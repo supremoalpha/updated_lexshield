@@ -31379,3 +31379,9 @@ body:has([data-video-call-page]) .video-call-controls {
   height: 100%;
   border: 0;
 }
+
+.case-file-view-video {
+  object-fit: contain;
+  background: #061225;
+  max-width: 100%;
+}

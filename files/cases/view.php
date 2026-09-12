@@ -179,8 +179,14 @@ if (($mime === '' || $mime === 'application/octet-stream') && preg_match('/\.pdf
     $canPreview = true;
 }
 
+if (($mime === '' || $mime === 'application/octet-stream') && preg_match('/\.(mp4|m4v|webm|mov|3gp)$/i', $fileName) === 1) {
+    $mime = function_exists('lex_case_file_guess_mime') ? lex_case_file_guess_mime($mime, $fileName) : 'video/mp4';
+    $canPreview = true;
+}
+
 $isImage = str_starts_with($mime, 'image/');
-$kind = $textBody !== '' ? 'text' : ($isImage ? 'image' : 'frame');
+$isVideo = str_starts_with($mime, 'video/');
+$kind = $textBody !== '' ? 'text' : ($isImage ? 'image' : ($isVideo ? 'video' : 'frame'));
 if ($kind === 'frame' && $sourceUrl !== '' && (str_contains($mime, 'pdf') || preg_match('/\.pdf$/i', $fileName) === 1)) {
     $sourceUrl .= '#toolbar=1&navpanes=0&scrollbar=1&view=FitH&zoom=page-fit';
 }
@@ -222,6 +228,8 @@ lex_page_header('View case file', 'case-files', $user);
     <?php elseif ($canPreview && $sourceUrl !== ''): ?>
       <?php if ($kind === 'image'): ?>
         <img class="case-file-view-media" src="<?= lex_e($sourceUrl) ?>" alt="" draggable="false" data-case-file-preview>
+      <?php elseif ($kind === 'video'): ?>
+        <video class="case-file-view-media case-file-view-video" src="<?= lex_e($sourceUrl) ?>" controls playsinline controlslist="nodownload noremoteplayback" disablepictureinpicture data-case-file-preview></video>
       <?php else: ?>
         <iframe class="case-file-view-frame" src="<?= lex_e($sourceUrl) ?>" data-src="<?= lex_e($sourceUrl) ?>" title="<?= lex_e($fileName) ?>" allowfullscreen data-case-file-preview></iframe>
       <?php endif; ?>
