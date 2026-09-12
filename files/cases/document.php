@@ -92,13 +92,18 @@ while (ob_get_level() > 0) {
     ob_end_clean();
 }
 
-header('Content-Type: ' . $mime);
-header('Content-Length: ' . $size);
-header('X-Content-Type-Options: nosniff');
-if ($preview && preg_match('/^(image\/|application\/pdf$|text\/)/', $mime)) {
-    header('Content-Disposition: inline; filename="' . str_replace('"', '\\"', $name) . '"');
+if ($preview && preg_match('/^(image\/|application\/pdf$|text\/)/', $mime) && function_exists('lex_case_file_send_view_only_headers')) {
+    lex_case_file_send_view_only_headers($mime, $name, $size);
 } else {
-    header('Content-Disposition: attachment; filename="' . str_replace('"', '\\"', $name) . '"');
+    header('Content-Type: ' . $mime);
+    header('Content-Length: ' . $size);
+    header('X-Content-Type-Options: nosniff');
+    if ($preview && preg_match('/^(image\/|application\/pdf$|text\/)/', $mime)) {
+        header('X-Frame-Options: SAMEORIGIN', true);
+        header('Content-Disposition: inline; filename="' . str_replace('"', '\\"', $name) . '"');
+    } else {
+        header('Content-Disposition: attachment; filename="' . str_replace('"', '\\"', $name) . '"');
+    }
 }
 if ($outputData !== null) {
     echo $outputData;

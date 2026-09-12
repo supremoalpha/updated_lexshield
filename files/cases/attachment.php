@@ -33,15 +33,33 @@ if (!$record) {
     exit('Attachment not found.');
 }
 
-$currentUserId = (int) $user['id'];
-$userRole = (string) ($user['role'] ?? '');
-$isClientOwner = $userRole === 'client' && $currentUserId === (int) $record['client_user_id'];
-$isLawyerOwner = $userRole === 'lawyer' && $currentUserId === (int) $record['created_by_user_id'];
+$access = function_exists('lex_case_file_vault_access')
+    ? lex_case_file_vault_access([
+        'id' => (int) $record['id'],
+        'client_user_id' => (int) $record['client_user_id'],
+        'assigned_lawyer_user_id' => (int) $record['assigned_lawyer_user_id'],
+        'created_by_user_id' => (int) $record['created_by_user_id'],
+    ], $user)
+    : 'none';
+$viewOnly = function_exists('lex_case_file_is_view_only') && lex_case_file_is_view_only($access);
+$preview = (string) ($_GET['preview'] ?? '') === '1';
 
-if (!$isClientOwner && !$isLawyerOwner) {
+if ($access === 'none') {
     lex_audit('denied_case_file_attachment_access', 'case_files', (string) $caseFileId);
     http_response_code(403);
     exit('Access denied.');
+}
+
+if ($viewOnly && !$preview) {
+    lex_audit('denied_case_file_attachment_download', 'case_files', (string) $caseFileId);
+    http_response_code(403);
+    exit('This shared case file is view-only. Download is disabled.');
+}
+
+if ($viewOnly && !lex_case_file_view_token_ok((string) ($_GET['token'] ?? ''), (int) $user['id'])) {
+    lex_audit('denied_case_file_attachment_preview', 'case_files', (string) $caseFileId);
+    http_response_code(403);
+    exit('Open this file from Case Files to view it.');
 }
 
 $attachment = null;
@@ -80,22 +98,34 @@ if ($mime === '' && function_exists('mime_content_type')) {
         $mime = $detected;
     }
 }
-if ($mime === '') {
+if (function_exists('lex_case_file_guess_mime')) {
+    $mime = lex_case_file_guess_mime($mime, $originalName);
+} elseif ($mime === '') {
     $mime = 'application/octet-stream';
 }
 
 $size = (int) ($attachment['size'] ?? filesize($path));
 
-lex_audit('download_case_file_attachment', 'case_files', (string) $caseFileId);
+if ($viewOnly && !lex_case_file_previewable_mime($mime, $originalName)) {
+    lex_audit('denied_case_file_attachment_download', 'case_files', (string) $caseFileId);
+    http_response_code(403);
+    exit('This file type cannot be opened in the view-only viewer.');
+}
+
+lex_audit($preview || $viewOnly ? 'preview_case_file_attachment' : 'download_case_file_attachment', 'case_files', (string) $caseFileId);
 
 while (ob_get_level() > 0) {
     ob_end_clean();
 }
 
-header('Content-Type: ' . $mime);
-header('Content-Length: ' . $size);
-header('Content-Transfer-Encoding: binary');
-header('X-Content-Type-Options: nosniff');
-header('Content-Disposition: attachment; filename="' . str_replace('"', '\\"', $originalName) . '"');
+if ($viewOnly || $preview) {
+    lex_case_file_send_view_only_headers($mime, $originalName, $size);
+} else {
+    header('Content-Type: ' . $mime);
+    header('Content-Length: ' . $size);
+    header('Content-Transfer-Encoding: binary');
+    header('X-Content-Type-Options: nosniff');
+    header('Content-Disposition: attachment; filename="' . str_replace('"', '\\"', $originalName) . '"');
+}
 readfile($path);
 exit;

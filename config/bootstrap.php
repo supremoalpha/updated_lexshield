@@ -216,8 +216,16 @@ mb_internal_encoding('UTF-8');
  * ---------------------------------------------------------------------*/
 
 if (!headers_sent()) {
+    $lexScriptBase = strtolower(basename(str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? $_SERVER['PHP_SELF'] ?? ''))));
+    $lexCaseFilePreviewEmbed = (string) ($_GET['preview'] ?? '') === '1'
+        && in_array($lexScriptBase, [
+            'case_document_file.php',
+            'case_file_attachment.php',
+            'document.php',
+            'attachment.php',
+        ], true);
     header('X-Content-Type-Options: nosniff');
-    header('X-Frame-Options: DENY');
+    header('X-Frame-Options: ' . ($lexCaseFilePreviewEmbed ? 'SAMEORIGIN' : 'DENY'));
     header('Referrer-Policy: strict-origin-when-cross-origin');
     header('Permissions-Policy: camera=(self), microphone=(self), geolocation=()');
     header(
@@ -227,7 +235,8 @@ if (!headers_sent()) {
         . "img-src 'self' data: blob:; "
         . "media-src 'self' blob:; "
         . "connect-src 'self' stun: turn: turns:; "
-        . "frame-ancestors 'none'; "
+        . "frame-src 'self'; "
+        . "frame-ancestors " . ($lexCaseFilePreviewEmbed ? "'self'" : "'none'") . '; '
         . "base-uri 'self'; "
         . "form-action 'self'"
     );
