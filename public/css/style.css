@@ -30412,6 +30412,94 @@ body.app-workspace [data-system-settings-page] {
   color: var(--ws-text);
 }
 
+body.app-workspace [data-admin-sharing-page],
+body.app-workspace [data-admin-sharing-page] .card,
+body.app-workspace [data-admin-sharing-page] .data-table,
+body.app-workspace [data-admin-sharing-page] .data-table th,
+body.app-workspace [data-admin-sharing-page] .data-table td,
+body.app-workspace [data-admin-sharing-page] .admin-audit-row,
+body.app-workspace [data-admin-sharing-page] .admin-dashboard-stat-copy,
+body.app-workspace [data-admin-sharing-page] .card-head h2,
+body.app-workspace [data-admin-sharing-page] .admin-sharing-meta {
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+
+body.app-workspace [data-admin-sharing-page] .card-head h2 {
+  font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: 0;
+}
+
+body.app-workspace [data-admin-sharing-page] .data-table {
+  font-size: 0.92rem;
+}
+
+body.app-workspace [data-admin-sharing-page] .data-table th {
+  color: var(--ws-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+body.app-workspace [data-admin-sharing-page] .data-table td {
+  color: var(--ws-text);
+  line-height: 1.45;
+}
+
+body.app-workspace [data-admin-sharing-page] .admin-empty-line {
+  color: var(--ws-muted);
+  font-size: 0.92rem;
+  padding: 1rem 0.2rem;
+}
+
+body.app-workspace [data-admin-sharing-page] .admin-sharing-meta {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--ws-muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+body.app-workspace [data-admin-sharing-page] .admin-sharing-decision strong {
+  color: var(--ws-text);
+  font-size: 0.95rem;
+}
+
+body.app-workspace [data-admin-sharing-page] .admin-sharing-ledger-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  margin-top: 0.35rem;
+  color: #93c5fd;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+body.app-workspace [data-admin-sharing-page] .admin-sharing-ledger-link:hover,
+body.app-workspace [data-admin-sharing-page] .admin-sharing-ledger-link:focus-visible {
+  text-decoration: underline;
+}
+
+html[data-theme="light"] body.app-workspace [data-admin-sharing-page] .data-table td,
+html[data-theme="light"] body.app-workspace [data-admin-sharing-page] .admin-sharing-decision strong {
+  color: #10243e;
+}
+
+html[data-theme="light"] body.app-workspace [data-admin-sharing-page] .data-table th,
+html[data-theme="light"] body.app-workspace [data-admin-sharing-page] .admin-sharing-meta,
+html[data-theme="light"] body.app-workspace [data-admin-sharing-page] .admin-empty-line {
+  color: #5f738f;
+}
+
+html[data-theme="light"] body.app-workspace [data-admin-sharing-page] .admin-sharing-ledger-link {
+  color: #1d4ed8;
+}
+
 body.app-workspace .card h2,
 body.app-workspace .card h3,
 body.app-workspace .card-head h2,
@@ -30420,6 +30508,16 @@ body.app-workspace .admin-lawyers-hero h2,
 body.app-workspace .client-appointment-panel-head h2,
 body.app-workspace .client-appointment-requests-head h2 {
   color: #fff;
+}
+
+html[data-theme="light"] body.app-workspace .card h2,
+html[data-theme="light"] body.app-workspace .card h3,
+html[data-theme="light"] body.app-workspace .card-head h2,
+html[data-theme="light"] body.app-workspace .admin-clients-hero h2,
+html[data-theme="light"] body.app-workspace .admin-lawyers-hero h2,
+html[data-theme="light"] body.app-workspace .client-appointment-panel-head h2,
+html[data-theme="light"] body.app-workspace .client-appointment-requests-head h2 {
+  color: #10243e;
 }
 
 body.app-workspace .muted,

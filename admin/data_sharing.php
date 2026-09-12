@@ -81,6 +81,7 @@ $statusClass = static fn (string $status): string => match ($status) {
 
 lex_page_header('Data Sharing Approvals', 'data-sharing', $user);
 ?>
+<div data-admin-sharing-page class="admin-sharing-page">
 <?php if ($error !== ''): ?><div class="alert alert-error"><?= lex_e($error) ?></div><?php endif; ?>
 
 <section class="admin-dashboard-stats" aria-label="Data sharing summary">
@@ -88,8 +89,8 @@ lex_page_header('Data Sharing Approvals', 'data-sharing', $user);
   <article class="admin-dashboard-stat-card"><div class="admin-dashboard-stat-copy"><span>Decided (recent)</span><strong><?= number_format(count($decided)) ?></strong></div></article>
   <article class="admin-dashboard-stat-card">
     <div class="admin-dashboard-stat-copy">
-      <span>Ledger</span>
-      <strong><a href="<?= lex_e(lex_app_url('admin/blockchain_ledger.php')) ?>">View blockchain &rarr;</a></strong>
+      <span>Blockchain ledger</span>
+      <a class="admin-sharing-ledger-link" href="<?= lex_e(lex_app_url('admin/blockchain_ledger.php')) ?>">View ledger</a>
     </div>
   </article>
 </section>
@@ -135,10 +136,10 @@ lex_page_header('Data Sharing Approvals', 'data-sharing', $user);
   <div class="card-head"><h2>Recent decisions</h2></div>
   <div class="admin-audit-list">
     <?php foreach ($decided as $request): ?>
-      <div class="admin-audit-row">
+      <div class="admin-audit-row admin-sharing-decision">
         <div>
           <strong><?= lex_e((string) $request['case_file_title']) ?></strong>
-          <span><?= lex_e((string) $request['from_lawyer_name']) ?> &rarr; <?= lex_e((string) $request['to_lawyer_name']) ?> &middot; by <?= lex_e((string) ($request['decided_by_name'] ?? 'System')) ?></span>
+          <span class="admin-sharing-meta">From <?= lex_e((string) $request['from_lawyer_name']) ?> to <?= lex_e((string) $request['to_lawyer_name']) ?> · Decided by <?= lex_e((string) ($request['decided_by_name'] ?? 'System')) ?></span>
         </div>
         <span class="status-pill <?= lex_e($statusClass((string) $request['status'])) ?>"><?= lex_e(ucfirst((string) $request['status'])) ?></span>
         <time><?= lex_e(lex_message_timestamp((string) $request['decided_at'])) ?></time>
@@ -147,4 +148,5 @@ lex_page_header('Data Sharing Approvals', 'data-sharing', $user);
     <?php if (!$decided): ?><div class="admin-empty-line">No decisions recorded yet.</div><?php endif; ?>
   </div>
 </section>
+</div>
 <?php lex_page_footer(); ?>

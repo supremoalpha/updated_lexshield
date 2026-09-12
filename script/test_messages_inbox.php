@@ -180,6 +180,15 @@ lex_inbox_assert(
     'Notification panel uses a professional empty state',
     str_contains($bootstrap, 'You\'re all caught up') && str_contains($bootstrap, 'Mark all as read')
 );
+$sharingPhp = (string) file_get_contents(dirname(__DIR__) . '/admin/data_sharing.php');
+lex_inbox_assert(
+    'Data sharing approvals page marks its layout',
+    str_contains($sharingPhp, 'data-admin-sharing-page') && str_contains($sharingPhp, 'From ') && str_contains($sharingPhp, 'Decided by')
+);
+lex_inbox_assert(
+    'Data sharing text stays whole words',
+    str_contains($style, '[data-admin-sharing-page]') && str_contains($style, 'html[data-theme="light"] body.app-workspace .card-head h2')
+);
 lex_inbox_assert(
     'Notification panel is pinned to the bell in JavaScript',
     str_contains($bootstrap, 'function placePanel') && str_contains($bootstrap, 'getBoundingClientRect') && str_contains($bootstrap, 'document.body.appendChild(dropdown)')
