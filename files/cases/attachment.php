@@ -98,13 +98,15 @@ if ($mime === '' && function_exists('mime_content_type')) {
         $mime = $detected;
     }
 }
-if ($mime === '') {
+if (function_exists('lex_case_file_guess_mime')) {
+    $mime = lex_case_file_guess_mime($mime, $originalName);
+} elseif ($mime === '') {
     $mime = 'application/octet-stream';
 }
 
 $size = (int) ($attachment['size'] ?? filesize($path));
 
-if ($viewOnly && !lex_case_file_previewable_mime($mime)) {
+if ($viewOnly && !lex_case_file_previewable_mime($mime, $originalName)) {
     lex_audit('denied_case_file_attachment_download', 'case_files', (string) $caseFileId);
     http_response_code(403);
     exit('This file type cannot be opened in the view-only viewer.');

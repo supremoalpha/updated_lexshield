@@ -198,9 +198,34 @@ if (!function_exists('lex_case_file_is_view_only')) {
     }
 }
 
-if (!function_exists('lex_case_file_previewable_mime')) {
-    function lex_case_file_previewable_mime(string $mime): bool
+if (!function_exists('lex_case_file_guess_mime')) {
+    function lex_case_file_guess_mime(string $mime, string $name): string
     {
+        $mime = strtolower(trim($mime));
+        if ($mime !== '' && preg_match('/^(image\/|application\/pdf$|text\/)/', $mime) === 1) {
+            return $mime;
+        }
+        $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+
+        return match ($ext) {
+            'txt', 'log', 'md', 'csv' => 'text/plain',
+            'pdf' => 'application/pdf',
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            default => $mime !== '' ? $mime : 'application/octet-stream',
+        };
+    }
+}
+
+if (!function_exists('lex_case_file_previewable_mime')) {
+    function lex_case_file_previewable_mime(string $mime, string $name = ''): bool
+    {
+        if ($name !== '' && function_exists('lex_case_file_guess_mime')) {
+            $mime = lex_case_file_guess_mime($mime, $name);
+        }
+
         return (bool) preg_match('/^(image\/|application\/pdf$|text\/)/', $mime);
     }
 }
@@ -262,6 +287,11 @@ if (!function_exists('lex_case_file_send_view_only_headers')) {
         header('Content-Type: ' . $mime);
         header('Content-Length: ' . $size);
         header('X-Content-Type-Options: nosniff');
+        header('X-Frame-Options: SAMEORIGIN', true);
+        header(
+            "Content-Security-Policy: default-src 'none'; frame-ancestors 'self'; base-uri 'none'",
+            true
+        );
         header('Cache-Control: private, no-store, no-cache, must-revalidate');
         header('Pragma: no-cache');
         header('Content-Disposition: inline; filename="' . str_replace('"', '', $name) . '"');

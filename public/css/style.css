@@ -31132,12 +31132,27 @@ body:has([data-video-call-page]) .video-call-controls {
 }
 
 .case-file-view-media,
-.case-file-view-frame {
+.case-file-view-frame,
+.case-file-view-text {
   display: block;
   width: 100%;
   min-height: 62vh;
   border: 0;
   pointer-events: none;
+}
+
+.case-file-view-text {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 1.2rem 1.4rem 2.4rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: 0.95rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: #e8eef8;
+  background: transparent;
 }
 
 .case-file-view-media {
@@ -31177,6 +31192,18 @@ body:has([data-video-call-page]) .video-call-controls {
   padding: 3rem 1.2rem;
   color: #dbeafe;
   text-align: center;
+}
+
+html[data-theme="light"] .case-file-view-stage {
+  background: #f4f6fb;
+}
+
+html[data-theme="light"] .case-file-view-text {
+  color: #1a2333;
+}
+
+html[data-theme="light"] .case-file-view-watermark {
+  color: rgba(15, 23, 42, 0.12);
 }
 
 .case-file-view-only.is-capture-blocked .case-file-view-stage::after {

@@ -15,13 +15,18 @@ $mime = '';
 $sourceUrl = '';
 $canPreview = false;
 $viewOnly = false;
+$textBody = '';
+$previewPath = '';
+$previewDocument = [];
 $watermark = trim((string) ($user['full_name'] ?? 'Viewer')) . ' · view only · ' . date('M j, Y g:i A');
 
 if ($documentId > 0) {
     $stmt = lex_pdo()->prepare(
-        'SELECT d.*, cf.id AS case_file_id, cf.case_file_title, cf.client_user_id,
+        'SELECT d.*, f.slug AS folder_slug, cf.id AS case_file_id, cf.case_file_title,
+                cf.folder_name AS case_folder_name, cf.client_user_id,
                 cf.assigned_lawyer_user_id, cf.created_by_user_id
          FROM case_file_documents d
+         JOIN case_file_folders f ON f.id = d.folder_id
          JOIN case_files cf ON cf.id = d.case_file_id
          WHERE d.id = :id
          LIMIT 1'
@@ -46,8 +51,16 @@ if ($documentId > 0) {
     $viewOnly = lex_case_file_is_view_only($access);
     $fileName = trim((string) ($document['original_name'] ?: 'document'));
     $title = (string) ($document['case_file_title'] ?? $title);
-    $mime = (string) ($document['mime_type'] ?: 'application/octet-stream');
-    $canPreview = lex_case_file_previewable_mime($mime);
+    $mime = function_exists('lex_case_file_guess_mime')
+        ? lex_case_file_guess_mime((string) ($document['mime_type'] ?? ''), $fileName)
+        : (string) ($document['mime_type'] ?: 'application/octet-stream');
+    $canPreview = lex_case_file_previewable_mime($mime, $fileName);
+    $previewDocument = $document;
+    $previewPath = lex_case_files_folder_path((string) $document['case_folder_name'])
+        . DIRECTORY_SEPARATOR
+        . lex_case_file_vault_slug((string) ($document['folder_slug'] ?? ''))
+        . DIRECTORY_SEPARATOR
+        . basename((string) $document['stored_name']);
     $query = ['document_id' => $documentId, 'preview' => 1];
     if ($viewOnly) {
         $query['token'] = lex_case_file_view_token_issue((int) $user['id']);
@@ -59,7 +72,7 @@ if ($documentId > 0) {
 } elseif ($caseFileId > 0 && $storedName !== '') {
     $stmt = lex_pdo()->prepare(
         'SELECT cf.id, cf.case_file_title, cf.client_user_id, cf.assigned_lawyer_user_id,
-                cf.created_by_user_id, cf.attachments_json
+                cf.created_by_user_id, cf.folder_name, cf.attachments_json
          FROM case_files cf
          WHERE cf.id = :id
          LIMIT 1'
@@ -96,8 +109,20 @@ if ($documentId > 0) {
     $viewOnly = lex_case_file_is_view_only($access);
     $fileName = trim((string) ($attachment['name'] ?? 'Attachment'));
     $title = (string) ($record['case_file_title'] ?? $title);
-    $mime = (string) ($attachment['mime_type'] ?? 'application/octet-stream');
-    $canPreview = lex_case_file_previewable_mime($mime);
+    $mime = function_exists('lex_case_file_guess_mime')
+        ? lex_case_file_guess_mime((string) ($attachment['mime_type'] ?? ''), $fileName)
+        : (string) ($attachment['mime_type'] ?? 'application/octet-stream');
+    $canPreview = lex_case_file_previewable_mime($mime, $fileName);
+    $category = strtoupper(trim((string) ($attachment['category'] ?? 'DOCUMENTS')));
+    $allowedCategories = ['DOCUMENTS', 'PHOTOS', 'EVIDENCE', 'COURT_FILINGS', 'CORRESPONDENCE'];
+    if (!in_array($category, $allowedCategories, true)) {
+        $category = 'DOCUMENTS';
+    }
+    $previewPath = lex_case_files_folder_path((string) $record['folder_name'])
+        . DIRECTORY_SEPARATOR
+        . $category
+        . DIRECTORY_SEPARATOR
+        . $storedName;
     $query = [
         'case_file_id' => $caseFileId,
         'stored_name' => $storedName,
@@ -115,8 +140,35 @@ if ($documentId > 0) {
     exit('File not found.');
 }
 
+if (($mime === '' || $mime === 'application/octet-stream') && preg_match('/\.(txt|log|md|csv)$/i', $fileName) === 1) {
+    $mime = 'text/plain';
+    $canPreview = true;
+}
+
+if (str_starts_with($mime, 'text/') && $previewPath !== '' && is_file($previewPath)) {
+    $bytes = false;
+    if ($previewDocument !== [] && (string) ($previewDocument['encryption_algorithm'] ?? '') !== '' && function_exists('lex_case_file_document_decrypt')) {
+        $cipherData = file_get_contents($previewPath);
+        if ($cipherData !== false) {
+            try {
+                $bytes = lex_case_file_document_decrypt($cipherData, $previewDocument);
+            } catch (Throwable $e) {
+                $bytes = false;
+            }
+        }
+    } else {
+        $bytes = file_get_contents($previewPath);
+    }
+    if (is_string($bytes) && $bytes !== '') {
+        if (strlen($bytes) > 250000) {
+            $bytes = substr($bytes, 0, 250000) . "\n\n[Preview truncated]";
+        }
+        $textBody = $bytes;
+    }
+}
+
 $isImage = str_starts_with($mime, 'image/');
-$kind = $isImage ? 'image' : (str_starts_with($mime, 'text/') ? 'text' : 'frame');
+$kind = $textBody !== '' ? 'text' : ($isImage ? 'image' : 'frame');
 $backHref = function_exists('lex_nav_href') ? lex_nav_href('case_files.php?record=' . max($caseFileId, 0)) : lex_app_url('case_files.php');
 if ($documentId > 0) {
     $backHref = function_exists('lex_nav_href')
@@ -144,7 +196,9 @@ lex_page_header('View case file', 'case-files', $user);
   <div class="case-file-view-stage" oncontextmenu="return false;">
     <div class="case-file-view-watermark" aria-hidden="true"><?php for ($i = 0; $i < 24; $i++): ?><span><?= lex_e($watermark) ?></span><?php endfor; ?></div>
     <div class="case-file-view-shield" aria-hidden="true"></div>
-    <?php if ($canPreview && $sourceUrl !== ''): ?>
+    <?php if ($kind === 'text' && $textBody !== ''): ?>
+      <pre class="case-file-view-text" style="margin:0;padding:1.2rem 1.4rem 2.4rem;min-height:62vh;white-space:pre-wrap;word-break:break-word;font:0.95rem/1.55 ui-monospace,Menlo,Consolas,monospace;"><?= lex_e($textBody) ?></pre>
+    <?php elseif ($canPreview && $sourceUrl !== ''): ?>
       <?php if ($kind === 'image'): ?>
         <img class="case-file-view-media" src="<?= lex_e($sourceUrl) ?>" alt="" draggable="false">
       <?php else: ?>

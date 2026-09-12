@@ -217,6 +217,7 @@ lex_inbox_assert(
     && str_contains($actionsPhp, 'Shared case files are view-only')
     && str_contains($documentPhp, 'This shared case file is view-only')
     && str_contains($viewPhp, 'data-case-file-view-only')
+    && str_contains($viewPhp, 'case-file-view-text')
     && is_file(dirname(__DIR__) . '/case_file_view.php'),
     'Shared lawyers must open an in-app viewer, not a download.'
 );
@@ -272,7 +273,20 @@ lex_inbox_assert(
 lex_inbox_assert(
     'Packed case-file viewer source includes the view-only page',
     function_exists('lex_case_files_view_source')
-    && str_contains(lex_case_files_view_source(), 'data-case-file-view-only')
+    && str_contains(lex_case_files_view_source(), 'case-file-view-text')
+);
+lex_inbox_assert(
+    'Text case files render on the page instead of a blocked iframe',
+    str_contains($viewPhp, 'case-file-view-text')
+    && str_contains($bootstrap, 'SAMEORIGIN')
+    && str_contains((string) file_get_contents(dirname(__DIR__) . '/config/case_files/core.php'), 'function lex_case_file_guess_mime'),
+    'capstone.txt was an empty frame because X-Frame-Options: DENY blocked the preview.'
+);
+lex_inbox_assert(
+    '.txt is treated as previewable text',
+    function_exists('lex_case_file_guess_mime')
+    && lex_case_file_guess_mime('application/octet-stream', 'capstone.txt') === 'text/plain'
+    && lex_case_file_previewable_mime('application/octet-stream', 'capstone.txt')
 );
 $viewWrapper = dirname(__DIR__) . '/case_file_view.php';
 $viewWrapperOriginal = is_file($viewWrapper) ? (string) file_get_contents($viewWrapper) : '';
