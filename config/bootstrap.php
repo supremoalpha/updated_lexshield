@@ -2022,6 +2022,105 @@ if (!function_exists('lex_nav_items_for_role')) {
     }
 }
 
+if (!function_exists('lex_notification_type_label')) {
+    function lex_notification_type_label(string $type): string
+    {
+        return match ($type) {
+            'message' => 'Message',
+            'call' => 'Call',
+            'appointment' => 'Appointment',
+            'payment' => 'Payment',
+            'data_sharing' => 'Data sharing',
+            'security' => 'Security',
+            'inquiry' => 'Inquiry',
+            'lawyer' => 'Lawyer',
+            'client' => 'Client',
+            'case_file' => 'Case file',
+            'blockchain' => 'Ledger',
+            'phishing' => 'Phishing',
+            'audit' => 'Audit',
+            'schedule' => 'Schedule',
+            default => 'Update',
+        };
+    }
+}
+
+if (!function_exists('lex_nav_hrefs_by_key')) {
+    /**
+     * @return array<string, string>
+     */
+    function lex_nav_hrefs_by_key(string $role): array
+    {
+        $hrefs = [];
+        foreach (lex_nav_items_for_role($role) as $navItem) {
+            $itemKey = (string) ($navItem['key'] ?? '');
+            $hrefs[$itemKey] = function_exists('lex_nav_href')
+                ? lex_nav_href((string) $navItem['href'])
+                : lex_app_url((string) $navItem['href']);
+        }
+
+        return $hrefs;
+    }
+}
+
+if (!function_exists('lex_notification_type_label')) {
+    function lex_notification_type_label(string $type): string
+    {
+        return match ($type) {
+            'message' => 'Message',
+            'call' => 'Call',
+            'appointment' => 'Appointment',
+            'payment' => 'Payment',
+            'data_sharing' => 'Data sharing',
+            'security' => 'Security',
+            'inquiry' => 'Inquiry',
+            'lawyer' => 'Lawyer',
+            'client' => 'Client',
+            'case_file' => 'Case file',
+            'blockchain' => 'Ledger',
+            'phishing' => 'Phishing',
+            'audit' => 'Audit',
+            'schedule' => 'Schedule',
+            default => 'Update',
+        };
+    }
+}
+
+if (!function_exists('lex_notif_href_map')) {
+    /**
+     * Page each notification type should open when its bell entry is clicked.
+     * Shared by the header markup and the footer poller, which re-renders the
+     * list client-side and has no other way to know the targets.
+     *
+     * @return array<string, string>
+     */
+    function lex_notif_href_map(string $role): array
+    {
+        if (!function_exists('lex_nav_badge_type_map')) {
+            return [];
+        }
+
+        $navHrefsByKey = lex_nav_hrefs_by_key($role);
+        $map = [];
+        foreach (lex_nav_badge_type_map() as $typeKey => $types) {
+            $targetHref = (string) ($navHrefsByKey[$typeKey] ?? '');
+            if ($targetHref === '' && $typeKey === 'billing') {
+                $targetHref = (string) ($navHrefsByKey['payments'] ?? '');
+            }
+            if ($targetHref === '') {
+                $targetHref = (string) ($navHrefsByKey['dashboard'] ?? '');
+            }
+            foreach ($types as $typeName) {
+                $mappedKey = function_exists('lex_nav_key_for_type') ? lex_nav_key_for_type($typeName, $role) : $typeKey;
+                $mappedHref = (string) ($navHrefsByKey[$mappedKey] ?? $targetHref);
+                $map[$typeName] = $mappedHref !== '' ? $mappedHref : $targetHref;
+            }
+        }
+
+        return $map;
+    }
+}
+
 if (!function_exists('lex_page_header')) {
     function lex_page_header(string $title, string $activeNav = '', ?array $user = null): void
     {
@@ -2037,29 +2136,8 @@ if (!function_exists('lex_page_header')) {
         $navBadges = function_exists('lex_nav_badge_counts')
             ? lex_nav_badge_counts($lexNotifUserId, $role)
             : [];
-        $navHrefsByKey = [];
-        $notifHrefsByType = [];
-        foreach ($navItems as $navItem) {
-            $itemKey = (string) ($navItem['key'] ?? '');
-            $itemHref = function_exists('lex_nav_href') ? lex_nav_href((string) $navItem['href']) : lex_app_url((string) $navItem['href']);
-            $navHrefsByKey[$itemKey] = $itemHref;
-        }
-        if (function_exists('lex_nav_badge_type_map')) {
-            foreach (lex_nav_badge_type_map() as $typeKey => $types) {
-                $targetHref = (string) ($navHrefsByKey[$typeKey] ?? '');
-                if ($targetHref === '' && $typeKey === 'billing') {
-                    $targetHref = (string) ($navHrefsByKey['payments'] ?? '');
-                }
-                if ($targetHref === '') {
-                    $targetHref = (string) ($navHrefsByKey['dashboard'] ?? '');
-                }
-                foreach ($types as $typeName) {
-                    $mappedKey = function_exists('lex_nav_key_for_type') ? lex_nav_key_for_type($typeName, $role) : $typeKey;
-                    $mappedHref = (string) ($navHrefsByKey[$mappedKey] ?? $targetHref);
-                    $notifHrefsByType[$typeName] = $mappedHref !== '' ? $mappedHref : $targetHref;
-                }
-            }
-        }
+        $navHrefsByKey = lex_nav_hrefs_by_key($role);
+        $notifHrefsByType = lex_notif_href_map($role);
         ?><!doctype html>
 <html lang="en" data-theme="dark">
 <head>
@@ -2132,18 +2210,25 @@ if (!function_exists('lex_page_header')) {
             <span class="notif-bell-badge"<?= $lexNotifCount > 0 ? '' : ' style="display:none"' ?>><?= $lexNotifCount > 99 ? '99+' : (string) $lexNotifCount ?></span>
           </button>
           <div class="notif-bell-dropdown" id="notifBellDropdown" hidden>
-            <div class="notif-bell-header"><strong>Notifications</strong><button class="notif-bell-mark-read" id="notifMarkAllRead" type="button">Mark all read</button></div>
+            <div class="notif-bell-header">
+              <div class="notif-bell-heading">
+                <strong>Notifications</strong>
+                <span class="notif-bell-unread-label" id="notifUnreadLabel"<?= $lexNotifCount > 0 ? '' : ' hidden' ?>><?= $lexNotifCount === 1 ? '1 new' : (($lexNotifCount > 99 ? '99+' : (string) $lexNotifCount) . ' new') ?></span>
+              </div>
+              <button class="notif-bell-mark-read" id="notifMarkAllRead" type="button">Mark all as read</button>
+            </div>
             <div class="notif-bell-list" id="notifBellList">
               <?php if (!$lexNotifRows): ?>
-                <p class="muted" style="padding:0.75rem;text-align:center;">No notifications yet.</p>
+                <div class="notif-bell-empty"><strong>You're all caught up</strong><p>New alerts will appear here.</p></div>
               <?php else: ?>
                 <?php foreach ($lexNotifRows as $lexNotifRow): ?>
                   <?php $lexNotifType = (string) ($lexNotifRow['type'] ?? ''); ?>
                   <div class="notif-bell-item<?= (int) ($lexNotifRow['is_read'] ?? 0) === 0 ? ' is-unread' : '' ?>" data-notif-id="<?= (int) $lexNotifRow['id'] ?>" data-notif-type="<?= lex_e($lexNotifType) ?>" data-notif-href="<?= lex_e((string) ($notifHrefsByType[$lexNotifType] ?? ($navHrefsByKey['dashboard'] ?? ''))) ?>">
-                    <span class="notif-bell-item-dot"></span>
-                    <div>
-                      <div><?= lex_e((string) ($lexNotifRow['message'] ?? '')) ?></div>
-                      <div class="notif-bell-item-time"><?= lex_e((string) ($lexNotifRow['created_at'] ?? '')) ?></div>
+                    <span class="notif-bell-icon" aria-hidden="true"></span>
+                    <div class="notif-bell-item-body">
+                      <div class="notif-bell-item-kind"><?= lex_e(lex_notification_type_label($lexNotifType)) ?></div>
+                      <div class="notif-bell-item-msg"><?= lex_e((string) ($lexNotifRow['message'] ?? '')) ?></div>
+                      <div class="notif-bell-item-time"><?= lex_e(function_exists('lex_message_timestamp') ? lex_message_timestamp((string) ($lexNotifRow['created_at'] ?? '')) : (string) ($lexNotifRow['created_at'] ?? '')) ?></div>
                     </div>
                   </div>
                 <?php endforeach; ?>
@@ -2176,6 +2261,10 @@ if (!function_exists('lex_page_footer')) {
     {
         $ringUser = function_exists('lex_current_user') ? lex_current_user() : null;
         $ringUserId = is_array($ringUser) ? (int) ($ringUser['id'] ?? 0) : 0;
+        // Rebuilt here rather than inherited: the header's copy is a local of a
+        // different function, so the poller used to serialise null and every
+        // refreshed notification lost its click target.
+        $notifHrefsByType = lex_notif_href_map(is_array($ringUser) ? (string) ($ringUser['role'] ?? '') : '');
         $incomingCall = null;
         if ($ringUserId > 0 && function_exists('lex_inbox_call_incoming_for')) {
             try {
@@ -2312,6 +2401,7 @@ window.lexClosePhishingDetector = function (event) {
   var dropdown = document.getElementById('notifBellDropdown');
   var listEl = document.getElementById('notifBellList');
   var markAllBtn = document.getElementById('notifMarkAllRead');
+  var unreadLabel = document.getElementById('notifUnreadLabel');
   var badge = bellBtn ? bellBtn.querySelector('.notif-bell-badge') : null;
   var notifUrl = <?= json_encode(lex_app_url('notifications_api.php')) ?>;
   var csrf = <?= json_encode(lex_csrf_token()) ?>;
@@ -2325,15 +2415,21 @@ window.lexClosePhishingDetector = function (event) {
     if (s < 86400) return Math.floor(s / 3600) + 'h ago';
     return Math.floor(s / 86400) + 'd ago';
   }
+  var kindLabels = { message: 'Message', call: 'Call', appointment: 'Appointment', payment: 'Payment', data_sharing: 'Data sharing', security: 'Security', inquiry: 'Inquiry', lawyer: 'Lawyer', client: 'Client', case_file: 'Case file', blockchain: 'Ledger', phishing: 'Phishing', audit: 'Audit', schedule: 'Schedule' };
+  function kindLabel(type) { return kindLabels[type] || 'Update'; }
+  function escapeText(value) { return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
   function render(data) {
     if (!data.notifications || !data.notifications.length) {
-      listEl.innerHTML = '<p class="muted" style="padding:0.75rem;text-align:center;">No notifications yet.</p>';
+      listEl.innerHTML = '<div class="notif-bell-empty"><strong>You\'re all caught up</strong><p>New alerts will appear here.</p></div>';
     } else {
       listEl.innerHTML = data.notifications.map(function (n) {
         var href = (notifHrefs && n.type && notifHrefs[n.type]) ? notifHrefs[n.type] : '';
-        return '<div class="notif-bell-item' + (Number(n.is_read) === 0 ? ' is-unread' : '') + '" data-notif-id="' + n.id + '" data-notif-type="' + String(n.type || '').replace(/"/g, '') + '" data-notif-href="' + String(href).replace(/"/g, '') + '">'
-          + '<span class="notif-bell-item-dot"></span>'
-          + '<div><div>' + (n.message || '').replace(/</g, '&lt;') + '</div><div class="notif-bell-item-time">' + timeAgo(n.created_at) + '</div></div></div>';
+        var type = String(n.type || '').replace(/"/g, '');
+        return '<div class="notif-bell-item' + (Number(n.is_read) === 0 ? ' is-unread' : '') + '" data-notif-id="' + n.id + '" data-notif-type="' + type + '" data-notif-href="' + String(href).replace(/"/g, '') + '">'
+          + '<span class="notif-bell-icon" aria-hidden="true"></span>'
+          + '<div class="notif-bell-item-body"><div class="notif-bell-item-kind">' + escapeText(kindLabel(type)) + '</div>'
+          + '<div class="notif-bell-item-msg">' + escapeText(n.message) + '</div>'
+          + '<div class="notif-bell-item-time">' + timeAgo(n.created_at) + '</div></div></div>';
       }).join('');
     }
     if (badge) {
@@ -2342,6 +2438,14 @@ window.lexClosePhishingDetector = function (event) {
         badge.style.display = '';
       } else {
         badge.style.display = 'none';
+      }
+    }
+    if (unreadLabel) {
+      if (data.unread > 0) {
+        unreadLabel.hidden = false;
+        unreadLabel.textContent = data.unread === 1 ? '1 new' : ((data.unread > 99 ? '99+' : String(data.unread)) + ' new');
+      } else {
+        unreadLabel.hidden = true;
       }
     }
     var navCounts = data.nav_badges && typeof data.nav_badges === 'object' ? data.nav_badges : null;
@@ -2399,12 +2503,54 @@ window.lexClosePhishingDetector = function (event) {
       .then(function (d) { if (d && d.ok) render(d); })
       .catch(function () {});
   }
+  function placePanel() {
+    if (!open || !dropdown || !bellBtn) return;
+    // Pin to the viewport with pixel offsets from the bell. CSS
+    // position:absolute + top:calc(100% + 8px) is wrong under position:fixed
+    // (percentage then means "a full screen below the fold"), and any
+    // transform/filter on .topbar would also trap a CSS-only fixed panel.
+    if (dropdown.parentNode !== document.body) {
+      document.body.appendChild(dropdown);
+    }
+    var rect = bellBtn.getBoundingClientRect();
+    var vw = window.innerWidth || document.documentElement.clientWidth;
+    var vh = window.innerHeight || document.documentElement.clientHeight;
+    var phone = vw <= 760;
+    dropdown.style.position = 'fixed';
+    dropdown.style.zIndex = '4300';
+    dropdown.style.maxHeight = Math.min(phone ? vh * 0.78 : vh * 0.7, phone ? 520 : 420) + 'px';
+    if (phone) {
+      dropdown.style.top = '12px';
+      dropdown.style.left = '12px';
+      dropdown.style.right = '12px';
+      dropdown.style.width = 'auto';
+      return;
+    }
+    var width = Math.min(360, Math.max(200, vw - 24));
+    var left = rect.right - width;
+    if (left < 12) left = 12;
+    if (left + width > vw - 12) left = Math.max(12, vw - 12 - width);
+    var top = rect.bottom + 8;
+    var maxH = Math.min(vh * 0.7, 420);
+    if (top + 96 > vh) {
+      top = Math.max(12, rect.top - maxH - 8);
+    }
+    dropdown.style.top = Math.round(top) + 'px';
+    dropdown.style.left = Math.round(left) + 'px';
+    dropdown.style.right = 'auto';
+    dropdown.style.width = width + 'px';
+  }
   function setOpen(next) {
     open = next;
     dropdown.hidden = !open;
     bellBtn.setAttribute('aria-expanded', String(open));
     if (wrap) wrap.classList.toggle('is-open', open);
-    if (open) load();
+    if (open) {
+      placePanel();
+      load();
+    } else if (wrap && dropdown.parentNode === document.body) {
+      wrap.appendChild(dropdown);
+    }
   }
   bellBtn.addEventListener('click', function (e) {
     e.preventDefault();
@@ -2412,10 +2558,13 @@ window.lexClosePhishingDetector = function (event) {
     setOpen(!open);
   });
   document.addEventListener('click', function (e) {
-    if (!open || !wrap) return;
-    if (wrap.contains(e.target)) return;
+    if (!open) return;
+    if (wrap && wrap.contains(e.target)) return;
+    if (dropdown.contains(e.target)) return;
     setOpen(false);
   });
+  window.addEventListener('resize', function () { if (open) placePanel(); });
+  window.addEventListener('scroll', function () { if (open) placePanel(); }, true);
   document.addEventListener('keydown', function (e) {
     if (open && e.key === 'Escape') setOpen(false);
   });

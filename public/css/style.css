@@ -3721,7 +3721,7 @@ body.app-workspace .notif-bell-btn {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.7rem 0.9rem;
+  padding: 0.85rem 1rem 0.8rem;
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
@@ -3729,38 +3729,156 @@ body.app-workspace .notif-bell-btn {
   z-index: 1;
 }
 
+.notif-bell-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.notif-bell-heading strong {
+  font-size: 0.95rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+.notif-bell-unread-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  background: rgba(225, 29, 72, 0.12);
+  color: #be123c;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.notif-bell-unread-label[hidden] { display: none; }
+
 .notif-bell-mark-read {
   background: none;
   border: 0;
   color: var(--gold, #c9a84c);
   cursor: pointer;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 700;
   min-height: 36px;
-  padding: 0 0.2rem;
+  padding: 0 0.15rem;
+  white-space: nowrap;
+}
+
+.notif-bell-mark-read:hover,
+.notif-bell-mark-read:focus-visible {
+  text-decoration: underline;
+}
+
+.notif-bell-empty {
+  padding: 1.6rem 1.1rem 1.75rem;
+  text-align: center;
+}
+
+.notif-bell-empty strong {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 750;
+}
+
+.notif-bell-empty p {
+  margin: 0.3rem 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
 }
 
 .notif-bell-item {
   display: flex;
-  gap: 0.55rem;
-  padding: 0.7rem 0.9rem;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.8rem 1rem;
   border-bottom: 1px solid var(--border);
   font-size: 0.84rem;
-  line-height: 1.35;
+  line-height: 1.4;
   cursor: pointer;
 }
 
-.notif-bell-item > div {
+.notif-bell-item:last-child { border-bottom: 0; }
+
+.notif-bell-item-body {
   min-width: 0;
+  flex: 1 1 auto;
 }
 
-.notif-bell-item > div > div:first-child {
+.notif-bell-item-kind {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 0.12rem;
+}
+
+.notif-bell-item-msg {
   overflow-wrap: anywhere;
+  color: inherit;
+  font-weight: 600;
 }
 
 .notif-bell-item.is-unread { background: rgba(0,132,255,0.06); }
 .notif-bell-item:hover,
 .notif-bell-item:focus-visible { background: rgba(0,132,255,0.1); }
+
+.notif-bell-icon {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  margin-top: 1px;
+  background: rgba(59, 130, 246, 0.14);
+  color: #2563eb;
+}
+
+.notif-bell-icon::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  background: currentColor;
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='black' d='M12 2a7 7 0 0 1 7 7v3.17l1.53 3.06A1 1 0 0 1 19.64 17H4.36a1 1 0 0 1-.89-1.77L5 12.17V9a7 7 0 0 1 7-7Zm0 19a3 3 0 0 1-2.83-2h5.66A3 3 0 0 1 12 21Z'/></svg>") center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='black' d='M12 2a7 7 0 0 1 7 7v3.17l1.53 3.06A1 1 0 0 1 19.64 17H4.36a1 1 0 0 1-.89-1.77L5 12.17V9a7 7 0 0 1 7-7Zm0 19a3 3 0 0 1-2.83-2h5.66A3 3 0 0 1 12 21Z'/></svg>") center / contain no-repeat;
+}
+
+.notif-bell-item[data-notif-type="message"] .notif-bell-icon,
+.notif-bell-item[data-notif-type="call"] .notif-bell-icon {
+  background: rgba(37, 99, 235, 0.14);
+  color: #2563eb;
+}
+
+.notif-bell-item[data-notif-type="appointment"] .notif-bell-icon,
+.notif-bell-item[data-notif-type="schedule"] .notif-bell-icon {
+  background: rgba(5, 150, 105, 0.14);
+  color: #059669;
+}
+
+.notif-bell-item[data-notif-type="payment"] .notif-bell-icon {
+  background: rgba(212, 175, 55, 0.18);
+  color: #b45309;
+}
+
+.notif-bell-item[data-notif-type="inquiry"] .notif-bell-icon,
+.notif-bell-item[data-notif-type="client"] .notif-bell-icon,
+.notif-bell-item[data-notif-type="lawyer"] .notif-bell-icon {
+  background: rgba(124, 58, 237, 0.14);
+  color: #7c3aed;
+}
+
+.notif-bell-item[data-notif-type="security"] .notif-bell-icon,
+.notif-bell-item[data-notif-type="phishing"] .notif-bell-icon,
+.notif-bell-item[data-notif-type="audit"] .notif-bell-icon {
+  background: rgba(225, 29, 72, 0.12);
+  color: #be123c;
+}
 
 .notif-bell-item-dot {
   flex: 0 0 8px;
@@ -3777,7 +3895,7 @@ body.app-workspace .notif-bell-btn {
 .notif-bell-item-time {
   color: var(--muted);
   font-size: 0.72rem;
-  margin-top: 2px;
+  margin-top: 0.2rem;
 }
 
 body.app-workspace .topbar-actions {
@@ -3796,7 +3914,10 @@ body.app-workspace .topbar-actions {
     flex-basis: 44px;
   }
 
-  .notif-bell-dropdown {
+  /* Matched by body.app-workspace too, so the workspace theme block far below
+     cannot outrank these phone offsets. */
+  .notif-bell-dropdown,
+  body.app-workspace .notif-bell-dropdown {
     position: fixed;
     top: max(0.75rem, env(safe-area-inset-top));
     left: 0.75rem;
@@ -29750,6 +29871,23 @@ body.pao-login .pao-page {
   word-break: break-word;
 }
 
+/* Titles and nav labels must stay whole words. overflow-wrap: anywhere on
+   .main-content inherits into the topbar and splits "Admin Dashboard" into
+   letter salad on a narrow title column. */
+body.app-workspace .topbar-title,
+body.app-workspace .topbar h1,
+body.app-workspace .nav-link-label,
+body.app-workspace .user-chip,
+body.app-workspace .notif-bell-header,
+body.app-workspace .notif-bell-item-kind,
+body.app-workspace .admin-dashboard-stat-copy span,
+body.app-workspace .admin-dashboard-kicker,
+body.app-workspace .admin-dashboard-card .card-head h2 {
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+
 .kpi-grid,
 .lawyer-dashboard-metrics,
 .lawyer-dashboard-shell .lawyer-dashboard-metrics,
@@ -30185,12 +30323,69 @@ body.app-workspace .user-chip span {
   font-size: 0.72rem;
 }
 
-body.app-workspace .notif-bell-dropdown {
-  position: fixed;
-  background: var(--ws-panel);
-  border: 1px solid var(--ws-line);
+/* The topbar stays dark in both themes, so the inbox matches that chrome
+   with a fixed palette. Using --ws-panel here followed the light-theme
+   override to #ffffff and then painted #fff type on it. */
+body.app-workspace .notif-bell-dropdown,
+html[data-theme="light"] body.app-workspace .notif-bell-dropdown,
+html[data-theme="dark"] body.app-workspace .notif-bell-dropdown {
+  background: #0b1220;
+  border: 1px solid #2a3b55;
   border-radius: 16px;
-  color: var(--ws-text);
+  color: #f8fafc;
+  box-shadow: 0 24px 64px rgba(2, 8, 20, 0.55);
+}
+
+body.app-workspace .notif-bell-header,
+html[data-theme="light"] body.app-workspace .notif-bell-header {
+  background: #0b1220;
+  border-bottom-color: #2a3b55;
+}
+
+body.app-workspace .notif-bell-heading strong,
+body.app-workspace .notif-bell-item-msg,
+body.app-workspace .notif-bell-empty strong,
+html[data-theme="light"] body.app-workspace .notif-bell-heading strong,
+html[data-theme="light"] body.app-workspace .notif-bell-item-msg,
+html[data-theme="light"] body.app-workspace .notif-bell-empty strong {
+  color: #f8fafc;
+}
+
+body.app-workspace .notif-bell-item-kind,
+body.app-workspace .notif-bell-item-time,
+body.app-workspace .notif-bell-empty p,
+html[data-theme="light"] body.app-workspace .notif-bell-item-kind,
+html[data-theme="light"] body.app-workspace .notif-bell-item-time,
+html[data-theme="light"] body.app-workspace .notif-bell-empty p {
+  color: #9aa8bd;
+}
+
+body.app-workspace .notif-bell-unread-label,
+html[data-theme="light"] body.app-workspace .notif-bell-unread-label {
+  background: rgba(225, 29, 72, 0.22);
+  color: #fda4af;
+}
+
+body.app-workspace .notif-bell-mark-read,
+html[data-theme="light"] body.app-workspace .notif-bell-mark-read {
+  color: #d4af37;
+}
+
+body.app-workspace .notif-bell-item,
+html[data-theme="light"] body.app-workspace .notif-bell-item {
+  border-bottom-color: #243044;
+}
+
+body.app-workspace .notif-bell-item.is-unread,
+html[data-theme="light"] body.app-workspace .notif-bell-item.is-unread {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+body.app-workspace .notif-bell-item:hover,
+body.app-workspace .notif-bell-item:focus-visible,
+html[data-theme="light"] body.app-workspace .notif-bell-item:hover,
+html[data-theme="light"] body.app-workspace .notif-bell-item:focus-visible {
+  background: rgba(59, 130, 246, 0.18);
 }
 
 body.app-workspace .card,
@@ -30217,6 +30412,94 @@ body.app-workspace [data-system-settings-page] {
   color: var(--ws-text);
 }
 
+body.app-workspace [data-admin-sharing-page],
+body.app-workspace [data-admin-sharing-page] .card,
+body.app-workspace [data-admin-sharing-page] .data-table,
+body.app-workspace [data-admin-sharing-page] .data-table th,
+body.app-workspace [data-admin-sharing-page] .data-table td,
+body.app-workspace [data-admin-sharing-page] .admin-audit-row,
+body.app-workspace [data-admin-sharing-page] .admin-dashboard-stat-copy,
+body.app-workspace [data-admin-sharing-page] .card-head h2,
+body.app-workspace [data-admin-sharing-page] .admin-sharing-meta {
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+
+body.app-workspace [data-admin-sharing-page] .card-head h2 {
+  font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: 0;
+}
+
+body.app-workspace [data-admin-sharing-page] .data-table {
+  font-size: 0.92rem;
+}
+
+body.app-workspace [data-admin-sharing-page] .data-table th {
+  color: var(--ws-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+body.app-workspace [data-admin-sharing-page] .data-table td {
+  color: var(--ws-text);
+  line-height: 1.45;
+}
+
+body.app-workspace [data-admin-sharing-page] .admin-empty-line {
+  color: var(--ws-muted);
+  font-size: 0.92rem;
+  padding: 1rem 0.2rem;
+}
+
+body.app-workspace [data-admin-sharing-page] .admin-sharing-meta {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--ws-muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+body.app-workspace [data-admin-sharing-page] .admin-sharing-decision strong {
+  color: var(--ws-text);
+  font-size: 0.95rem;
+}
+
+body.app-workspace [data-admin-sharing-page] .admin-sharing-ledger-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  margin-top: 0.35rem;
+  color: #93c5fd;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+body.app-workspace [data-admin-sharing-page] .admin-sharing-ledger-link:hover,
+body.app-workspace [data-admin-sharing-page] .admin-sharing-ledger-link:focus-visible {
+  text-decoration: underline;
+}
+
+html[data-theme="light"] body.app-workspace [data-admin-sharing-page] .data-table td,
+html[data-theme="light"] body.app-workspace [data-admin-sharing-page] .admin-sharing-decision strong {
+  color: #10243e;
+}
+
+html[data-theme="light"] body.app-workspace [data-admin-sharing-page] .data-table th,
+html[data-theme="light"] body.app-workspace [data-admin-sharing-page] .admin-sharing-meta,
+html[data-theme="light"] body.app-workspace [data-admin-sharing-page] .admin-empty-line {
+  color: #5f738f;
+}
+
+html[data-theme="light"] body.app-workspace [data-admin-sharing-page] .admin-sharing-ledger-link {
+  color: #1d4ed8;
+}
+
 body.app-workspace .card h2,
 body.app-workspace .card h3,
 body.app-workspace .card-head h2,
@@ -30225,6 +30508,16 @@ body.app-workspace .admin-lawyers-hero h2,
 body.app-workspace .client-appointment-panel-head h2,
 body.app-workspace .client-appointment-requests-head h2 {
   color: #fff;
+}
+
+html[data-theme="light"] body.app-workspace .card h2,
+html[data-theme="light"] body.app-workspace .card h3,
+html[data-theme="light"] body.app-workspace .card-head h2,
+html[data-theme="light"] body.app-workspace .admin-clients-hero h2,
+html[data-theme="light"] body.app-workspace .admin-lawyers-hero h2,
+html[data-theme="light"] body.app-workspace .client-appointment-panel-head h2,
+html[data-theme="light"] body.app-workspace .client-appointment-requests-head h2 {
+  color: #10243e;
 }
 
 body.app-workspace .muted,
@@ -30559,9 +30852,12 @@ body.app-workspace .admin-dashboard-stat-icon svg {
     background: #070b14;
   }
 
+  /* Must outrank the z-index:60 given to #sidebarToggle above: .topbar-actions
+     is a stacking context, so the notification panel nested inside it cannot
+     paint over the hamburger on its own however high its own z-index is. */
   body.app-workspace .topbar-actions {
     position: relative;
-    z-index: 41;
+    z-index: 61;
   }
 
   body.app-workspace:not(.sidebar-is-open) .sidebar {

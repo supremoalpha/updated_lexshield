@@ -73,6 +73,39 @@ lex_inbox_assert('Ended inbox calls can drop leftover signals', str_contains($ca
 lex_inbox_assert('Incoming ring page exists', str_contains($ringPhp, 'lex_inbox_call_incoming_for') && str_contains($ringPhp, 'decline'));
 lex_inbox_assert('Notification bell is in the top bar', str_contains($bootstrap, 'notifBellBtn') && str_contains($bootstrap, 'lex_notifications_recent'));
 lex_inbox_assert('Notification dropdown stays on screen on phones', str_contains($style, '.notif-bell-dropdown') && str_contains($style, 'position: fixed') && str_contains($bootstrap, 'wrap.contains(e.target)'));
+// The panel is anchored with top: calc(100% + 8px), which only means "just below the bell"
+// while it is position: absolute. Any rule that switches it to position: fixed re-resolves
+// that percentage against the viewport and throws it a whole screen below the fold, so such
+// a rule has to bring its own offsets.
+$lexBellFixedNoOffset = [];
+preg_match_all('/([^{}]*)\{([^{}]*)\}/', $style, $lexCssBlocks, PREG_SET_ORDER);
+foreach ($lexCssBlocks as $lexCssBlock) {
+    $lexSelector = trim((string) $lexCssBlock[1]);
+    $lexBody = (string) $lexCssBlock[2];
+    if (!str_contains($lexSelector, '.notif-bell-dropdown')) {
+        continue;
+    }
+    if (!preg_match('/position:\s*fixed/', $lexBody)) {
+        continue;
+    }
+    if (!preg_match('/(^|[;\s])top:/', $lexBody)) {
+        $lexBellFixedNoOffset[] = preg_replace('/\s+/', ' ', $lexSelector);
+    }
+}
+lex_inbox_assert(
+    'Notification dropdown stays on screen on desktop',
+    (bool) preg_match('/\.notif-bell-dropdown\s*\{[^}]*position:\s*absolute[^}]*top:\s*calc\(100% \+ 8px\)/', $style)
+        && $lexBellFixedNoOffset === [],
+    $lexBellFixedNoOffset === []
+        ? 'The .notif-bell-dropdown desktop anchor (position: absolute; top: calc(100% + 8px)) is missing.'
+        : 'position: fixed without a top offset in: ' . implode(' | ', $lexBellFixedNoOffset)
+);
+lex_inbox_assert(
+    'Notification panel outranks the hamburger on phones',
+    (bool) preg_match('/body\.app-workspace\s+\.topbar-actions\s*\{\s*position:\s*relative;\s*z-index:\s*(\d+);/', $style, $lexTopbarActionsZ)
+        && (int) $lexTopbarActionsZ[1] > 60,
+    '.topbar-actions is a stacking context, so it must outrank the z-index:60 on #sidebarToggle or the panel nested inside it cannot paint over the hamburger.'
+);
 lex_inbox_assert('Footer loads the incoming-call ringer', str_contains($bootstrap, 'call-ring.js') && str_contains($bootstrap, 'lex-call-ring-data'));
 lex_inbox_assert('Incoming ring overlay is in the page footer', str_contains($bootstrap, 'lexCallRingOverlay') && str_contains($bootstrap, 'lexCallRingToast'));
 lex_inbox_assert('Incoming ring uses SQL presence so timezones cannot hide it', str_contains($callsPhp, 'DATE_SUB(NOW(), INTERVAL 90 SECOND)'));
@@ -110,6 +143,64 @@ lex_inbox_assert('Messages badge uses unread message count', str_contains($boots
 lex_inbox_assert('Appointments badge uses unread appointment notifications', str_contains($bootstrap, "['appointment']") && str_contains($bootstrap, 'lex_nav_appointment_count'));
 lex_inbox_assert('Appointments button shows how many appointments are waiting', str_contains($bootstrap, 'function lex_nav_appointment_count') && str_contains($bootstrap, "baseLabel + ' (' + shown + ')'") && str_contains($bootstrap, 'background:#e11d48'));
 lex_inbox_assert('Notification API returns sidebar badge counts', str_contains($notifApi, 'unread_messages') && str_contains($notifApi, 'nav_badges'));
+lex_inbox_assert(
+    'Notification API badges come from the same helper the sidebar renders from',
+    str_contains($notifApi, 'lex_nav_badge_counts(') && str_contains($notifApi, 'lex_nav_unread_messages('),
+    'Recomputing the counts a different way lets the polled badges drift from the server-rendered ones until the next full page load.'
+);
+// lex_page_footer() is a different scope from lex_page_header(). Reaching for the
+// header's $notifHrefsByType there emits a PHP warning straight into the inline
+// <script> (fatal to the whole bell on any install with display_errors on) and
+// otherwise serialises null, so every polled notification loses its click target.
+$lexFooterAt = strpos($bootstrap, 'function lex_page_footer(): void');
+$lexFooterEnd = $lexFooterAt === false ? false : strpos($bootstrap, "\nif (!function_exists(", $lexFooterAt);
+$lexFooterBody = $lexFooterAt === false
+    ? ''
+    : substr($bootstrap, $lexFooterAt, ($lexFooterEnd === false ? strlen($bootstrap) : $lexFooterEnd) - $lexFooterAt);
+$lexFooterAssigns = strpos($lexFooterBody, '$notifHrefsByType =');
+$lexFooterUses = strpos($lexFooterBody, 'json_encode($notifHrefsByType');
+lex_inbox_assert(
+    'Footer builds its own notification href map',
+    $lexFooterBody !== '' && $lexFooterUses !== false && $lexFooterAssigns !== false && $lexFooterAssigns < $lexFooterUses,
+    'lex_page_footer() must assign $notifHrefsByType before serialising it; it cannot inherit the header\'s copy.'
+);
+lex_inbox_assert(
+    'Header and footer share one notification href map',
+    str_contains($bootstrap, 'function lex_notif_href_map') && substr_count($bootstrap, 'lex_notif_href_map(') >= 3
+);
+lex_inbox_assert(
+    'Notification times are human-readable on first paint',
+    str_contains($bootstrap, 'lex_message_timestamp') && str_contains($bootstrap, 'notif-bell-item-time')
+);
+lex_inbox_assert(
+    'Notification rows show a type label and icon',
+    str_contains($bootstrap, 'function lex_notification_type_label') && str_contains($bootstrap, 'notif-bell-item-kind') && str_contains($bootstrap, 'notif-bell-icon')
+);
+lex_inbox_assert(
+    'Notification panel uses a professional empty state',
+    str_contains($bootstrap, 'You\'re all caught up') && str_contains($bootstrap, 'Mark all as read')
+);
+$sharingPhp = (string) file_get_contents(dirname(__DIR__) . '/admin/data_sharing.php');
+lex_inbox_assert(
+    'Data sharing approvals page marks its layout',
+    str_contains($sharingPhp, 'data-admin-sharing-page') && str_contains($sharingPhp, 'From ') && str_contains($sharingPhp, 'Decided by')
+);
+lex_inbox_assert(
+    'Data sharing text stays whole words',
+    str_contains($style, '[data-admin-sharing-page]') && str_contains($style, 'html[data-theme="light"] body.app-workspace .card-head h2')
+);
+$adminDash = (string) file_get_contents(dirname(__DIR__) . '/admin/index.php');
+$adminHome = (string) file_get_contents(dirname(__DIR__) . '/auth/admin_home.php');
+lex_inbox_assert(
+    'Audit Feed View all opens admin/audit_logs.php from go.php',
+    str_contains($adminDash, "lex_nav_href('admin/audit_logs.php')") && str_contains($adminHome, "lex_nav_href('admin/audit_logs.php')")
+    && !str_contains($adminDash, 'href="audit_logs.php"') && !str_contains($adminHome, 'href="audit_logs.php"'),
+    'A bare audit_logs.php href from /lexshield/go.php 404s because that file lives in admin/.'
+);
+lex_inbox_assert(
+    'Notification panel is pinned to the bell in JavaScript',
+    str_contains($bootstrap, 'function placePanel') && str_contains($bootstrap, 'getBoundingClientRect') && str_contains($bootstrap, 'document.body.appendChild(dropdown)')
+);
 lex_inbox_assert('Footer JS refreshes sidebar badges', str_contains($bootstrap, 'nav_badges') && str_contains($bootstrap, 'data-nav-badge'));
 lex_inbox_assert('Clicking a top-bar notification opens the matching page', str_contains($bootstrap, 'data-notif-href') && str_contains($bootstrap, 'window.location.href = href'));
 lex_inbox_assert('Nav badge styles exist', str_contains($style, '.nav-badge') && str_contains($style, 'display: none'));
