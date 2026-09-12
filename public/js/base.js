@@ -498,12 +498,60 @@
     });
   }
 
+  const bindCustomTypeField = (root) => {
+    const select = root.querySelector('[data-type-choice], [data-appointment-type]');
+    const wrap = root.querySelector('[data-custom-type-wrap]');
+    const input = root.querySelector('[data-custom-type]');
+    if (!(select instanceof HTMLSelectElement) || !(wrap instanceof HTMLElement)) {
+      return {
+        typeLabel: () => (select instanceof HTMLSelectElement && select.value ? select.value : 'Consultation'),
+      };
+    }
+
+    const syncCustomType = () => {
+      const isCustom = select.value === 'Custom';
+      wrap.hidden = !isCustom;
+      if (input instanceof HTMLInputElement) {
+        input.disabled = !isCustom;
+        input.required = isCustom;
+        if (isCustom) {
+          input.setAttribute('required', 'required');
+        } else {
+          input.removeAttribute('required');
+        }
+      }
+    };
+
+    select.addEventListener('change', syncCustomType);
+    select.addEventListener('input', syncCustomType);
+    if (input instanceof HTMLInputElement) {
+      input.addEventListener('input', syncCustomType);
+    }
+    syncCustomType();
+
+    return {
+      typeLabel: () => {
+        if (select.value === 'Custom' && input instanceof HTMLInputElement && input.value.trim()) {
+          return input.value.trim();
+        }
+        return select.value || 'Consultation';
+      },
+    };
+  };
+
+  document.querySelectorAll('form').forEach((form) => {
+    if (form instanceof HTMLFormElement && form.querySelector('[data-custom-type-wrap]') && !form.matches('[data-client-appointment-form]')) {
+      bindCustomTypeField(form);
+    }
+  });
+
   const appointmentForm = document.querySelector('[data-client-appointment-form]');
   if (appointmentForm instanceof HTMLFormElement) {
     const lawyerSelect = appointmentForm.querySelector('[data-appointment-lawyer-select]');
     const dateInput = appointmentForm.querySelector('[data-appointment-date]');
     const timeInput = appointmentForm.querySelector('[data-appointment-time]');
     const typeInput = appointmentForm.querySelector('[data-appointment-type]');
+    const customTypeField = bindCustomTypeField(appointmentForm);
     const summaryLawyer = appointmentForm.querySelector('[data-appointment-summary-lawyer]');
     const summaryMeta = appointmentForm.querySelector('[data-appointment-summary-meta]');
 
@@ -527,7 +575,7 @@
       const specialization = selectedOption?.dataset?.specialization || 'General Practice';
       const dateLabel = formatDate(dateInput?.value || '');
       const timeLabel = formatTime(timeInput?.value || '');
-      const typeLabel = typeInput?.value || 'Consultation';
+      const typeLabel = customTypeField.typeLabel();
 
       if (summaryLawyer) {
         summaryLawyer.textContent = lawyerLabel;
@@ -539,7 +587,8 @@
       }
     };
 
-    [lawyerSelect, dateInput, timeInput, typeInput].forEach((control) => {
+    const customTypeInput = appointmentForm.querySelector('[data-custom-type]');
+    [lawyerSelect, dateInput, timeInput, typeInput, customTypeInput].forEach((control) => {
       control?.addEventListener('change', updateAppointmentSummary);
       control?.addEventListener('input', updateAppointmentSummary);
     });

@@ -44,6 +44,7 @@ $lexOptionalBootFiles = [
     __DIR__ . '/messages/calls.php',
     __DIR__ . '/email_notifications.php',
     __DIR__ . '/case_files/core.php',
+    __DIR__ . '/appointments/types.php',
     __DIR__ . '/blockchain/ledger.php',
 ];
 foreach ($lexOptionalBootFiles as $lexOptionalBootFile) {

@@ -29,6 +29,17 @@ $loginLabel = $currentUser ? 'Open dashboard' : 'Already registered? Login';
 
 $error = '';
 $success = '';
+$inquiryTopicChoices = function_exists('lex_quick_inquiry_topics')
+    ? lex_quick_inquiry_topics()
+    : ['Appointment', 'Legal assistance', 'Directory', 'Notary', 'Other', 'Custom'];
+$inquiryCustomChoice = function_exists('lex_appointment_custom_choice')
+    ? lex_appointment_custom_choice()
+    : 'Custom';
+$inquiryTopicMaxLen = function_exists('lex_quick_inquiry_topic_max_length')
+    ? lex_quick_inquiry_topic_max_length()
+    : 190;
+$selectedInquiryTopic = '';
+$selectedInquiryCustomTopic = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string) ($_POST['action'] ?? '') === 'quick_inquiry') {
     if (!lex_csrf_validate($_POST['csrf_token'] ?? null)) {
@@ -47,11 +58,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string) ($_POST['action'] ?? '') =
             }
             $email = lex_sanitize_email($_POST['email'] ?? '');
             $phone = lex_sanitize_text($_POST['phone'] ?? '');
-            $topic = lex_sanitize_text($_POST['topic'] ?? '');
+            $resolvedTopic = function_exists('lex_resolve_typed_choice')
+                ? lex_resolve_typed_choice(
+                    lex_sanitize_text($_POST['topic'] ?? ''),
+                    lex_sanitize_text($_POST['custom_topic'] ?? ''),
+                    $inquiryTopicChoices,
+                    $inquiryTopicMaxLen
+                )
+                : [
+                    'choice' => lex_sanitize_text($_POST['topic'] ?? ''),
+                    'custom' => '',
+                    'value' => lex_sanitize_text($_POST['topic'] ?? ''),
+                    'ok' => true,
+                ];
+            $topicChoice = (string) $resolvedTopic['choice'];
+            $topic = (string) $resolvedTopic['value'];
+            $selectedInquiryTopic = $topicChoice;
+            $selectedInquiryCustomTopic = (string) $resolvedTopic['custom'];
             $message = lex_sanitize_multiline_text($_POST['message'] ?? '');
 
             if ($fullName === '' || $message === '' || ($email === '' && $phone === '')) {
                 $error = 'Please share your name, a way to reach you, and your message.';
+            } elseif ($topicChoice === $inquiryCustomChoice && empty($resolvedTopic['ok'])) {
+                $error = 'Enter a custom inquiry type.';
+            } elseif ($topicChoice !== '' && empty($resolvedTopic['ok'])) {
+                $error = 'Choose a valid inquiry topic.';
             } else {
                 $pdo = lex_pdo();
                 $pdo->prepare(
@@ -68,6 +99,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string) ($_POST['action'] ?? '') =
                     lex_notify_role_users('admin', 'inquiry', 'New quick inquiry from ' . $fullName . '.');
                 }
                 $success = 'Thanks! Our team will reach out to you shortly.';
+                $selectedInquiryTopic = '';
+                $selectedInquiryCustomTopic = '';
             }
         }
     }
@@ -400,13 +433,16 @@ lex_pao_page_header('Equal Access to Justice for All', 'home', 'pao-home');
       <label>Email address <input type="email" name="email" placeholder="Email address"></label>
       <label>Phone number <input type="text" name="phone" placeholder="Phone number"></label>
       <label class="pao-full">Choose a topic
-        <select name="topic">
+        <select name="topic" data-type-choice>
           <option value="">Choose a topic</option>
-          <option>Appointment</option>
-          <option>Legal assistance</option>
-          <option>Directory</option>
-          <option>Other</option>
+          <?php foreach ($inquiryTopicChoices as $topicOption): ?>
+            <option value="<?= lex_e($topicOption) ?>"<?= $selectedInquiryTopic === $topicOption ? ' selected' : '' ?>><?= lex_e($topicOption) ?></option>
+          <?php endforeach; ?>
         </select>
+      </label>
+      <label class="pao-full" data-custom-type-wrap<?= $selectedInquiryTopic === $inquiryCustomChoice ? '' : ' hidden' ?>>
+        Custom type
+        <input type="text" name="custom_topic" value="<?= lex_e($selectedInquiryCustomTopic) ?>" maxlength="<?= (int) $inquiryTopicMaxLen ?>" placeholder="Describe the inquiry type" data-custom-type<?= $selectedInquiryTopic === $inquiryCustomChoice ? ' required' : '' ?>>
       </label>
       <label class="pao-full">Message <textarea name="message" rows="4" required placeholder="Tell us what you need help with."></textarea></label>
       <button class="pao-btn pao-btn-blue pao-full" type="submit">Send inquiry</button>
