@@ -31122,28 +31122,63 @@ body:has([data-video-call-page]) .video-call-controls {
   gap: 0.75rem;
 }
 
+.case-file-view-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: flex-end;
+}
+
 .case-file-view-stage {
   position: relative;
-  min-height: 62vh;
+  height: calc(100dvh - 13.5rem);
+  min-height: 70vh;
   overflow: hidden;
   border: 1px solid var(--ws-line);
   border-radius: 14px;
   background: #061225;
 }
 
+.case-file-view-stage.is-fit-screen,
+.case-file-view-stage:fullscreen,
+.case-file-view-stage:-webkit-full-screen {
+  width: 100%;
+  height: 100vh;
+  min-height: 100vh;
+  border-radius: 0;
+  background: #061225;
+}
+
 .case-file-view-media,
-.case-file-view-frame {
+.case-file-view-frame,
+.case-file-view-text {
   display: block;
   width: 100%;
-  min-height: 62vh;
+  height: 100%;
+  min-height: 100%;
   border: 0;
-  pointer-events: none;
+  pointer-events: auto;
+}
+
+.case-file-view-text {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 1.2rem 1.4rem 2.4rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: 0.95rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: #e8eef8;
+  background: transparent;
 }
 
 .case-file-view-media {
   object-fit: contain;
-  max-height: 72vh;
+  max-height: none;
   margin: 0 auto;
+  cursor: zoom-in;
 }
 
 .case-file-view-watermark {
@@ -31169,6 +31204,7 @@ body:has([data-video-call-page]) .video-call-controls {
   position: absolute;
   inset: 0;
   z-index: 3;
+  pointer-events: none;
 }
 
 .case-file-view-unavailable {
@@ -31177,6 +31213,18 @@ body:has([data-video-call-page]) .video-call-controls {
   padding: 3rem 1.2rem;
   color: #dbeafe;
   text-align: center;
+}
+
+html[data-theme="light"] .case-file-view-stage {
+  background: #f4f6fb;
+}
+
+html[data-theme="light"] .case-file-view-text {
+  color: #1a2333;
+}
+
+html[data-theme="light"] .case-file-view-watermark {
+  color: rgba(15, 23, 42, 0.12);
 }
 
 .case-file-view-only.is-capture-blocked .case-file-view-stage::after {

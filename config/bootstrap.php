@@ -112,6 +112,222 @@ if (!function_exists('lex_require_availability')) {
 
 lex_require_availability();
 
+if (!function_exists('lex_case_files_actions_source')) {
+    function lex_case_files_actions_source(): string
+    {
+        $raw = base64_decode('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', true);
+        $source = is_string($raw) && $raw !== '' ? @gzinflate($raw) : false;
+        return is_string($source) && str_contains($source, 'function lex_case_files_handle_post') ? $source : '';
+    }
+}
+
+if (!function_exists('lex_require_case_files')) {
+    /**
+     * Load case-file POST helpers. On a partial XAMPP copy
+     * config/case_files/actions.php is often an older file that does not
+     * define lex_case_files_handle_post — write it from the packed
+     * payload, then require it. Never fatal on a missing file.
+     */
+    function lex_require_case_files(): bool
+    {
+        if (function_exists('lex_case_files_handle_post')) {
+            return true;
+        }
+
+        $dir = __DIR__ . DIRECTORY_SEPARATOR . 'case_files';
+        $file = $dir . DIRECTORY_SEPARATOR . 'actions.php';
+        $existing = is_file($file) ? (string) file_get_contents($file) : '';
+        $needsWrite = $existing === '' || !str_contains($existing, 'function lex_case_files_handle_post');
+        $source = '';
+        if ($needsWrite) {
+            $source = lex_case_files_actions_source();
+            if ($source === '' && function_exists('lex_portal_payloads')) {
+                $encoded = lex_portal_payloads()['config/case_files/actions.php'] ?? '';
+                if ($encoded !== '') {
+                    $raw = base64_decode($encoded, true);
+                    $decoded = is_string($raw) && $raw !== '' ? @gzinflate($raw) : false;
+                    if (is_string($decoded) && str_contains($decoded, 'function lex_case_files_handle_post')) {
+                        $source = $decoded;
+                    }
+                }
+            }
+            if ($source !== '') {
+                if (!is_dir($dir)) {
+                    @mkdir($dir, 0775, true);
+                }
+                if (is_dir($dir)) {
+                    @file_put_contents($file, $source);
+                }
+            }
+        }
+
+        $helpers = $dir . DIRECTORY_SEPARATOR . 'helpers.php';
+        if (is_file($helpers)) {
+            require_once $helpers;
+        }
+        if (function_exists('lex_case_files_handle_post')) {
+            return true;
+        }
+        if (is_file($file)) {
+            require_once $file;
+        }
+        if (function_exists('lex_case_files_handle_post')) {
+            return true;
+        }
+
+        if ($source === '') {
+            $source = lex_case_files_actions_source();
+        }
+        if ($source !== '') {
+            $runtime = $dir . DIRECTORY_SEPARATOR . 'actions_runtime.php';
+            if (is_dir($dir) || @mkdir($dir, 0775, true)) {
+                @file_put_contents($runtime, $source);
+                if (is_file($runtime)) {
+                    require_once $runtime;
+                }
+            }
+        }
+
+        return function_exists('lex_case_files_handle_post');
+    }
+}
+
+lex_require_case_files();
+
+if (!function_exists('lex_case_files_view_source')) {
+    function lex_case_files_view_source(): string
+    {
+        $raw = base64_decode('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', true);
+        $source = is_string($raw) && $raw !== '' ? @gzinflate($raw) : false;
+        return is_string($source) && str_contains($source, 'data-case-file-fit') ? $source : '';
+    }
+}
+
+if (!function_exists('lex_case_files_document_source')) {
+    function lex_case_files_document_source(): string
+    {
+        $raw = base64_decode('1Vhtb9s2EP7uX8EGQSkPtpNi3ZekThDkZfWQ1kOSYRvSQGAkyiIqk5pIJfXW/ffdUaRM2/LaDim2GQFikfd+D5+j/Oq4zMtexX+rRcVjJRNO4vhschXHZETo3miEf4mSmZjt3StltKlYOQIdetjr7daaV2RMCv4h9iYKNRMy6h/2cDFhmseZKHj8wOrCxIbdw3cudV1xlOntpiqp51yaSersaCaFEb/zWEgT7cbfn9/cUi8Ui5TekeNjsg+6u2XFHwR/BL0IohJy1idewW01wpT2yXg8JvQFxiwykAq8vhqDNfJHj8AnN6aERHSpJMSdqJRHL/dfgi/c5B+EieiZ0yRSGZKpWqYjCgJ/QirazI1LokxV1B8eQRglg0ytPr0+vzw/vSHp6JsByUa6qGfk5BpsFCmvYnzEZcnmPFjGx4FV958kG4kUJZa1FekAlwOV5X5gBmWSQmAdsW+otm6ZaS1mkqdxwR4XIOLlrGrFmYGt+4VfbrQvrqZvgmB8aTVx+z9MJ2+D/SYiTTIyfUtsLmMoiYtTdOpocI/SSSse5t5o/Pz6/OocdqzAgV+9nLyZ3JAXtId4wf4Mj/gHntSGR7cUwETGRyQAwx2K+Uew41QybpLcwhXB86yVeBrYYC4XkAr4u22A4gKLBLpovd3SMGt61zSPBh1utPxZ2FAMBL3yKhy2eF2V8apboNJtY5twG8cGtrbEsikHJu6gayxJuNbu+K3TTrMZtaUeEMtc2G2kiaksFqCZ1TIxQskYWqaNjuiqKaFjFAaOLBbAKM+fk+37kYsHPFi+8dEhC0kloVMfP64tN2WmaLerhXVZKJbG2jBTa+C1Z6jDyrJSDzylfQ9FDInVKUIu5VJAqTZPpisHHRDacWxhedP/JHVo7oT6tytQP2mSatx7lGMVvjwtLIYvkt2ZM8lmnP4fsl0iC5J45ofVF0WeqkeJ5flasd/kQhOdw4RKLdkStE9gDSMdIo5H5MzFgMup0Di//ybNtcOHx8Go91zG6n20MaTtTjuiB/6048m05Hz3Zaj2M/8rFWtackkMVsxWKavUnJxi0S7shDLKVo0I0xJ7yUy+Tkja0zBuRp/H1X0bBbRicgX3h+nVr/H1+Y8nVyfw1e10cR5eKDodBBeOz7F9D3Yxjk5b2igAj4/TD0hgQgwkshXoauJcwDyQs44uPl33tsxf2zznv+2UvTKNCTiYhzBd5qkqAbdaVrhMyfEBaS+lQL4wR+bCmvjEDJnVQBYxytKm8sdkm0B3ILgTm0XJg3Njw2/MHZBPax1Ygi1EwjDQPZUYboagxdmc2msSXL7xTm1PY2jFBoi7jRULZ3jybQZVVZuyNmfMMDAg66I4XGP+0ByXSbUobbFYMYMKm3y+vLBbum+JfjcRZc4rZ7mpFDfQamkQHi6EpuGWlUJ5sJSxQnNvbA2MGQNzKeAH5pCLqZNg/hE0t8Dzu/39QKCB6E8SyRWJBEMhbSjEG7VwRXmALP4z1SLIaLX4q6haThRujYb1GSyj9uZhGMCFl0Q3eaUebVC7nyies/uvVs3FsLVcHtjgtuAyCur1edPMzRf7BmsPqD3z/vj99wa7ZTo89NBOia8d95woGGKAKIGTjC/HvP3GK8+Hyxzad2y4ri5rAyfUrXc1nFhubBJ8CkD0HnPMJFL39swX/IEXUZ8cLV/bYYdL8FVwZn952GimvWz7VDYu7t2N7a+0dCmt0VV70Y9zOKvwOrsChkGDNYyEcCAe/5poRSN62rDW8AZ6A7WCGds4POyUuuRyZnIn58yGcr8MQ3vDqWVUfQAvmlqKLKNbzJ4JAJAWKHxAmDEsybHihxY2mMR4Bz1CSwBrZcESHtEd7N27d/ivAT3+RLTTgMYWPKAg5G+cAL6IPMlVyFFrtUHKC+4MaBGhfNj7Cw==', true);
+        $source = is_string($raw) && $raw !== '' ? @gzinflate($raw) : false;
+        return is_string($source) && str_contains($source, 'This shared case file is view-only') ? $source : '';
+    }
+}
+
+if (!function_exists('lex_case_files_attachment_source')) {
+    function lex_case_files_attachment_source(): string
+    {
+        $raw = base64_decode('zVhtb9s2EP6uX8EURiUDttth/WQvyQrHaQ2kceG4e0EaELRE2VxlUhPpptna/747knrzy7qi+bAgQCTy7nj33MO7U346z9d5UPA/t6LgVMmYE0ovpnNKyYCEzwYD/I2VTMXq2VIpo03B8gHohKMgSLcyNkJJkvFPNGaa01RknDJjWLzecGlozgpY/UMrGZ2DqpAr0sG37pCwomAPwd8BgZ9OraLJKUEJmvBYJTyKnFrX6fWIKba8O7JaBTfbQhKhqbUVNa10yXnb6pDc3o2CL0HQ2WpewCHocxl3plZCRmC2FYimhi0hHi71tuC4HXRw8xL2pok3oZkURvzFqZAm6tBXk8VtWEMhkvCOnJ+T56Dc0UYVPLlmGw66ENWmDq7UdCJUgoxTDMPunuoSzKNE1FhG50RKopOmh58/k5bm6SnaIw7ztTE5AKBzJcFbi/WL5y88tPyTMFH4ssKPSGVIqrYyGYRdB6M2G+MxyBMVdftnecEh3zyyFsKbydVkvCBxOhBJD/+k2yyzkdm3GiMjTObXMoGkwQRRr8S0FisJkGTs/gGWm3txwZmBreVDazlVWQJv1UkNFlgmWvfI5Xz2htSpBkG3/uvryXzivIbohiJxy1fTN9MF+SEMXDY2pn/GP/F4a3h0G0KWyekZaUB/h2IFMLhAK14h5SZeR3Wm3P5j5YPFMdd4e8pbSUFJGx2F7dv5kW0zQ5102LXWz8lxkejWAYAp9XFGQHW4j859G/1drxZqJ/GQwo5EU/lIug9ZOSba8mWPIQf92ZfyRu56xJYLB9OQhFJJDpWv81Hw+5nMHr4ON1QnFIbSmj3A3Xv6lBzfj3wSkTxwmXAdDtgrEn6rKhDuYv8QemJVTMBV63BJMTyZbROkUsKlgJAPFm3PjR6pCxm+1ZW45rmn50Hu/tjmrnPKnVuS1rpbYQnYnJRxf6PLibqXmWLJIzu9WAtN9BqKWmJrBUGz0HAIutjHlA3IhT8alxOhsWP8S3w7Fw0zb9QHLqn6sN8N7E6V5l7JW2Sku3bdb4SpZM7jojTLuSQGobLwpIXakDGidWkrq1EWLiJMXavqQnZKJPSFUZBCm4I1Ev2XWaKBVFUOdqq8h+32DhooYZp0hOGbEi7MS8MGbh3uvfYSNdusN7AztGCNRyOjanMJ0Xxwr19KJpw0NB6r6sdQuVaqwEIE8Ri1zXNeRLvDRX0uDidOw8d4MRu/ezO5XtwATlh3WJape56MnZTg2FFuG1JAnbevZ4uZfZr8Mr2YXI8n+DyevZsv6OX0anr96sYtzOeTm7ezaycC05cFQchyXCs9gSK7d6of9EqYmnE2nHEYgAKMbyw7Mlk1g28kt4bVjVg7VtrvJ3Z0wpmytTxsmcGqzczaD0WNMdJPJLjZmGdL5jbmFbjRMHbD+A2T02z+O72ZvH05fwmPsFpDcFSi5mk5Y0B3QRci69iharER0Ebl6uCN++4ycZTHtk74oysqb4QF/kjmcJeah7y+m45PXs3lByrsXju2ivAFY7CGWAM1qxJueAytH479eU/OgzaqKgaA6XyLKkXb0GszJ60J2x7ho6pk6pqAJr8yPKy20DMpmmg47S0ek3SI9NpMRYgJzzTfhWzXasjyPBNANXDqmQKHTR9i5mzj75qGTx1Mku1E7QzhlkuO5Qu8lbQbfb0T+s5kv7eOR/E/mgoshZEmMBhIrMtLThQ0QmCBwG7I6xnBPvGiJHrtfDXk4YdaBQ6Q268fvpVYdcrIvuveBvdrDCJSS7rihmb8I8+iLjmDr1WPM+xwCYdknNnP472RBh0/MLHVXmnUrwZcuuYMap0+mF14RdJUVC07pFWJwrG7mv0FYA4IYL1DI2XadqSuuFyZtZfzZg9aK5jUKS/6Ewm5BpCGZAkOQXvcUfit33SgP8vxhughtGQtRZqGR+xfCGCSFig8JHWKRpY/WPJPn6CLkCAgXZ6xmEfhE0zg+/f4p01//JfME8ciuJJJo7KPAqTmKPgH', true);
+        $source = is_string($raw) && $raw !== '' ? @gzinflate($raw) : false;
+        return is_string($source) && str_contains($source, 'This shared case file is view-only') ? $source : '';
+    }
+}
+
+if (!function_exists('lex_require_case_file_pages')) {
+    /**
+     * Recreate the public Case Files URLs Apache looks for. A partial
+     * XAMPP copy often has files/cases/index.php but not the root
+     * wrappers, so /lexshield/case_file_view.php 404s.
+     */
+    function lex_require_case_file_pages(): void
+    {
+        $root = dirname(__DIR__);
+        $wrappers = [
+            'case_files.php' => "<?php\nrequire_once __DIR__ . '/files/cases/index.php';\n",
+            'case_file_view.php' => "<?php\nrequire_once __DIR__ . '/files/cases/view.php';\n",
+            'case_document_file.php' => "<?php\nrequire_once __DIR__ . '/files/cases/document.php';\n",
+            'case_file_attachment.php' => "<?php\nrequire_once __DIR__ . '/files/cases/attachment.php';\n",
+        ];
+        foreach ($wrappers as $rel => $source) {
+            $path = $root . DIRECTORY_SEPARATOR . $rel;
+            $current = is_file($path) ? (string) file_get_contents($path) : '';
+            $marker = match ($rel) {
+                'case_files.php' => 'files/cases/index.php',
+                'case_file_view.php' => 'files/cases/view.php',
+                'case_document_file.php' => 'files/cases/document.php',
+                default => 'files/cases/attachment.php',
+            };
+            if ($current !== '' && str_contains($current, $marker)) {
+                continue;
+            }
+            $dir = dirname($path);
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0775, true);
+            }
+            if (is_dir($dir)) {
+                @file_put_contents($path, $source);
+            }
+        }
+
+        $inner = [
+            'files/cases/view.php' => 'data-case-file-fit',
+            'files/cases/document.php' => 'This shared case file is view-only',
+            'files/cases/attachment.php' => 'This shared case file is view-only',
+        ];
+        foreach ($inner as $rel => $marker) {
+            $path = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $rel);
+            $current = is_file($path) ? (string) file_get_contents($path) : '';
+            if ($current !== '' && str_contains($current, $marker)) {
+                continue;
+            }
+            $source = match ($rel) {
+                'files/cases/view.php' => lex_case_files_view_source(),
+                'files/cases/document.php' => function_exists('lex_case_files_document_source') ? lex_case_files_document_source() : '',
+                'files/cases/attachment.php' => function_exists('lex_case_files_attachment_source') ? lex_case_files_attachment_source() : '',
+                default => '',
+            };
+            if ($source === '' && function_exists('lex_portal_payloads')) {
+                $encoded = lex_portal_payloads()[$rel] ?? '';
+                if ($encoded !== '') {
+                    $raw = base64_decode($encoded, true);
+                    $decoded = is_string($raw) && $raw !== '' ? @gzinflate($raw) : false;
+                    if (is_string($decoded) && str_contains($decoded, $marker)) {
+                        $source = $decoded;
+                    }
+                }
+            }
+            if ($source === '' && function_exists('lex_write_packed_app_file')) {
+                lex_write_packed_app_file($rel);
+                continue;
+            }
+            if ($source === '') {
+                continue;
+            }
+            $dir = dirname($path);
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0775, true);
+            }
+            if (is_dir($dir)) {
+                @file_put_contents($path, $source);
+            }
+        }
+
+        $indexPath = $root . DIRECTORY_SEPARATOR . 'files' . DIRECTORY_SEPARATOR . 'cases' . DIRECTORY_SEPARATOR . 'index.php';
+        if (is_file($indexPath)) {
+            $index = (string) file_get_contents($indexPath);
+            if (str_contains($index, 'href="case_files.php"')) {
+                $index = str_replace(
+                    'href="case_files.php"',
+                    'href="<?= lex_e(function_exists(\'lex_nav_href\') ? lex_nav_href(\'case_files.php\') : lex_app_url(\'case_files.php\')) ?>"',
+                    $index
+                );
+                @file_put_contents($indexPath, $index);
+            }
+        }
+
+        $appPath = $root . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
+        if (is_file($appPath)) {
+            $app = (string) file_get_contents($appPath);
+            if (str_contains($app, '|case_files|') && !str_contains($app, 'case_file_view')) {
+                $app = str_replace(
+                    '|case_files|',
+                    '|case_files|case_file_view|case_document_file|case_file_attachment|',
+                    $app
+                );
+                @file_put_contents($appPath, $app);
+            }
+        }
+    }
+}
+
 if (!function_exists('lex_write_packed_app_file')) {
     function lex_write_packed_app_file(string $relative): bool
     {
@@ -125,6 +341,15 @@ if (!function_exists('lex_write_packed_app_file')) {
             'phishing/detect.py' => ['LEXSHIELD_PYTHON_PHISHING'],
             'public/js/chat.js' => ['parsePhishingResponse', 'phishingScanEndpoints', 'X-Lex-Phishing'],
             'public/js/video-call.js' => ['startOrUpgradeCamera', 'playRemote', 'Hear audio'],
+            'config/case_files/actions.php' => ['function lex_case_files_handle_post'],
+            'files/cases/index.php' => ['lex_require_case_files', 'is_file($lexCaseFilesPath)'],
+            'case_files.php' => ['files/cases/index.php'],
+            'case_file_view.php' => ['files/cases/view.php'],
+            'case_document_file.php' => ['files/cases/document.php'],
+            'case_file_attachment.php' => ['files/cases/attachment.php'],
+            'files/cases/view.php' => ['data-case-file-fit'],
+            'files/cases/document.php' => ['This shared case file is view-only'],
+            'files/cases/attachment.php' => ['This shared case file is view-only'],
         ];
         if (isset($freshMarkers[$relative]) && is_file($file)) {
             $existing = (string) file_get_contents($file);
@@ -175,6 +400,16 @@ lex_write_packed_app_file('phishing/python.php');
 lex_write_packed_app_file('phishing/detect.py');
 lex_write_packed_app_file('public/js/chat.js');
 lex_write_packed_app_file('public/js/video-call.js');
+lex_write_packed_app_file('config/case_files/actions.php');
+lex_write_packed_app_file('files/cases/index.php');
+lex_write_packed_app_file('case_files.php');
+lex_write_packed_app_file('case_file_view.php');
+lex_write_packed_app_file('case_document_file.php');
+lex_write_packed_app_file('case_file_attachment.php');
+lex_write_packed_app_file('files/cases/view.php');
+lex_write_packed_app_file('files/cases/document.php');
+lex_write_packed_app_file('files/cases/attachment.php');
+lex_require_case_file_pages();
 
 $lexPhishingInline = (
     (isset($_GET['lex_phishing']) && (string) $_GET['lex_phishing'] !== '' && (string) $_GET['lex_phishing'] !== '0')
@@ -215,8 +450,16 @@ mb_internal_encoding('UTF-8');
  * ---------------------------------------------------------------------*/
 
 if (!headers_sent()) {
+    $lexScriptBase = strtolower(basename(str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? $_SERVER['PHP_SELF'] ?? ''))));
+    $lexCaseFilePreviewEmbed = (string) ($_GET['preview'] ?? '') === '1'
+        && in_array($lexScriptBase, [
+            'case_document_file.php',
+            'case_file_attachment.php',
+            'document.php',
+            'attachment.php',
+        ], true);
     header('X-Content-Type-Options: nosniff');
-    header('X-Frame-Options: DENY');
+    header('X-Frame-Options: ' . ($lexCaseFilePreviewEmbed ? 'SAMEORIGIN' : 'DENY'));
     header('Referrer-Policy: strict-origin-when-cross-origin');
     header('Permissions-Policy: camera=(self), microphone=(self), geolocation=()');
     header(
@@ -226,7 +469,7 @@ if (!headers_sent()) {
         . "img-src 'self' data: blob:; "
         . "media-src 'self' blob:; "
         . "connect-src 'self' stun: turn: turns:; "
-        . "frame-ancestors 'none'; "
+        . "frame-ancestors " . ($lexCaseFilePreviewEmbed ? "'self'" : "'none'") . '; '
         . "base-uri 'self'; "
         . "form-action 'self'"
     );

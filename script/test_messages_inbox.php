@@ -217,6 +217,8 @@ lex_inbox_assert(
     && str_contains($actionsPhp, 'Shared case files are view-only')
     && str_contains($documentPhp, 'This shared case file is view-only')
     && str_contains($viewPhp, 'data-case-file-view-only')
+    && str_contains($viewPhp, 'case-file-view-text')
+    && str_contains($viewPhp, 'data-case-file-fit')
     && is_file(dirname(__DIR__) . '/case_file_view.php'),
     'Shared lawyers must open an in-app viewer, not a download.'
 );
@@ -226,6 +228,86 @@ lex_inbox_assert(
     && str_contains($style, '@media print')
     && str_contains($viewPhp, "['copy', 'cut', 'paste'")
     && str_contains($lawyerSharing, 'cannot download, copy, print')
+);
+$caseFilesIndex = (string) file_get_contents(dirname(__DIR__) . '/files/cases/index.php');
+lex_inbox_assert(
+    'Case Files page does not hard-require a missing actions.php',
+    !str_contains($caseFilesIndex, "require_once __DIR__ . '/../../config/case_files/actions.php'")
+    && str_contains($caseFilesIndex, 'is_file($lexCaseFilesPath)')
+    && str_contains($caseFilesIndex, 'function lex_case_files_handle_post'),
+    'A missing config/case_files/actions.php on XAMPP must not fatal Case Files.'
+);
+lex_inbox_assert(
+    'Bootstrap can recreate case-file POST helpers on XAMPP',
+    str_contains($bootstrap, 'lex_require_case_files')
+    && str_contains($bootstrap, 'lex_case_files_actions_source')
+    && str_contains($bootstrap, 'function lex_case_files_handle_post')
+    && str_contains($ensurePhp, '/config/case_files/actions.php'),
+    'Partial XAMPP copies must be able to rewrite a stale actions.php that lacks lex_case_files_handle_post.'
+);
+lex_inbox_assert(
+    'Packed case-file actions source includes the POST handler',
+    function_exists('lex_case_files_actions_source')
+    && str_contains(lex_case_files_actions_source(), 'function lex_case_files_handle_post')
+);
+lex_inbox_assert(
+    'Case Files Reset stays on /lexshield/case_files.php',
+    str_contains($caseFilesIndex, "lex_nav_href('case_files.php')")
+    && !preg_match('/href="case_files\\.php"/', $caseFilesIndex),
+    'A bare case_files.php href from /lexshield/files/cases/index.php 404s.'
+);
+$appPhp = (string) file_get_contents(dirname(__DIR__) . '/config/app.php');
+lex_inbox_assert(
+    'case_file_view.php keeps the /lexshield prefix',
+    str_contains($appPhp, 'case_file_view')
+    && lex_uri_folder_prefix('/lexshield/case_file_view.php') === '/lexshield'
+    && lex_uri_folder_prefix('/lexshield/case_document_file.php') === '/lexshield'
+);
+lex_inbox_assert(
+    'Bootstrap can recreate Case File viewer pages on XAMPP',
+    str_contains($bootstrap, 'lex_require_case_file_pages')
+    && str_contains($bootstrap, 'lex_case_files_view_source')
+    && str_contains($ensurePhp, "'case_file_view.php'")
+    && str_contains($ensurePhp, "'files/cases/view.php'"),
+    'Apache 404s when case_file_view.php was never copied onto XAMPP.'
+);
+lex_inbox_assert(
+    'Packed case-file viewer source includes the view-only page',
+    function_exists('lex_case_files_view_source')
+    && str_contains(lex_case_files_view_source(), 'data-case-file-fit')
+);
+lex_inbox_assert(
+    'Case file viewer can fit the screen and stay clickable',
+    str_contains($viewPhp, 'data-case-file-fit')
+    && str_contains($viewPhp, 'data-case-file-fullscreen')
+    && str_contains($viewPhp, 'zoom=page-fit')
+    && str_contains($style, 'pointer-events: auto')
+);
+lex_inbox_assert(
+    'Text case files render on the page instead of a blocked iframe',
+    str_contains($viewPhp, 'case-file-view-text')
+    && str_contains($bootstrap, 'SAMEORIGIN')
+    && str_contains((string) file_get_contents(dirname(__DIR__) . '/config/case_files/core.php'), 'function lex_case_file_guess_mime'),
+    'capstone.txt was an empty frame because X-Frame-Options: DENY blocked the preview.'
+);
+lex_inbox_assert(
+    '.txt is treated as previewable text',
+    function_exists('lex_case_file_guess_mime')
+    && lex_case_file_guess_mime('application/octet-stream', 'capstone.txt') === 'text/plain'
+    && lex_case_file_previewable_mime('application/octet-stream', 'capstone.txt')
+);
+$viewWrapper = dirname(__DIR__) . '/case_file_view.php';
+$viewWrapperOriginal = is_file($viewWrapper) ? (string) file_get_contents($viewWrapper) : '';
+@unlink($viewWrapper);
+lex_require_case_file_pages();
+$viewWrapperRestored = is_file($viewWrapper) ? (string) file_get_contents($viewWrapper) : '';
+if ($viewWrapperRestored === '' && $viewWrapperOriginal !== '') {
+    @file_put_contents($viewWrapper, $viewWrapperOriginal);
+}
+lex_inbox_assert(
+    'Missing case_file_view.php is rewritten on boot',
+    str_contains($viewWrapperRestored, 'files/cases/view.php'),
+    'Bootstrap must recreate the Apache entry file so View does not 404.'
 );
 lex_inbox_assert(
     'Data sharing text stays whole words',

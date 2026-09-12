@@ -9,7 +9,10 @@ declare(strict_types=1);
  * `case_file_id` from the request alone).
  */
 
-require_once __DIR__ . '/helpers.php';
+$lexCaseFilesHelpers = __DIR__ . DIRECTORY_SEPARATOR . 'helpers.php';
+if (is_file($lexCaseFilesHelpers)) {
+    require_once $lexCaseFilesHelpers;
+}
 
 if (!function_exists('lex_case_files_owns_or_manages')) {
     function lex_case_files_owns_or_manages(PDO $pdo, int $caseFileId, array $user): ?array

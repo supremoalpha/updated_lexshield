@@ -618,3 +618,8 @@ if (!function_exists('lex_case_files_send_json')) {
         exit;
     }
 }
+
+$lexCaseFilesActions = __DIR__ . DIRECTORY_SEPARATOR . 'actions.php';
+if (!function_exists('lex_case_files_handle_post') && is_file($lexCaseFilesActions)) {
+    require_once $lexCaseFilesActions;
+}

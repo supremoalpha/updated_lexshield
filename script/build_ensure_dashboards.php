@@ -25,8 +25,17 @@ foreach (['client', 'lawyer', 'admin'] as $role) {
     }
 }
 $add('case_files.php');
+$add('case_file_view.php');
+$add('case_document_file.php');
+$add('case_file_attachment.php');
 $add('chat.php');
 $add('go.php');
+$add('config/case_files/actions.php');
+$add('config/case_files/helpers.php');
+$add('files/cases/index.php');
+$add('files/cases/view.php');
+$add('files/cases/document.php');
+$add('files/cases/attachment.php');
 
 $mapLines = [];
 foreach ($files as $relative => $b64) {
@@ -46,10 +55,29 @@ declare(strict_types=1);
 if (!function_exists('lex_dashboard_is_real')) {
     function lex_dashboard_is_real(string \$path): bool
     {
-        if (!is_file(\$path) || !is_readable(\$path) || filesize(\$path) < 80) {
+        if (!is_file(\$path) || !is_readable(\$path)) {
             return false;
         }
-        \$head = (string) file_get_contents(\$path, false, null, 0, 500);
+        \$source = (string) file_get_contents(\$path);
+        \$normalized = str_replace('\\\\', '/', \$path);
+        \$wrapperNeedles = [
+            '/case_files.php' => 'files/cases/index.php',
+            '/case_file_view.php' => 'files/cases/view.php',
+            '/case_document_file.php' => 'files/cases/document.php',
+            '/case_file_attachment.php' => 'files/cases/attachment.php',
+        ];
+        foreach (\$wrapperNeedles as \$suffix => \$needle) {
+            if (str_ends_with(\$normalized, \$suffix)) {
+                return str_contains(\$source, \$needle);
+            }
+        }
+        if (str_ends_with(\$normalized, '/files/cases/view.php')) {
+            return str_contains(\$source, 'data-case-file-fit');
+        }
+        if (filesize(\$path) < 80) {
+            return false;
+        }
+        \$head = substr(\$source, 0, 500);
         return str_contains(\$head, '<?php')
             && (
                 str_contains(\$head, 'lex_require_role')

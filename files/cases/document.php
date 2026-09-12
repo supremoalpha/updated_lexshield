@@ -75,8 +75,10 @@ if (!is_file($path)) {
     exit('Document file missing.');
 }
 
-$mime = (string) ($document['mime_type'] ?: 'application/octet-stream');
 $name = trim((string) ($document['original_name'] ?: 'document'));
+$mime = function_exists('lex_case_file_guess_mime')
+    ? lex_case_file_guess_mime((string) ($document['mime_type'] ?? ''), $name)
+    : (string) ($document['mime_type'] ?: 'application/octet-stream');
 $size = (int) ($document['file_size'] ?: filesize($path));
 $outputData = null;
 
@@ -99,7 +101,7 @@ if ((string) ($document['encryption_algorithm'] ?? '') !== '') {
     $size = strlen($outputData);
 }
 
-if ($viewOnly && !lex_case_file_previewable_mime($mime)) {
+if ($viewOnly && !lex_case_file_previewable_mime($mime, $name)) {
     lex_audit('denied_case_file_document_download', 'case_file_documents', (string) $documentId);
     http_response_code(403);
     exit('This file type cannot be opened in the view-only viewer.');

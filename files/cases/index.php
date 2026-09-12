@@ -1,7 +1,31 @@
 <?php
 require_once __DIR__ . '/../../config/bootstrap.php';
-require_once __DIR__ . '/../../config/case_files/helpers.php';
-require_once __DIR__ . '/../../config/case_files/actions.php';
+
+$lexCaseFilesDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'case_files';
+foreach (['helpers.php', 'actions.php'] as $lexCaseFilesName) {
+    $lexCaseFilesPath = $lexCaseFilesDir . DIRECTORY_SEPARATOR . $lexCaseFilesName;
+    if (is_file($lexCaseFilesPath)) {
+        require_once $lexCaseFilesPath;
+    }
+}
+
+if (function_exists('lex_require_case_files')) {
+    lex_require_case_files();
+}
+
+if (!function_exists('lex_case_files_handle_post')) {
+    function lex_case_files_handle_post(PDO $pdo, array $user, array $filters, array $clients, array $lawyers): array
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            return ['error' => '', 'failed_action' => ''];
+        }
+
+        return [
+            'error' => 'Case file saving is not installed. Copy config\\case_files\\actions.php into this XAMPP folder.',
+            'failed_action' => (string) ($_POST['action'] ?? ''),
+        ];
+    }
+}
 
 lex_case_files_table_ensure();
 lex_case_file_vault_table_ensure();
@@ -86,7 +110,7 @@ lex_page_header('Case Files', 'case-files', $user);
     </label>
     <div class="case-search-actions">
       <button class="button button-primary" type="submit">Apply</button>
-      <a class="button button-secondary" href="case_files.php" data-case-reset>Reset</a>
+      <a class="button button-secondary" href="<?= lex_e(function_exists('lex_nav_href') ? lex_nav_href('case_files.php') : lex_app_url('case_files.php')) ?>" data-case-reset>Reset</a>
       <?php if ($user['role'] === 'lawyer'): ?>
         <button class="button button-accent" type="button" data-case-create-open>New case</button>
       <?php endif; ?>
