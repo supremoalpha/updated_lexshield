@@ -367,7 +367,7 @@
     };
 
     return (
-      <article className="lawyer-card">
+      <article className="lawyer-card lawyer-card--directory">
         <div className="lawyer-card__media">
           {lawyer.avatarUrl ? (
             <img src={lawyer.avatarUrl} alt={`Avatar for ${lawyer.name}`} />
@@ -383,7 +383,7 @@
         <div className="lawyer-card__body">
           <div className="lawyer-card__identity">
             <h3>{lawyer.name}</h3>
-            <p><span aria-hidden="true">{"\u229F"}</span> {lawyer.specialization || 'General Practice'}</p>
+            <p>{lawyer.specialization || 'General Practice'}</p>
           </div>
 
           <button
@@ -522,7 +522,7 @@
               type="search"
               value={searchDraft}
               onChange={(event) => setSearchDraft(event.target.value)}
-              placeholder="Name, specialization, bar number, or background"
+              placeholder="Search by name, specialization, or background"
             />
           </label>
           <label className="lawyer-searchbar__field lawyer-searchbar__field--select">

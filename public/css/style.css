@@ -119,23 +119,76 @@
 
 .client-lawyers-react-card .lawyer-directory-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(235px, 280px));
-  justify-content: center;
-  align-items: start;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  justify-content: start;
+  align-items: stretch;
   gap: 1.15rem;
 }
 
 .client-lawyers-react-card .lawyer-card {
   width: 100%;
-  max-width: 280px;
-  min-height: 468px;
+  max-width: none;
+  min-height: 0;
   gap: 0;
   padding: 0;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 16px;
   background: #0b1d32;
   border: 1px solid rgba(143, 165, 196, 0.2);
   box-shadow: none;
+}
+
+.client-lawyers-react-card .lawyer-card--directory {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+}
+
+.client-lawyers-react-card .lawyer-card--directory .lawyer-card__media {
+  aspect-ratio: auto;
+  width: 4.5rem;
+  height: 4.5rem;
+  max-height: none;
+  border-radius: 999px;
+  background: #3b82f6;
+}
+
+.client-lawyers-react-card .lawyer-card--directory .lawyer-card__placeholder {
+  color: #fff;
+}
+
+.client-lawyers-react-card .lawyer-card--directory .lawyer-card__initials {
+  position: static;
+  opacity: 1;
+  color: #fff;
+  font-weight: 800;
+}
+
+.client-lawyers-react-card .lawyer-card--directory .lawyer-card__person-icon {
+  display: none;
+}
+
+.client-lawyers-react-card .lawyer-card--directory .status-badge,
+.client-lawyers-react-card .lawyer-card--directory .lawyer-card__rating,
+.client-lawyers-react-card .lawyer-card--directory .lawyer-card__chips {
+  display: none;
+}
+
+.client-lawyers-react-card .lawyer-card--directory .lawyer-card__body {
+  padding: 0;
+  gap: 0.45rem;
+}
+
+.client-lawyers-react-card .lawyer-card--directory .lawyer-card__actions {
+  justify-content: flex-start;
+}
+
+.client-lawyers-react-card .lawyer-card--directory .lawyer-card__actions .button {
+  min-height: 2rem;
+  min-width: 0;
+  padding: 0 0.85rem;
 }
 
 .client-lawyers-react-card .lawyer-card:hover {
@@ -18488,6 +18541,81 @@ html[data-theme="dark"] .rating-stars .is-filled {
   }
 }
 
+/* Compact LEXSHIELD directory cards — last so portrait overrides cannot win. */
+.client-lawyers-react-card .lawyer-directory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  justify-content: start;
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.client-lawyers-react-card .lawyer-card.lawyer-card--directory {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: 16px;
+  justify-self: stretch;
+}
+
+.client-lawyers-react-card .lawyer-card.lawyer-card--directory .lawyer-card__media {
+  width: 4.5rem;
+  height: 4.5rem;
+  max-height: none;
+  aspect-ratio: auto;
+  border-radius: 999px;
+  background: #3b82f6;
+}
+
+.client-lawyers-react-card .lawyer-card.lawyer-card--directory .lawyer-card__placeholder {
+  color: #fff;
+}
+
+.client-lawyers-react-card .lawyer-card.lawyer-card--directory .lawyer-card__initials {
+  position: static;
+  opacity: 1;
+  color: #fff;
+  font-weight: 800;
+}
+
+.client-lawyers-react-card .lawyer-card.lawyer-card--directory .lawyer-card__person-icon,
+.client-lawyers-react-card .lawyer-card.lawyer-card--directory .status-badge,
+.client-lawyers-react-card .lawyer-card.lawyer-card--directory .lawyer-card__rating,
+.client-lawyers-react-card .lawyer-card.lawyer-card--directory .lawyer-card__chips {
+  display: none;
+}
+
+.client-lawyers-react-card .lawyer-card.lawyer-card--directory .lawyer-card__body {
+  padding: 0;
+  gap: 0.4rem;
+}
+
+.client-lawyers-react-card .lawyer-card.lawyer-card--directory .lawyer-card__actions {
+  justify-content: flex-start;
+}
+
+.client-lawyers-react-card .lawyer-card.lawyer-card--directory .lawyer-card__actions .button {
+  min-height: 2rem;
+  min-width: 0;
+  padding: 0 0.85rem;
+}
+
+@media (max-width: 560px) {
+  .client-lawyers-react-card .lawyer-directory-grid,
+  .client-lawyers-react-card .lawyer-card.lawyer-card--directory {
+    grid-template-columns: 1fr;
+  }
+
+  .client-lawyers-react-card .lawyer-card.lawyer-card--directory {
+    max-width: none;
+  }
+}
+
 /* Case files theme final cascade */
 body:has([data-case-files-app]) {
   --case-surface: #fffdf9;
@@ -29194,6 +29322,61 @@ body.pao-site .pao-directory-search {
   align-items: center;
   padding: 0.85rem;
   margin: 0 0 1.2rem;
+}
+
+body.pao-site .pao-directory-search .pao-btn {
+  min-height: 44px;
+  min-width: 5.5rem;
+  width: auto;
+  padding: 0 1.15rem;
+}
+
+body.pao-site .pao-lawyer-row--directory {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  align-items: stretch;
+}
+
+body.pao-site .pao-lawyer-card--directory,
+body.pao-home .pao-lawyer-card--directory {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.1rem !important;
+  min-height: 0;
+}
+
+body.pao-site .pao-lawyer-card--directory .pao-lawyer-avatar,
+body.pao-home .pao-lawyer-card--directory .pao-lawyer-avatar {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 999px;
+  margin: 0;
+  background: #3b82f6;
+  color: #fff;
+  font-size: 1.05rem;
+}
+
+body.pao-site .pao-lawyer-card--directory .pao-lawyer-copy {
+  display: grid;
+  gap: 0.28rem;
+  justify-items: start;
+  min-width: 0;
+}
+
+body.pao-site .pao-lawyer-card--directory h3,
+body.pao-home .pao-lawyer-card--directory h3,
+body.pao-site .pao-lawyer-card--directory p,
+body.pao-home .pao-lawyer-card--directory p {
+  margin: 0;
+  text-align: left;
+}
+
+body.pao-site .pao-lawyer-card--directory .pao-btn {
+  margin-top: 0.35rem;
+  min-height: 2rem;
+  padding: 0 0.85rem;
+  width: auto;
 }
 
 body.pao-site .pao-directory-search input,
