@@ -1,0 +1,27 @@
+This folder holds ClamAV virus-signature databases (.cvd files).
+They are binary files, not documents - do not open them in Word, Notepad, or VS Code.
+LEXSHIELD reads them automatically to scan uploaded files for malware.
+
+Generated: 2026-09-11 16:31:13
+
+main.cvd
+  Version:    63
+  Signatures: 3,287,027
+  Built:      16 Dec 2025 23-18 +0000
+  Size:       84.9 MB
+  What it is: Core signature set. Large; rarely changes.
+
+daily.cvd
+  Version:    28109
+  Signatures: 355,631
+  Built:      31 Aug 2026 06-24 +0000
+  Size:       22.3 MB
+  What it is: Daily signature updates. Small; changes often.
+
+bytecode.cvd
+  Version:    339
+  Signatures: 80
+  Built:      11 Sep 2025 08-29 -0400
+  Size:       275.1 KB
+  What it is: Bytecode detection rules for newer threats.
+
