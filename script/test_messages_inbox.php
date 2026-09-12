@@ -143,6 +143,11 @@ lex_inbox_assert('Messages badge uses unread message count', str_contains($boots
 lex_inbox_assert('Appointments badge uses unread appointment notifications', str_contains($bootstrap, "['appointment']") && str_contains($bootstrap, 'lex_nav_appointment_count'));
 lex_inbox_assert('Appointments button shows how many appointments are waiting', str_contains($bootstrap, 'function lex_nav_appointment_count') && str_contains($bootstrap, "baseLabel + ' (' + shown + ')'") && str_contains($bootstrap, 'background:#e11d48'));
 lex_inbox_assert('Notification API returns sidebar badge counts', str_contains($notifApi, 'unread_messages') && str_contains($notifApi, 'nav_badges'));
+lex_inbox_assert(
+    'Notification API badges come from the same helper the sidebar renders from',
+    str_contains($notifApi, 'lex_nav_badge_counts(') && str_contains($notifApi, 'lex_nav_unread_messages('),
+    'Recomputing the counts a different way lets the polled badges drift from the server-rendered ones until the next full page load.'
+);
 lex_inbox_assert('Footer JS refreshes sidebar badges', str_contains($bootstrap, 'nav_badges') && str_contains($bootstrap, 'data-nav-badge'));
 lex_inbox_assert('Clicking a top-bar notification opens the matching page', str_contains($bootstrap, 'data-notif-href') && str_contains($bootstrap, 'window.location.href = href'));
 lex_inbox_assert('Nav badge styles exist', str_contains($style, '.nav-badge') && str_contains($style, 'display: none'));

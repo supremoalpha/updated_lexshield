@@ -8,6 +8,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 $user = lex_require_login();
 $userId = (int) $user['id'];
+$role = (string) ($user['role'] ?? '');
 $pdo = lex_pdo();
 if (function_exists('lex_notifications_table_ensure')) {
     lex_notifications_table_ensure();
@@ -27,8 +28,23 @@ if ($method === 'GET') {
     $unread = function_exists('lex_notifications_unread_count')
         ? lex_notifications_unread_count($userId)
         : 0;
+    $unreadMessages = function_exists('lex_nav_unread_messages')
+        ? lex_nav_unread_messages($userId)
+        : 0;
+    // The footer poller repaints [data-nav-badge] from this, so it has to be the
+    // same source the sidebar is server-rendered from or the two drift apart
+    // until the next full page load.
+    $navBadges = function_exists('lex_nav_badge_counts')
+        ? lex_nav_badge_counts($userId, $role)
+        : [];
 
-    echo json_encode(['ok' => true, 'notifications' => $rows, 'unread' => $unread], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    echo json_encode([
+        'ok' => true,
+        'notifications' => $rows,
+        'unread' => $unread,
+        'unread_messages' => $unreadMessages,
+        'nav_badges' => (object) $navBadges,
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
 }
 
