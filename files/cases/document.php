@@ -38,6 +38,7 @@ $caseFile = [
     'created_by_user_id' => (int) $document['created_by_user_id'],
 ];
 $access = lex_case_file_vault_access($caseFile, $user);
+$viewOnly = function_exists('lex_case_file_is_view_only') && lex_case_file_is_view_only($access);
 if ($access === 'none' || ($access === 'client' && (string) $document['upload_status'] !== 'approved')) {
     lex_audit('denied_case_file_document_access', 'case_file_documents', (string) $documentId);
     http_response_code(403);
@@ -48,6 +49,18 @@ if ((string) $document['upload_status'] !== 'approved' && $access !== 'manage') 
     lex_audit('denied_case_file_document_access', 'case_file_documents', (string) $documentId);
     http_response_code(403);
     exit('Access denied.');
+}
+
+if ($viewOnly && !$preview) {
+    lex_audit('denied_case_file_document_download', 'case_file_documents', (string) $documentId);
+    http_response_code(403);
+    exit('This shared case file is view-only. Download is disabled.');
+}
+
+if ($viewOnly && !lex_case_file_view_token_ok((string) ($_GET['token'] ?? ''), (int) $user['id'])) {
+    lex_audit('denied_case_file_document_preview', 'case_file_documents', (string) $documentId);
+    http_response_code(403);
+    exit('Open this file from Case Files to view it.');
 }
 
 $path = lex_case_files_folder_path((string) $document['case_folder_name'])
@@ -86,18 +99,24 @@ if ((string) ($document['encryption_algorithm'] ?? '') !== '') {
     $size = strlen($outputData);
 }
 
-lex_audit($preview ? 'preview_case_file_document' : 'download_case_file_document', 'case_file_documents', (string) $documentId);
+if ($viewOnly && !lex_case_file_previewable_mime($mime)) {
+    lex_audit('denied_case_file_document_download', 'case_file_documents', (string) $documentId);
+    http_response_code(403);
+    exit('This file type cannot be opened in the view-only viewer.');
+}
+
+lex_audit($preview || $viewOnly ? 'preview_case_file_document' : 'download_case_file_document', 'case_file_documents', (string) $documentId);
 
 while (ob_get_level() > 0) {
     ob_end_clean();
 }
 
-header('Content-Type: ' . $mime);
-header('Content-Length: ' . $size);
-header('X-Content-Type-Options: nosniff');
-if ($preview && preg_match('/^(image\/|application\/pdf$|text\/)/', $mime)) {
-    header('Content-Disposition: inline; filename="' . str_replace('"', '\\"', $name) . '"');
+if ($viewOnly || ($preview && lex_case_file_previewable_mime($mime))) {
+    lex_case_file_send_view_only_headers($mime, $name, $size);
 } else {
+    header('Content-Type: ' . $mime);
+    header('Content-Length: ' . $size);
+    header('X-Content-Type-Options: nosniff');
     header('Content-Disposition: attachment; filename="' . str_replace('"', '\\"', $name) . '"');
 }
 if ($outputData !== null) {

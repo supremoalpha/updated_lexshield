@@ -116,13 +116,23 @@ if (!function_exists('lex_case_files_fetch_state')) {
     function lex_case_files_fetch_state(array $filters, int $pageSize): array
     {
         $pdo = lex_pdo();
+        if ($filters['role'] === 'lawyer' && function_exists('lex_data_sharing_table_ensure')) {
+            lex_data_sharing_table_ensure();
+        }
         $where = [];
         $params = [];
 
         if ($filters['role'] === 'lawyer') {
-            $where[] = '(cf.assigned_lawyer_user_id = :uid1 OR cf.created_by_user_id = :uid2)';
+            $where[] = '(cf.assigned_lawyer_user_id = :uid1 OR cf.created_by_user_id = :uid2
+                OR EXISTS (
+                    SELECT 1 FROM case_file_shares s
+                    WHERE s.case_file_id = cf.id
+                      AND s.lawyer_user_id = :uid3
+                      AND s.revoked_at IS NULL
+                ))';
             $params['uid1'] = $filters['user_id'];
             $params['uid2'] = $filters['user_id'];
+            $params['uid3'] = $filters['user_id'];
         } else {
             $where[] = 'cf.client_user_id = :uid1';
             $params['uid1'] = $filters['user_id'];
@@ -163,9 +173,9 @@ if (!function_exists('lex_case_files_fetch_state')) {
 
         $counts = [
             'total' => $total,
-            'open' => lex_stats("SELECT COUNT(*) FROM case_files cf WHERE " . implode(' AND ', array_slice($where, 0, 1)) . " AND cf.status = 'open'", array_intersect_key($params, ['uid1' => 1, 'uid2' => 1])),
-            'ongoing' => lex_stats("SELECT COUNT(*) FROM case_files cf WHERE " . implode(' AND ', array_slice($where, 0, 1)) . " AND cf.status = 'ongoing'", array_intersect_key($params, ['uid1' => 1, 'uid2' => 1])),
-            'closed' => lex_stats("SELECT COUNT(*) FROM case_files cf WHERE " . implode(' AND ', array_slice($where, 0, 1)) . " AND cf.status = 'closed'", array_intersect_key($params, ['uid1' => 1, 'uid2' => 1])),
+            'open' => lex_stats("SELECT COUNT(*) FROM case_files cf WHERE " . implode(' AND ', array_slice($where, 0, 1)) . " AND cf.status = 'open'", array_intersect_key($params, ['uid1' => 1, 'uid2' => 1, 'uid3' => 1])),
+            'ongoing' => lex_stats("SELECT COUNT(*) FROM case_files cf WHERE " . implode(' AND ', array_slice($where, 0, 1)) . " AND cf.status = 'ongoing'", array_intersect_key($params, ['uid1' => 1, 'uid2' => 1, 'uid3' => 1])),
+            'closed' => lex_stats("SELECT COUNT(*) FROM case_files cf WHERE " . implode(' AND ', array_slice($where, 0, 1)) . " AND cf.status = 'closed'", array_intersect_key($params, ['uid1' => 1, 'uid2' => 1, 'uid3' => 1])),
         ];
 
         $selectedId = $filters['record'] > 0 ? $filters['record'] : (int) ($records[0]['id'] ?? 0);
@@ -261,14 +271,23 @@ if (!function_exists('lex_case_files_render_list')) {
         ob_start();
         ?>
         <?php foreach ($state['records'] as $record): ?>
-          <?php $isSelected = $state['selected'] && (int) $state['selected']['id'] === (int) $record['id']; ?>
+          <?php
+            $isSelected = $state['selected'] && (int) $state['selected']['id'] === (int) $record['id'];
+            $listAccess = lex_case_file_vault_access([
+                'id' => (int) $record['id'],
+                'client_user_id' => (int) $record['client_user_id'],
+                'assigned_lawyer_user_id' => (int) $record['assigned_lawyer_user_id'],
+                'created_by_user_id' => (int) $record['created_by_user_id'],
+            ], ['id' => (int) $filters['user_id'], 'role' => (string) $filters['role']]);
+            $isShared = lex_case_file_is_view_only($listAccess);
+          ?>
           <article class="card case-list-item<?= $isSelected ? ' is-active' : '' ?>" data-case-select data-case-id="<?= (int) $record['id'] ?>" role="button" tabindex="0">
             <div class="card-head">
               <div>
                 <strong><?= lex_e((string) $record['full_name']) ?></strong>
-                <p class="muted"><?= lex_e((string) $record['case_file_title']) ?></p>
+                <p class="muted"><?= lex_e((string) $record['case_file_title']) ?><?= $isShared ? ' · Shared with you' : '' ?></p>
               </div>
-              <span class="status-pill <?= lex_case_files_status_class((string) $record['status']) ?>"><?= lex_e(ucfirst((string) $record['status'])) ?></span>
+              <span class="status-pill <?= $isShared ? 'is-ongoing' : lex_case_files_status_class((string) $record['status']) ?>"><?= $isShared ? 'View only' : lex_e(ucfirst((string) $record['status'])) ?></span>
             </div>
             <p class="muted">Lawyer: <?= lex_e((string) $record['lawyer_name']) ?> &middot; Updated <?= lex_e(lex_message_timestamp((string) $record['updated_at'])) ?></p>
           </article>
@@ -293,6 +312,17 @@ if (!function_exists('lex_case_files_render_detail')) {
     {
         ob_start();
         $record = $state['selected'];
+        $detailAccess = 'none';
+        $detailViewOnly = false;
+        if ($record) {
+            $detailAccess = lex_case_file_vault_access([
+                'id' => (int) $record['id'],
+                'client_user_id' => (int) $record['client_user_id'],
+                'assigned_lawyer_user_id' => (int) $record['assigned_lawyer_user_id'],
+                'created_by_user_id' => (int) $record['created_by_user_id'],
+            ], $user);
+            $detailViewOnly = lex_case_file_is_view_only($detailAccess);
+        }
         ?>
         <div class="modal-overlay" data-case-detail-modal aria-hidden="true">
           <div class="modal-card">
@@ -304,6 +334,9 @@ if (!function_exists('lex_case_files_render_detail')) {
               <?php if (!$record): ?>
                 <p class="muted">Select a case file from the list to see details.</p>
               <?php else: ?>
+                <?php if ($detailViewOnly): ?>
+                  <p class="case-file-view-banner">Shared with you. You can see every file. Download, copy, and screenshots are turned off.</p>
+                <?php endif; ?>
                 <dl class="admin-profile-details">
                   <div><dt>Client</dt><dd><?= lex_e((string) $record['full_name']) ?></dd></div>
                   <div><dt>Lawyer</dt><dd><?= lex_e((string) $record['lawyer_name']) ?></dd></div>
@@ -311,9 +344,9 @@ if (!function_exists('lex_case_files_render_detail')) {
                   <div><dt>Description</dt><dd><?= nl2br(lex_e((string) ($record['description'] ?? 'No description provided.'))) ?></dd></div>
                 </dl>
                 <div class="inline-actions">
-                  <?php if ($filters['role'] === 'lawyer'): ?>
+                  <?php if ($filters['role'] === 'lawyer' && !$detailViewOnly): ?>
                     <button class="button button-secondary" type="button" data-case-edit-open data-case-id="<?= (int) $record['id'] ?>" data-full-name="<?= lex_e((string) $record['full_name']) ?>" data-case-file-title="<?= lex_e((string) $record['case_file_title']) ?>" data-description="<?= lex_e((string) $record['description']) ?>" data-status="<?= lex_e((string) $record['status']) ?>">Edit</button>
-                    <a class="button button-secondary" href="<?= lex_e(lex_app_url('lawyer/data_sharing.php?case_file_id=' . (int) $record['id'])) ?>">Share with another lawyer</a>
+                    <a class="button button-secondary" href="<?= lex_e(lex_app_url('lawyer/data_sharing.php?case_file_id=' . (int) $record['id'])) ?>">Share case files</a>
                   <?php endif; ?>
                   <button class="button button-accent" type="button" data-case-open-vault data-case-id="<?= (int) $record['id'] ?>">Open secure vault</button>
                 </div>
@@ -323,11 +356,16 @@ if (!function_exists('lex_case_files_render_detail')) {
                   <?php foreach ($attachments as $attachment): ?>
                     <li class="admin-audit-row">
                       <span><?= lex_e((string) ($attachment['name'] ?? 'Attachment')) ?></span>
-                      <a class="button button-secondary" href="<?= lex_e(lex_app_url('case_file_attachment.php?case_file_id=' . (int) $record['id'] . '&stored_name=' . rawurlencode((string) ($attachment['stored_name'] ?? '')))) ?>">Download</a>
+                      <?php if ($detailViewOnly): ?>
+                        <a class="button button-secondary" href="<?= lex_e(lex_case_file_view_url(['case_file_id' => (int) $record['id'], 'stored_name' => (string) ($attachment['stored_name'] ?? '')])) ?>">View</a>
+                      <?php else: ?>
+                        <a class="button button-secondary" href="<?= lex_e(lex_app_url('case_file_attachment.php?case_file_id=' . (int) $record['id'] . '&stored_name=' . rawurlencode((string) ($attachment['stored_name'] ?? '')))) ?>">Download</a>
+                      <?php endif; ?>
                     </li>
                   <?php endforeach; ?>
                   <?php if (!$attachments): ?><li class="admin-empty-line">No attachments uploaded yet.</li><?php endif; ?>
                 </ul>
+                <?php if (!$detailViewOnly): ?>
                 <form method="post" enctype="multipart/form-data" class="stack-form">
                   <?= lex_csrf_field() ?>
                   <input type="hidden" name="action" value="upload_attachment">
@@ -342,6 +380,7 @@ if (!function_exists('lex_case_files_render_detail')) {
                   <label>File <input type="file" name="attachment" required></label>
                   <button class="button button-primary" type="submit">Upload attachment</button>
                 </form>
+                <?php endif; ?>
               <?php endif; ?>
             </div>
           </div>
@@ -369,28 +408,45 @@ if (!function_exists('lex_case_files_render_vault_panel')) {
         ];
         $access = lex_case_file_vault_access($caseFileArr, $user);
         $canManage = $access === 'manage';
+        $viewOnly = lex_case_file_is_view_only($access);
 
         lex_case_file_vault_table_ensure();
         $pdo = lex_pdo();
-        $folder = lex_case_files_ensure_vault_folder($pdo, (int) $record['id'], 'General', (int) $user['id']);
-
-        $stmt = $pdo->prepare(
-            'SELECT d.*, u.full_name AS uploaded_by_name
-             FROM case_file_documents d
-             JOIN users u ON u.id = d.uploaded_by_user_id
-             WHERE d.folder_id = :folder_id
-             ORDER BY d.created_at DESC'
+        lex_case_files_ensure_vault_folder($pdo, (int) $record['id'], 'General', (int) $user['id']);
+        $folderStmt = $pdo->prepare(
+            'SELECT * FROM case_file_folders WHERE case_file_id = :id ORDER BY name ASC'
         );
-        $stmt->execute(['folder_id' => (int) $folder['id']]);
-        $documents = $stmt->fetchAll() ?: [];
+        $folderStmt->execute(['id' => (int) $record['id']]);
+        $folders = $folderStmt->fetchAll() ?: [];
         ?>
         <section class="card">
           <div class="card-head">
             <h2>Secure Vault - <?= lex_e((string) $record['case_file_title']) ?></h2>
-            <span class="pill">AES-256 encrypted</span>
+            <span class="pill"><?= $viewOnly ? 'View only' : 'AES-256 encrypted' ?></span>
           </div>
+          <?php if ($viewOnly): ?>
+            <p class="case-file-view-banner">Every approved file in this case is visible. You cannot download, copy, or capture it.</p>
+          <?php endif; ?>
+          <?php foreach ($folders as $folder): ?>
+            <?php
+              $stmt = $pdo->prepare(
+                  'SELECT d.*, u.full_name AS uploaded_by_name
+                   FROM case_file_documents d
+                   JOIN users u ON u.id = d.uploaded_by_user_id
+                   WHERE d.folder_id = :folder_id
+                   ORDER BY d.created_at DESC'
+              );
+              $stmt->execute(['folder_id' => (int) $folder['id']]);
+              $documents = $stmt->fetchAll() ?: [];
+              $visible = 0;
+              foreach ($documents as $document) {
+                  if ($access === 'manage' || (string) $document['upload_status'] === 'approved') {
+                      $visible++;
+                  }
+              }
+            ?>
           <details class="case-vault-folder-section" open>
-            <summary><?= lex_e((string) $folder['name']) ?> (<?= count($documents) ?>)</summary>
+            <summary><?= lex_e((string) $folder['name']) ?> (<?= $visible ?>)</summary>
             <ul class="admin-audit-list">
               <?php foreach ($documents as $document): ?>
                 <?php
@@ -402,7 +458,10 @@ if (!function_exists('lex_case_files_render_vault_panel')) {
                   <span class="pill payment-status-pill payment-status-<?= lex_e((string) $document['upload_status']) ?>"><?= lex_e(ucfirst((string) $document['upload_status'])) ?></span>
                   <small class="muted">by <?= lex_e((string) $document['uploaded_by_name']) ?> &middot; <?= lex_e(lex_message_timestamp((string) $document['created_at'])) ?></small>
                   <div class="inline-actions">
-                    <a class="button button-secondary" href="<?= lex_e(lex_app_url('case_document_file.php?document_id=' . (int) $document['id'])) ?>">Download</a>
+                    <a class="button button-secondary" href="<?= lex_e(lex_case_file_view_url(['document_id' => (int) $document['id']])) ?>">View</a>
+                    <?php if (!$viewOnly): ?>
+                      <a class="button button-secondary" href="<?= lex_e(lex_app_url('case_document_file.php?document_id=' . (int) $document['id'])) ?>">Download</a>
+                    <?php endif; ?>
                     <?php if ($canManage && (string) $document['upload_status'] === 'pending'): ?>
                       <form method="post" style="display:inline;">
                         <?= lex_csrf_field() ?>
@@ -422,10 +481,11 @@ if (!function_exists('lex_case_files_render_vault_panel')) {
                   </div>
                 </li>
               <?php endforeach; ?>
-              <?php if (!$documents): ?><li class="admin-empty-line">No documents in the vault yet.</li><?php endif; ?>
+              <?php if ($visible === 0): ?><li class="admin-empty-line">No documents in this folder yet.</li><?php endif; ?>
             </ul>
           </details>
-          <?php if ($access !== 'none'): ?>
+          <?php endforeach; ?>
+          <?php if ($access !== 'none' && !$viewOnly): ?>
             <form method="post" enctype="multipart/form-data" class="stack-form">
               <?= lex_csrf_field() ?>
               <input type="hidden" name="action" value="vault_upload">

@@ -136,8 +136,10 @@ if (!function_exists('lex_case_files_handle_post')) {
                     'created_by_user_id' => (int) $record['created_by_user_id'],
                 ], $user) : 'none';
 
-                if (!$record || $access === 'none') {
-                    return ['error' => 'Case file not found or access denied.', 'failed_action' => 'upload_attachment'];
+                if (!$record || $access === 'none' || $access === 'shared') {
+                    return ['error' => $access === 'shared'
+                        ? 'Shared case files are view-only. You cannot upload.'
+                        : 'Case file not found or access denied.', 'failed_action' => 'upload_attachment'];
                 }
 
                 $category = lex_safe_identifier((string) ($_POST['category'] ?? 'DOCUMENTS'), LEX_CASE_FILE_CATEGORIES, 'DOCUMENTS');
@@ -203,8 +205,10 @@ if (!function_exists('lex_case_files_handle_post')) {
                     'created_by_user_id' => (int) $record['created_by_user_id'],
                 ], $user) : 'none';
 
-                if (!$record || $access === 'none') {
-                    return ['error' => 'Case file not found or access denied.', 'failed_action' => 'vault_upload'];
+                if (!$record || $access === 'none' || $access === 'shared') {
+                    return ['error' => $access === 'shared'
+                        ? 'Shared case files are view-only. You cannot upload.'
+                        : 'Case file not found or access denied.', 'failed_action' => 'vault_upload'];
                 }
 
                 $file = $_FILES['document'] ?? [];

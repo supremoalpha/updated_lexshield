@@ -199,6 +199,35 @@ lex_inbox_assert(
     str_contains($sharingPhp, 'data-admin-sharing-page') && str_contains($sharingPhp, 'From ') && str_contains($sharingPhp, 'Decided by')
 );
 lex_inbox_assert(
+    'Sidebar calls the feature Case File Sharing',
+    str_contains($bootstrap, "'label' => 'Case File Sharing'")
+    && !str_contains($bootstrap, "'label' => 'Data Sharing'"),
+    'Admin and lawyer nav must say Case File Sharing.'
+);
+$lawyerSharing = (string) file_get_contents(dirname(__DIR__) . '/lawyer/data_sharing.php');
+$helpersPhp = (string) file_get_contents(dirname(__DIR__) . '/config/case_files/helpers.php');
+$actionsPhp = (string) file_get_contents(dirname(__DIR__) . '/config/case_files/actions.php');
+$documentPhp = (string) file_get_contents(dirname(__DIR__) . '/files/cases/document.php');
+$viewPhp = (string) file_get_contents(dirname(__DIR__) . '/files/cases/view.php');
+lex_inbox_assert(
+    'Shared case files are view-only',
+    str_contains($helpersPhp, 'function lex_case_file_is_view_only') === false
+    && str_contains((string) file_get_contents(dirname(__DIR__) . '/config/case_files/core.php'), 'function lex_case_file_is_view_only')
+    && str_contains($helpersPhp, 'Shared with you')
+    && str_contains($actionsPhp, 'Shared case files are view-only')
+    && str_contains($documentPhp, 'This shared case file is view-only')
+    && str_contains($viewPhp, 'data-case-file-view-only')
+    && is_file(dirname(__DIR__) . '/case_file_view.php'),
+    'Shared lawyers must open an in-app viewer, not a download.'
+);
+lex_inbox_assert(
+    'View-only viewer blocks copy and print',
+    str_contains($style, '.case-file-view-watermark')
+    && str_contains($style, '@media print')
+    && str_contains($viewPhp, "['copy', 'cut', 'paste'")
+    && str_contains($lawyerSharing, 'cannot download, copy, print')
+);
+lex_inbox_assert(
     'Data sharing text stays whole words',
     str_contains($style, '[data-admin-sharing-page]') && str_contains($style, 'html[data-theme="light"] body.app-workspace .card-head h2')
 );

@@ -612,7 +612,7 @@ if (!function_exists('lex_activity_label')) {
             'password_reset_requested' => 'Password reset requested',
             'update_settings' => 'Updated system settings',
             'clear_phishing_scans' => 'Cleared phishing scans',
-            'share_requested' => 'Data share requested',
+            'share_requested' => 'Case file share requested',
             'share_approved' => 'Data share approved',
             'share_rejected' => 'Data share rejected',
             'virus_detected' => 'Blocked infected upload',
@@ -1203,7 +1203,7 @@ if (!function_exists('lex_nav_badge_words')) {
             'messages' => $count === 1 ? 'new message' : 'new messages',
             'payments', 'billing' => $count === 1 ? 'payment' : 'payments',
             'inquiries' => $count === 1 ? 'inquiry' : 'inquiries',
-            'data-sharing' => $count === 1 ? 'share request' : 'share requests',
+            'data-sharing' => $count === 1 ? 'file share request' : 'file share requests',
             'case-files' => $count === 1 ? 'case file' : 'case files',
             'clients' => $count === 1 ? 'new client' : 'new clients',
             'lawyers' => $count === 1 ? 'lawyer update' : 'lawyer updates',
@@ -2048,7 +2048,7 @@ if (!function_exists('lex_nav_items_for_role')) {
                 ['key' => 'payments', 'label' => 'Payments', 'href' => 'admin/payments.php', 'icon' => $cashIcon],
                 ['key' => 'inquiries', 'label' => 'Quick Inquiries', 'href' => 'admin/inquiries.php', 'icon' => $inboxIcon],
                 ['key' => 'messages', 'label' => 'Messages', 'href' => 'chat.php', 'icon' => $chatIcon],
-                ['key' => 'data-sharing', 'label' => 'Data Sharing', 'href' => 'admin/data_sharing.php', 'icon' => $shareIcon],
+                ['key' => 'data-sharing', 'label' => 'Case File Sharing', 'href' => 'admin/data_sharing.php', 'icon' => $shareIcon],
                 ['key' => 'blockchain', 'label' => 'Blockchain Ledger', 'href' => 'admin/blockchain_ledger.php', 'icon' => $chainIcon],
                 ['key' => 'phishing', 'label' => 'Phishing Scans', 'href' => 'admin/phishing_scans.php', 'icon' => $shieldIcon],
                 ['key' => 'audit', 'label' => 'Audit Logs', 'href' => 'admin/audit_logs.php', 'icon' => $auditIcon],
@@ -2060,7 +2060,7 @@ if (!function_exists('lex_nav_items_for_role')) {
                 ['key' => 'case-files', 'label' => 'Case Files', 'href' => 'case_files.php', 'icon' => $folderIcon],
                 ['key' => 'messages', 'label' => 'Messages', 'href' => 'chat.php', 'icon' => $chatIcon],
                 ['key' => 'schedule', 'label' => 'My Schedule', 'href' => 'lawyer/schedule.php', 'icon' => $calendarIcon],
-                ['key' => 'data-sharing', 'label' => 'Data Sharing', 'href' => 'lawyer/data_sharing.php', 'icon' => $shareIcon],
+                ['key' => 'data-sharing', 'label' => 'Case File Sharing', 'href' => 'lawyer/data_sharing.php', 'icon' => $shareIcon],
                 ['key' => 'profile', 'label' => 'Profile', 'href' => 'lawyer/profile.php', 'icon' => $gearIcon],
             ],
             'client' => [
@@ -2087,7 +2087,7 @@ if (!function_exists('lex_notification_type_label')) {
             'call' => 'Call',
             'appointment' => 'Appointment',
             'payment' => 'Payment',
-            'data_sharing' => 'Data sharing',
+            'data_sharing' => 'Case file sharing',
             'security' => 'Security',
             'inquiry' => 'Inquiry',
             'lawyer' => 'Lawyer',
@@ -2128,7 +2128,7 @@ if (!function_exists('lex_notification_type_label')) {
             'call' => 'Call',
             'appointment' => 'Appointment',
             'payment' => 'Payment',
-            'data_sharing' => 'Data sharing',
+            'data_sharing' => 'Case file sharing',
             'security' => 'Security',
             'inquiry' => 'Inquiry',
             'lawyer' => 'Lawyer',
@@ -2472,7 +2472,7 @@ window.lexClosePhishingDetector = function (event) {
     if (s < 86400) return Math.floor(s / 3600) + 'h ago';
     return Math.floor(s / 86400) + 'd ago';
   }
-  var kindLabels = { message: 'Message', call: 'Call', appointment: 'Appointment', payment: 'Payment', data_sharing: 'Data sharing', security: 'Security', inquiry: 'Inquiry', lawyer: 'Lawyer', client: 'Client', case_file: 'Case file', blockchain: 'Ledger', phishing: 'Phishing', audit: 'Audit', schedule: 'Schedule' };
+  var kindLabels = { message: 'Message', call: 'Call', appointment: 'Appointment', payment: 'Payment', data_sharing: 'Case file sharing', security: 'Security', inquiry: 'Inquiry', lawyer: 'Lawyer', client: 'Client', case_file: 'Case file', blockchain: 'Ledger', phishing: 'Phishing', audit: 'Audit', schedule: 'Schedule' };
   function kindLabel(type) { return kindLabels[type] || 'Update'; }
   function escapeText(value) { return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
   function render(data) {

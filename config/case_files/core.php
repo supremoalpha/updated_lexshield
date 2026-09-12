@@ -157,9 +157,10 @@ if (!function_exists('lex_case_file_vault_slug')) {
 if (!function_exists('lex_case_file_vault_access')) {
     /**
      * Returns 'manage' (full control: creator/assigned lawyer or admin),
-     * 'client' (read-only, approved documents only) or 'none'.
+     * 'client' (own case: approved documents), 'shared' (view-only grant),
+     * or 'none'.
      *
-     * @param array{client_user_id:int,assigned_lawyer_user_id:int,created_by_user_id:int} $caseFile
+     * @param array{id?:int,client_user_id:int,assigned_lawyer_user_id:int,created_by_user_id:int} $caseFile
      * @param array{id:int,role:string} $user
      */
     function lex_case_file_vault_access(array $caseFile, array $user): string
@@ -179,15 +180,91 @@ if (!function_exists('lex_case_file_vault_access')) {
             return 'client';
         }
 
-        // A lawyer who is neither the creator nor the assigned lawyer can
-        // still be granted read access to this case file's vault through
-        // the admin-approved, blockchain-logged data sharing workflow.
+        // Admin-approved case file sharing: the other lawyer can see every
+        // approved file but cannot download, copy, or save it.
         if ($role === 'lawyer' && function_exists('lex_data_sharing_has_access')
             && lex_data_sharing_has_access((int) ($caseFile['id'] ?? 0), $userId)) {
             return 'shared';
         }
 
         return 'none';
+    }
+}
+
+if (!function_exists('lex_case_file_is_view_only')) {
+    function lex_case_file_is_view_only(string $access): bool
+    {
+        return $access === 'shared';
+    }
+}
+
+if (!function_exists('lex_case_file_previewable_mime')) {
+    function lex_case_file_previewable_mime(string $mime): bool
+    {
+        return (bool) preg_match('/^(image\/|application\/pdf$|text\/)/', $mime);
+    }
+}
+
+if (!function_exists('lex_case_file_view_url')) {
+    function lex_case_file_view_url(array $query): string
+    {
+        $query = array_filter($query, static fn ($value) => $value !== '' && $value !== null);
+        $href = 'case_file_view.php';
+        if ($query !== []) {
+            $href .= '?' . http_build_query($query);
+        }
+
+        return function_exists('lex_nav_href') ? lex_nav_href($href) : lex_app_url($href);
+    }
+}
+
+if (!function_exists('lex_case_file_view_token_issue')) {
+    function lex_case_file_view_token_issue(int $userId): string
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            return '';
+        }
+        $token = bin2hex(random_bytes(16));
+        $_SESSION['lex_case_view_token'] = [
+            't' => $token,
+            'exp' => time() + 180,
+            'uid' => $userId,
+        ];
+
+        return $token;
+    }
+}
+
+if (!function_exists('lex_case_file_view_token_ok')) {
+    function lex_case_file_view_token_ok(string $token, int $userId): bool
+    {
+        if ($token === '' || session_status() !== PHP_SESSION_ACTIVE) {
+            return false;
+        }
+        $row = $_SESSION['lex_case_view_token'] ?? null;
+        if (!is_array($row)) {
+            return false;
+        }
+        $stored = (string) ($row['t'] ?? '');
+        $exp = (int) ($row['exp'] ?? 0);
+        $uid = (int) ($row['uid'] ?? 0);
+
+        return $stored !== ''
+            && hash_equals($stored, $token)
+            && $exp >= time()
+            && $uid === $userId;
+    }
+}
+
+if (!function_exists('lex_case_file_send_view_only_headers')) {
+    function lex_case_file_send_view_only_headers(string $mime, string $name, int $size): void
+    {
+        header('Content-Type: ' . $mime);
+        header('Content-Length: ' . $size);
+        header('X-Content-Type-Options: nosniff');
+        header('Cache-Control: private, no-store, no-cache, must-revalidate');
+        header('Pragma: no-cache');
+        header('Content-Disposition: inline; filename="' . str_replace('"', '', $name) . '"');
     }
 }
 
