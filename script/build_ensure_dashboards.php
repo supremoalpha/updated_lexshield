@@ -25,8 +25,13 @@ foreach (['client', 'lawyer', 'admin'] as $role) {
     }
 }
 $add('case_files.php');
+$add('case_file_view.php');
 $add('chat.php');
 $add('go.php');
+$add('config/case_files/actions.php');
+$add('config/case_files/helpers.php');
+$add('files/cases/index.php');
+$add('files/cases/view.php');
 
 $mapLines = [];
 foreach ($files as $relative => $b64) {

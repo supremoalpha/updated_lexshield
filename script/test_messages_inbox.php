@@ -227,6 +227,27 @@ lex_inbox_assert(
     && str_contains($viewPhp, "['copy', 'cut', 'paste'")
     && str_contains($lawyerSharing, 'cannot download, copy, print')
 );
+$caseFilesIndex = (string) file_get_contents(dirname(__DIR__) . '/files/cases/index.php');
+lex_inbox_assert(
+    'Case Files page does not hard-require a missing actions.php',
+    !str_contains($caseFilesIndex, "require_once __DIR__ . '/../../config/case_files/actions.php'")
+    && str_contains($caseFilesIndex, 'is_file($lexCaseFilesPath)')
+    && str_contains($caseFilesIndex, 'function lex_case_files_handle_post'),
+    'A missing config/case_files/actions.php on XAMPP must not fatal Case Files.'
+);
+lex_inbox_assert(
+    'Bootstrap can recreate case-file POST helpers on XAMPP',
+    str_contains($bootstrap, 'lex_require_case_files')
+    && str_contains($bootstrap, 'lex_case_files_actions_source')
+    && str_contains($bootstrap, 'function lex_case_files_handle_post')
+    && str_contains($ensurePhp, '/config/case_files/actions.php'),
+    'Partial XAMPP copies must be able to rewrite a stale actions.php that lacks lex_case_files_handle_post.'
+);
+lex_inbox_assert(
+    'Packed case-file actions source includes the POST handler',
+    function_exists('lex_case_files_actions_source')
+    && str_contains(lex_case_files_actions_source(), 'function lex_case_files_handle_post')
+);
 lex_inbox_assert(
     'Data sharing text stays whole words',
     str_contains($style, '[data-admin-sharing-page]') && str_contains($style, 'html[data-theme="light"] body.app-workspace .card-head h2')
