@@ -103,7 +103,7 @@ if (!function_exists('lex_uri_folder_prefix')) {
             return $match[1];
         }
 
-        $rootFiles = 'index|portal|go|open|chat|chat_call|chat_call_signal|chat_call_ring|chat_typing|notifications_api|lexshield|setup|client|lawyer|admin|attorney|fix_mail|case_files|case_document_file|case_file_attachment|message_attachment|payment_proof|payment_qr_image|video_call_signal';
+        $rootFiles = 'index|portal|go|open|chat|chat_call|chat_call_signal|chat_call_ring|chat_typing|notifications_api|lexshield|setup|client|lawyer|admin|attorney|fix_mail|case_files|case_file_view|case_document_file|case_file_attachment|message_attachment|payment_proof|payment_qr_image|video_call_signal';
         if (preg_match('#^(/[^/]+)/(?:' . $rootFiles . ')\.php#', $uri, $match) === 1) {
             return $match[1];
         }

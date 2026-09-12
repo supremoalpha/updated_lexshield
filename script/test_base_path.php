@@ -75,6 +75,21 @@ lex_assert_same(
     lex_uri_folder_prefix('/lexshield/chat_call_signal.php')
 );
 lex_assert_same(
+    'prefix from /lexshield/case_file_view.php',
+    '/lexshield',
+    lex_uri_folder_prefix('/lexshield/case_file_view.php')
+);
+lex_assert_same(
+    'prefix from /lexshield/case_document_file.php',
+    '/lexshield',
+    lex_uri_folder_prefix('/lexshield/case_document_file.php')
+);
+lex_assert_same(
+    'prefix from /lexshield/case_file_attachment.php',
+    '/lexshield',
+    lex_uri_folder_prefix('/lexshield/case_file_attachment.php')
+);
+lex_assert_same(
     'find-a-lawyer from go.php stays in /lexshield',
     'client/lawyers.php',
     lex_relative_app_location('/lexshield/go.php', 'client/lawyers.php')

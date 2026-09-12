@@ -249,6 +249,45 @@ lex_inbox_assert(
     && str_contains(lex_case_files_actions_source(), 'function lex_case_files_handle_post')
 );
 lex_inbox_assert(
+    'Case Files Reset stays on /lexshield/case_files.php',
+    str_contains($caseFilesIndex, "lex_nav_href('case_files.php')")
+    && !preg_match('/href="case_files\\.php"/', $caseFilesIndex),
+    'A bare case_files.php href from /lexshield/files/cases/index.php 404s.'
+);
+$appPhp = (string) file_get_contents(dirname(__DIR__) . '/config/app.php');
+lex_inbox_assert(
+    'case_file_view.php keeps the /lexshield prefix',
+    str_contains($appPhp, 'case_file_view')
+    && lex_uri_folder_prefix('/lexshield/case_file_view.php') === '/lexshield'
+    && lex_uri_folder_prefix('/lexshield/case_document_file.php') === '/lexshield'
+);
+lex_inbox_assert(
+    'Bootstrap can recreate Case File viewer pages on XAMPP',
+    str_contains($bootstrap, 'lex_require_case_file_pages')
+    && str_contains($bootstrap, 'lex_case_files_view_source')
+    && str_contains($ensurePhp, "'case_file_view.php'")
+    && str_contains($ensurePhp, "'files/cases/view.php'"),
+    'Apache 404s when case_file_view.php was never copied onto XAMPP.'
+);
+lex_inbox_assert(
+    'Packed case-file viewer source includes the view-only page',
+    function_exists('lex_case_files_view_source')
+    && str_contains(lex_case_files_view_source(), 'data-case-file-view-only')
+);
+$viewWrapper = dirname(__DIR__) . '/case_file_view.php';
+$viewWrapperOriginal = is_file($viewWrapper) ? (string) file_get_contents($viewWrapper) : '';
+@unlink($viewWrapper);
+lex_require_case_file_pages();
+$viewWrapperRestored = is_file($viewWrapper) ? (string) file_get_contents($viewWrapper) : '';
+if ($viewWrapperRestored === '' && $viewWrapperOriginal !== '') {
+    @file_put_contents($viewWrapper, $viewWrapperOriginal);
+}
+lex_inbox_assert(
+    'Missing case_file_view.php is rewritten on boot',
+    str_contains($viewWrapperRestored, 'files/cases/view.php'),
+    'Bootstrap must recreate the Apache entry file so View does not 404.'
+);
+lex_inbox_assert(
     'Data sharing text stays whole words',
     str_contains($style, '[data-admin-sharing-page]') && str_contains($style, 'html[data-theme="light"] body.app-workspace .card-head h2')
 );

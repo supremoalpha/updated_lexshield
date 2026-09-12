@@ -110,7 +110,7 @@ lex_page_header('Case Files', 'case-files', $user);
     </label>
     <div class="case-search-actions">
       <button class="button button-primary" type="submit">Apply</button>
-      <a class="button button-secondary" href="case_files.php" data-case-reset>Reset</a>
+      <a class="button button-secondary" href="<?= lex_e(function_exists('lex_nav_href') ? lex_nav_href('case_files.php') : lex_app_url('case_files.php')) ?>" data-case-reset>Reset</a>
       <?php if ($user['role'] === 'lawyer'): ?>
         <button class="button button-accent" type="button" data-case-create-open>New case</button>
       <?php endif; ?>

@@ -194,6 +194,94 @@ if (!function_exists('lex_require_case_files')) {
 
 lex_require_case_files();
 
+if (!function_exists('lex_case_files_view_source')) {
+    function lex_case_files_view_source(): string
+    {
+        $raw = base64_decode('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', true);
+        $source = is_string($raw) && $raw !== '' ? @gzinflate($raw) : false;
+        return is_string($source) && str_contains($source, 'data-case-file-view-only') ? $source : '';
+    }
+}
+
+if (!function_exists('lex_require_case_file_pages')) {
+    /**
+     * Recreate the public Case Files URLs Apache looks for. A partial
+     * XAMPP copy often has files/cases/index.php but not the root
+     * wrappers, so /lexshield/case_file_view.php 404s.
+     */
+    function lex_require_case_file_pages(): void
+    {
+        $root = dirname(__DIR__);
+        $wrappers = [
+            'case_files.php' => "<?php\nrequire_once __DIR__ . '/files/cases/index.php';\n",
+            'case_file_view.php' => "<?php\nrequire_once __DIR__ . '/files/cases/view.php';\n",
+            'case_document_file.php' => "<?php\nrequire_once __DIR__ . '/files/cases/document.php';\n",
+            'case_file_attachment.php' => "<?php\nrequire_once __DIR__ . '/files/cases/attachment.php';\n",
+        ];
+        foreach ($wrappers as $rel => $source) {
+            $path = $root . DIRECTORY_SEPARATOR . $rel;
+            $current = is_file($path) ? (string) file_get_contents($path) : '';
+            $marker = match ($rel) {
+                'case_files.php' => 'files/cases/index.php',
+                'case_file_view.php' => 'files/cases/view.php',
+                'case_document_file.php' => 'files/cases/document.php',
+                default => 'files/cases/attachment.php',
+            };
+            if ($current !== '' && str_contains($current, $marker)) {
+                continue;
+            }
+            $dir = dirname($path);
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0775, true);
+            }
+            if (is_dir($dir)) {
+                @file_put_contents($path, $source);
+            }
+        }
+
+        $inner = [
+            'files/cases/view.php' => 'data-case-file-view-only',
+            'files/cases/document.php' => 'This shared case file is view-only',
+            'files/cases/attachment.php' => 'This shared case file is view-only',
+        ];
+        foreach ($inner as $rel => $marker) {
+            $path = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $rel);
+            $current = is_file($path) ? (string) file_get_contents($path) : '';
+            if ($current !== '' && str_contains($current, $marker)) {
+                continue;
+            }
+            $source = '';
+            if ($rel === 'files/cases/view.php') {
+                $source = lex_case_files_view_source();
+            }
+            if ($source === '' && function_exists('lex_portal_payloads')) {
+                $encoded = lex_portal_payloads()[$rel] ?? '';
+                if ($encoded !== '') {
+                    $raw = base64_decode($encoded, true);
+                    $decoded = is_string($raw) && $raw !== '' ? @gzinflate($raw) : false;
+                    if (is_string($decoded) && str_contains($decoded, $marker)) {
+                        $source = $decoded;
+                    }
+                }
+            }
+            if ($source === '' && function_exists('lex_write_packed_app_file')) {
+                lex_write_packed_app_file($rel);
+                continue;
+            }
+            if ($source === '') {
+                continue;
+            }
+            $dir = dirname($path);
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0775, true);
+            }
+            if (is_dir($dir)) {
+                @file_put_contents($path, $source);
+            }
+        }
+    }
+}
+
 if (!function_exists('lex_write_packed_app_file')) {
     function lex_write_packed_app_file(string $relative): bool
     {
@@ -209,6 +297,13 @@ if (!function_exists('lex_write_packed_app_file')) {
             'public/js/video-call.js' => ['startOrUpgradeCamera', 'playRemote', 'Hear audio'],
             'config/case_files/actions.php' => ['function lex_case_files_handle_post'],
             'files/cases/index.php' => ['lex_require_case_files', 'is_file($lexCaseFilesPath)'],
+            'case_files.php' => ['files/cases/index.php'],
+            'case_file_view.php' => ['files/cases/view.php'],
+            'case_document_file.php' => ['files/cases/document.php'],
+            'case_file_attachment.php' => ['files/cases/attachment.php'],
+            'files/cases/view.php' => ['data-case-file-view-only'],
+            'files/cases/document.php' => ['This shared case file is view-only'],
+            'files/cases/attachment.php' => ['This shared case file is view-only'],
         ];
         if (isset($freshMarkers[$relative]) && is_file($file)) {
             $existing = (string) file_get_contents($file);
@@ -261,6 +356,14 @@ lex_write_packed_app_file('public/js/chat.js');
 lex_write_packed_app_file('public/js/video-call.js');
 lex_write_packed_app_file('config/case_files/actions.php');
 lex_write_packed_app_file('files/cases/index.php');
+lex_write_packed_app_file('case_files.php');
+lex_write_packed_app_file('case_file_view.php');
+lex_write_packed_app_file('case_document_file.php');
+lex_write_packed_app_file('case_file_attachment.php');
+lex_write_packed_app_file('files/cases/view.php');
+lex_write_packed_app_file('files/cases/document.php');
+lex_write_packed_app_file('files/cases/attachment.php');
+lex_require_case_file_pages();
 
 $lexPhishingInline = (
     (isset($_GET['lex_phishing']) && (string) $_GET['lex_phishing'] !== '' && (string) $_GET['lex_phishing'] !== '0')
