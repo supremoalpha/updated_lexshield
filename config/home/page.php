@@ -274,10 +274,15 @@ lex_pao_page_header('Equal Access to Justice for All', 'home', 'pao-home');
           $avatarUrl = lex_profile_avatar_url((string) ($lawyer['avatar_stored_name'] ?? ''));
           $initials = strtoupper(substr(preg_replace('/\s+/', '', (string) $lawyer['full_name']) ?: 'PA', 0, 2));
           $specLabel = (string) ($lawyer['specialization'] ?: 'General Practice');
+          $rating = $lawyer['avg_rating'] !== null && $lawyer['avg_rating'] !== '' ? (float) $lawyer['avg_rating'] : 0.0;
+          $reviews = (int) ($lawyer['review_count'] ?? 0);
           $lawyerId = (int) ($lawyer['id'] ?? 0);
           $profileUrl = $lawyerId > 0
               ? lex_app_url('lawyer/view.php?id=' . $lawyerId . '&return_to=' . rawurlencode(lex_app_url('index.php') . '#attorneys'))
               : '#attorneys';
+          $bookUrl = ($lawyerId > 0 && $currentRole === 'client')
+              ? lex_app_url('client/appointment.php?lawyer_id=' . $lawyerId)
+              : $reserveUrl;
         ?>
         <article class="pao-lawyer-card pao-lawyer-card--directory" data-name="<?= lex_e((string) $lawyer['full_name']) ?>" data-spec="<?= lex_e($specLabel) ?>">
           <div class="pao-lawyer-avatar">
@@ -286,7 +291,11 @@ lex_pao_page_header('Equal Access to Justice for All', 'home', 'pao-home');
           <div class="pao-lawyer-copy">
             <h3><?= lex_e((string) $lawyer['full_name']) ?></h3>
             <p><?= lex_e($specLabel) ?></p>
-            <a class="pao-btn pao-btn-ghost" href="<?= lex_e($profileUrl) ?>">View</a>
+            <?= lex_pao_star_rating($rating, $reviews) ?>
+            <div class="pao-lawyer-actions">
+              <a class="pao-btn pao-btn-ghost" href="<?= lex_e($profileUrl) ?>">View</a>
+              <a class="pao-btn pao-btn-blue" href="<?= lex_e($bookUrl) ?>">Book</a>
+            </div>
           </div>
         </article>
       <?php endforeach; ?>
