@@ -175,7 +175,7 @@ lex_page_header('Admin Dashboard', 'dashboard');
         <span class="admin-dashboard-kicker">System trail</span>
         <h2>Audit Feed</h2>
       </div>
-      <a class="button button-secondary" href="audit_logs.php">View all</a>
+      <a class="button button-secondary" href="<?= lex_e(function_exists('lex_nav_href') ? lex_nav_href('admin/audit_logs.php') : lex_app_url('admin/audit_logs.php')) ?>">View all</a>
     </div>
     <div class="admin-audit-list">
       <?php foreach ($recentAudit as $row): ?>

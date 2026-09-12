@@ -189,6 +189,14 @@ lex_inbox_assert(
     'Data sharing text stays whole words',
     str_contains($style, '[data-admin-sharing-page]') && str_contains($style, 'html[data-theme="light"] body.app-workspace .card-head h2')
 );
+$adminDash = (string) file_get_contents(dirname(__DIR__) . '/admin/index.php');
+$adminHome = (string) file_get_contents(dirname(__DIR__) . '/auth/admin_home.php');
+lex_inbox_assert(
+    'Audit Feed View all opens admin/audit_logs.php from go.php',
+    str_contains($adminDash, "lex_nav_href('admin/audit_logs.php')") && str_contains($adminHome, "lex_nav_href('admin/audit_logs.php')")
+    && !str_contains($adminDash, 'href="audit_logs.php"') && !str_contains($adminHome, 'href="audit_logs.php"'),
+    'A bare audit_logs.php href from /lexshield/go.php 404s because that file lives in admin/.'
+);
 lex_inbox_assert(
     'Notification panel is pinned to the bell in JavaScript',
     str_contains($bootstrap, 'function placePanel') && str_contains($bootstrap, 'getBoundingClientRect') && str_contains($bootstrap, 'document.body.appendChild(dropdown)')
