@@ -73,6 +73,33 @@ lex_inbox_assert('Ended inbox calls can drop leftover signals', str_contains($ca
 lex_inbox_assert('Incoming ring page exists', str_contains($ringPhp, 'lex_inbox_call_incoming_for') && str_contains($ringPhp, 'decline'));
 lex_inbox_assert('Notification bell is in the top bar', str_contains($bootstrap, 'notifBellBtn') && str_contains($bootstrap, 'lex_notifications_recent'));
 lex_inbox_assert('Notification dropdown stays on screen on phones', str_contains($style, '.notif-bell-dropdown') && str_contains($style, 'position: fixed') && str_contains($bootstrap, 'wrap.contains(e.target)'));
+// The panel is anchored with top: calc(100% + 8px), which only means "just below the bell"
+// while it is position: absolute. Any rule that switches it to position: fixed re-resolves
+// that percentage against the viewport and throws it a whole screen below the fold, so such
+// a rule has to bring its own offsets.
+$lexBellFixedNoOffset = [];
+preg_match_all('/([^{}]*)\{([^{}]*)\}/', $style, $lexCssBlocks, PREG_SET_ORDER);
+foreach ($lexCssBlocks as $lexCssBlock) {
+    $lexSelector = trim((string) $lexCssBlock[1]);
+    $lexBody = (string) $lexCssBlock[2];
+    if (!str_contains($lexSelector, '.notif-bell-dropdown')) {
+        continue;
+    }
+    if (!preg_match('/position:\s*fixed/', $lexBody)) {
+        continue;
+    }
+    if (!preg_match('/(^|[;\s])top:/', $lexBody)) {
+        $lexBellFixedNoOffset[] = preg_replace('/\s+/', ' ', $lexSelector);
+    }
+}
+lex_inbox_assert(
+    'Notification dropdown stays on screen on desktop',
+    (bool) preg_match('/\.notif-bell-dropdown\s*\{[^}]*position:\s*absolute[^}]*top:\s*calc\(100% \+ 8px\)/', $style)
+        && $lexBellFixedNoOffset === [],
+    $lexBellFixedNoOffset === []
+        ? 'The .notif-bell-dropdown desktop anchor (position: absolute; top: calc(100% + 8px)) is missing.'
+        : 'position: fixed without a top offset in: ' . implode(' | ', $lexBellFixedNoOffset)
+);
 lex_inbox_assert('Footer loads the incoming-call ringer', str_contains($bootstrap, 'call-ring.js') && str_contains($bootstrap, 'lex-call-ring-data'));
 lex_inbox_assert('Incoming ring overlay is in the page footer', str_contains($bootstrap, 'lexCallRingOverlay') && str_contains($bootstrap, 'lexCallRingToast'));
 lex_inbox_assert('Incoming ring uses SQL presence so timezones cannot hide it', str_contains($callsPhp, 'DATE_SUB(NOW(), INTERVAL 90 SECOND)'));
