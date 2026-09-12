@@ -1,0 +1,193 @@
+(() => {
+  window.lexCallRingStarted = true;
+  if (document.querySelector('[data-video-call-page]')) {
+    return;
+  }
+
+  const dataNode = document.getElementById('lex-call-ring-data');
+  const overlay = document.getElementById('lexCallRingOverlay');
+  if (!dataNode || !overlay) {
+    return;
+  }
+
+  let config;
+  try {
+    config = JSON.parse(dataNode.textContent || '{}');
+  } catch (error) {
+    return;
+  }
+
+  const endpoint = config.ringEndpoint || document.body.getAttribute('data-call-ring-url') || '';
+  if (!endpoint) {
+    return;
+  }
+
+  const POLL_MS = 2000;
+  const toast = document.getElementById('lexCallRingToast');
+  let currentPeerId = 0;
+  let audioCtx = null;
+  let ringTimer = null;
+  let titleTimer = null;
+  const originalTitle = document.title;
+
+  const stopRingtone = () => {
+    if (ringTimer) {
+      window.clearInterval(ringTimer);
+      ringTimer = null;
+    }
+    if (audioCtx) {
+      try {
+        audioCtx.close();
+      } catch (error) {
+        // Already closed.
+      }
+      audioCtx = null;
+    }
+  };
+
+  const playTone = () => {
+    try {
+      if (!audioCtx || audioCtx.state === 'closed') {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      const now = audioCtx.currentTime;
+      [0, 0.22].forEach((offset, index) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = index === 0 ? 520 : 660;
+        gain.gain.setValueAtTime(0.0001, now + offset);
+        gain.gain.exponentialRampToValueAtTime(0.12, now + offset + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.2);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + offset);
+        osc.stop(now + offset + 0.22);
+      });
+    } catch (error) {
+      // Autoplay can stay blocked until the user clicks somewhere.
+    }
+  };
+
+  const startRingtone = () => {
+    stopRingtone();
+    playTone();
+    ringTimer = window.setInterval(playTone, 1800);
+  };
+
+  const stopTitleFlash = () => {
+    if (titleTimer) {
+      window.clearInterval(titleTimer);
+      titleTimer = null;
+    }
+    document.title = originalTitle;
+  };
+
+  const startTitleFlash = (name) => {
+    if (titleTimer) return;
+    titleTimer = window.setInterval(() => {
+      document.title = document.title === originalTitle ? `Incoming call — ${name}` : originalTitle;
+    }, 900);
+  };
+
+  const hideIncoming = () => {
+    currentPeerId = 0;
+    stopRingtone();
+    stopTitleFlash();
+    overlay.hidden = true;
+    overlay.setAttribute('aria-hidden', 'true');
+    if (toast) toast.hidden = true;
+  };
+
+  const showIncoming = (incoming) => {
+    const name = incoming.peerName || 'Someone';
+    const href = incoming.callHref || '#';
+    const isNew = currentPeerId !== Number(incoming.peerUserId || 0);
+    overlay.querySelectorAll('[data-call-ring-name]').forEach((node) => {
+      node.textContent = name;
+    });
+    overlay.querySelectorAll('[data-call-ring-role]').forEach((node) => {
+      const role = String(incoming.peerRole || '').trim();
+      node.textContent = role !== '' ? role.charAt(0).toUpperCase() + role.slice(1) : '';
+    });
+    overlay.querySelectorAll('[data-call-ring-avatar]').forEach((node) => {
+      node.textContent = incoming.peerInitial || name.slice(0, 1).toUpperCase();
+    });
+    overlay.querySelectorAll('[data-call-ring-accept]').forEach((node) => {
+      node.setAttribute('href', href);
+    });
+    if (toast) {
+      const text = toast.querySelector('[data-call-ring-toast-text]');
+      if (text) text.textContent = `${name} is calling you`;
+      const accept = toast.querySelector('[data-call-ring-toast-accept]');
+      if (accept) accept.setAttribute('href', href);
+      toast.hidden = false;
+    }
+    overlay.hidden = false;
+    overlay.setAttribute('aria-hidden', 'false');
+    startTitleFlash(name);
+    if (isNew) {
+      currentPeerId = Number(incoming.peerUserId || 0);
+      startRingtone();
+      if (typeof window.showNotification === 'function') {
+        window.showNotification('info', `${name} is calling you`);
+      }
+    }
+  };
+
+  overlay.querySelectorAll('[data-call-ring-decline]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const peerId = currentPeerId;
+      hideIncoming();
+      if (!peerId) return;
+      fetch(endpoint, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          action: 'decline',
+          peer_user_id: peerId,
+          csrf_token: config.csrfToken,
+        }),
+      }).catch(() => {});
+    });
+  });
+
+  const pollIncoming = async () => {
+    try {
+      const url = new URL(endpoint, window.location.href);
+      const response = await fetch(url.toString(), {
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json' },
+      });
+      const data = await response.json();
+      if (!data || data.ok !== true) {
+        return;
+      }
+      if (data.incoming && data.incoming.peerUserId) {
+        showIncoming(data.incoming);
+        return;
+      }
+      if (currentPeerId || (overlay && !overlay.hidden)) {
+        hideIncoming();
+      }
+    } catch (error) {
+      // Keep polling; the other person may still be ringing.
+    }
+  };
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      pollIncoming();
+    }
+  });
+
+  if (config.incoming && config.incoming.peerUserId) {
+    showIncoming(config.incoming);
+  }
+  pollIncoming();
+  window.setInterval(pollIncoming, POLL_MS);
+})();
