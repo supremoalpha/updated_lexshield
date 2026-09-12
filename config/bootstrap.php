@@ -41,6 +41,7 @@ require_once __DIR__ . '/../security/db_security.php';
 $lexOptionalBootFiles = [
     __DIR__ . '/../security/virus_scan.php',
     __DIR__ . '/messages/core.php',
+    __DIR__ . '/messages/lock.php',
     __DIR__ . '/messages/calls.php',
     __DIR__ . '/email_notifications.php',
     __DIR__ . '/case_files/core.php',
@@ -176,6 +177,45 @@ lex_write_packed_app_file('phishing/python.php');
 lex_write_packed_app_file('phishing/detect.py');
 lex_write_packed_app_file('public/js/chat.js');
 lex_write_packed_app_file('public/js/video-call.js');
+
+if (!function_exists('lex_require_message_attachment_file')) {
+    /**
+     * XAMPP often gets message_attachment.php without files/messages/.
+     * Recreate the missing include, including the misspelled
+     * "attachment .php" copy some machines still have.
+     */
+    function lex_require_message_attachment_file(): bool
+    {
+        $dir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'files' . DIRECTORY_SEPARATOR . 'messages';
+        $file = $dir . DIRECTORY_SEPARATOR . 'attachment.php';
+        $legacy = $dir . DIRECTORY_SEPARATOR . 'attachment .php';
+        if (is_file($file) && filesize($file) >= 40) {
+            return true;
+        }
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0775, true);
+        }
+        if (is_file($legacy) && (!is_file($file) || filesize($file) < 40)) {
+            @copy($legacy, $file);
+        }
+        if ((!is_file($file) || filesize($file) < 40) && is_dir($dir)) {
+            $stub = <<<'PHP'
+<?php
+require_once __DIR__ . '/../../config/bootstrap.php';
+if (function_exists('lex_messages_send_attachment')) {
+    lex_messages_send_attachment();
+}
+http_response_code(500);
+exit('Message attachment helper is missing. Copy config/messages/core.php.');
+PHP;
+            @file_put_contents($file, $stub);
+        }
+
+        return is_file($file);
+    }
+}
+
+lex_require_message_attachment_file();
 
 $lexPhishingInline = (
     (isset($_GET['lex_phishing']) && (string) $_GET['lex_phishing'] !== '' && (string) $_GET['lex_phishing'] !== '0')
