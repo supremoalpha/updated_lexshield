@@ -167,8 +167,16 @@ if (str_starts_with($mime, 'text/') && $previewPath !== '' && is_file($previewPa
     }
 }
 
+if (($mime === '' || $mime === 'application/octet-stream') && preg_match('/\.pdf$/i', $fileName) === 1) {
+    $mime = 'application/pdf';
+    $canPreview = true;
+}
+
 $isImage = str_starts_with($mime, 'image/');
 $kind = $textBody !== '' ? 'text' : ($isImage ? 'image' : 'frame');
+if ($kind === 'frame' && $sourceUrl !== '' && (str_contains($mime, 'pdf') || preg_match('/\.pdf$/i', $fileName) === 1)) {
+    $sourceUrl .= '#toolbar=1&navpanes=0&scrollbar=1&view=FitH&zoom=page-fit';
+}
 $backHref = function_exists('lex_nav_href') ? lex_nav_href('case_files.php?record=' . max($caseFileId, 0)) : lex_app_url('case_files.php');
 if ($documentId > 0) {
     $backHref = function_exists('lex_nav_href')
@@ -188,21 +196,25 @@ lex_page_header('View case file', 'case-files', $user);
       <h2><?= lex_e($title) ?></h2>
       <p class="muted"><?= lex_e($fileName) ?><?= $viewOnly ? ' · Shared view only' : '' ?></p>
     </div>
-    <a class="button button-secondary" href="<?= lex_e($backHref) ?>">Back to case files</a>
+    <div class="case-file-view-actions">
+      <button class="button button-secondary" type="button" data-case-file-fit>Fit to screen</button>
+      <button class="button button-secondary" type="button" data-case-file-fullscreen>Full screen</button>
+      <a class="button button-secondary" href="<?= lex_e($backHref) ?>">Back to case files</a>
+    </div>
   </div>
   <?php if ($viewOnly): ?>
     <p class="case-file-view-banner">You can see every file in this shared case. Download, copy, print, and screenshots are blocked in the portal.</p>
   <?php endif; ?>
-  <div class="case-file-view-stage" oncontextmenu="return false;">
+  <div class="case-file-view-stage is-fit-screen" data-case-file-stage oncontextmenu="return false;">
     <div class="case-file-view-watermark" aria-hidden="true"><?php for ($i = 0; $i < 24; $i++): ?><span><?= lex_e($watermark) ?></span><?php endfor; ?></div>
     <div class="case-file-view-shield" aria-hidden="true"></div>
     <?php if ($kind === 'text' && $textBody !== ''): ?>
-      <pre class="case-file-view-text" style="margin:0;padding:1.2rem 1.4rem 2.4rem;min-height:62vh;white-space:pre-wrap;word-break:break-word;font:0.95rem/1.55 ui-monospace,Menlo,Consolas,monospace;"><?= lex_e($textBody) ?></pre>
+      <pre class="case-file-view-text"><?= lex_e($textBody) ?></pre>
     <?php elseif ($canPreview && $sourceUrl !== ''): ?>
       <?php if ($kind === 'image'): ?>
-        <img class="case-file-view-media" src="<?= lex_e($sourceUrl) ?>" alt="" draggable="false">
+        <img class="case-file-view-media" src="<?= lex_e($sourceUrl) ?>" alt="" draggable="false" data-case-file-preview>
       <?php else: ?>
-        <iframe class="case-file-view-frame" src="<?= lex_e($sourceUrl) ?>" title="<?= lex_e($fileName) ?>"></iframe>
+        <iframe class="case-file-view-frame" src="<?= lex_e($sourceUrl) ?>" data-src="<?= lex_e($sourceUrl) ?>" title="<?= lex_e($fileName) ?>" allowfullscreen data-case-file-preview></iframe>
       <?php endif; ?>
     <?php else: ?>
       <div class="case-file-view-unavailable">
@@ -212,10 +224,25 @@ lex_page_header('View case file', 'case-files', $user);
     <?php endif; ?>
   </div>
 </section>
+<style>
+.case-file-view-actions { display: flex; flex-wrap: wrap; gap: 0.55rem; justify-content: flex-end; }
+.case-file-view-stage { height: calc(100dvh - 13.5rem); min-height: 70vh; }
+.case-file-view-stage.is-fit-screen,
+.case-file-view-stage:fullscreen,
+.case-file-view-stage:-webkit-full-screen { height: 100vh; min-height: 100vh; border-radius: 0; }
+.case-file-view-media,
+.case-file-view-frame,
+.case-file-view-text { height: 100%; min-height: 100%; pointer-events: auto; }
+.case-file-view-shield { pointer-events: none; }
+</style>
 <script>
 (function () {
   var root = document.querySelector('[data-case-file-view-only]');
   if (!root) return;
+  var stage = root.querySelector('[data-case-file-stage]');
+  var frame = root.querySelector('.case-file-view-frame');
+  var fitBtn = root.querySelector('[data-case-file-fit]');
+  var fullBtn = root.querySelector('[data-case-file-fullscreen]');
   var block = function (event) { event.preventDefault(); event.stopPropagation(); return false; };
   ['copy', 'cut', 'paste', 'dragstart', 'selectstart', 'contextmenu'].forEach(function (name) {
     document.addEventListener(name, block, true);
@@ -223,7 +250,7 @@ lex_page_header('View case file', 'case-files', $user);
   document.addEventListener('keydown', function (event) {
     var key = String(event.key || '').toLowerCase();
     var blocked = (event.ctrlKey || event.metaKey) && ['c', 'x', 's', 'p', 'a'].indexOf(key) !== -1;
-    if (blocked || key === 'printscreen' || key === 'f12') {
+    if (blocked || key === 'printscreen') {
       event.preventDefault();
       root.classList.add('is-capture-blocked');
       window.setTimeout(function () { root.classList.remove('is-capture-blocked'); }, 1200);
@@ -232,6 +259,40 @@ lex_page_header('View case file', 'case-files', $user);
   window.addEventListener('beforeprint', function (event) {
     event.preventDefault();
     document.body.classList.add('case-file-print-blocked');
+  });
+  var applyFit = function () {
+    if (!stage) return;
+    stage.classList.add('is-fit-screen');
+    if (!frame) return;
+    var raw = frame.getAttribute('data-src') || frame.src || '';
+    var base = raw.split('#')[0];
+    var next = base + '#toolbar=1&navpanes=0&scrollbar=1&view=FitH&zoom=page-fit';
+    if (frame.src !== next) {
+      frame.src = next;
+    }
+  };
+  var toggleFullscreen = function () {
+    if (!stage) return;
+    var active = document.fullscreenElement || document.webkitFullscreenElement;
+    if (active) {
+      if (document.exitFullscreen) document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      return;
+    }
+    if (stage.requestFullscreen) stage.requestFullscreen();
+    else if (stage.webkitRequestFullscreen) stage.webkitRequestFullscreen();
+  };
+  if (fitBtn) fitBtn.addEventListener('click', applyFit);
+  if (fullBtn) fullBtn.addEventListener('click', toggleFullscreen);
+  root.addEventListener('dblclick', function (event) {
+    if (event.target && event.target.closest('[data-case-file-preview], [data-case-file-stage]')) {
+      toggleFullscreen();
+    }
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (fullBtn) {
+      fullBtn.textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen';
+    }
   });
 })();
 </script>

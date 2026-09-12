@@ -72,7 +72,7 @@ if (!function_exists('lex_dashboard_is_real')) {
             }
         }
         if (str_ends_with(\$normalized, '/files/cases/view.php')) {
-            return str_contains(\$source, 'case-file-view-text');
+            return str_contains(\$source, 'data-case-file-fit');
         }
         if (filesize(\$path) < 80) {
             return false;

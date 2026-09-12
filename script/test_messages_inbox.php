@@ -218,6 +218,7 @@ lex_inbox_assert(
     && str_contains($documentPhp, 'This shared case file is view-only')
     && str_contains($viewPhp, 'data-case-file-view-only')
     && str_contains($viewPhp, 'case-file-view-text')
+    && str_contains($viewPhp, 'data-case-file-fit')
     && is_file(dirname(__DIR__) . '/case_file_view.php'),
     'Shared lawyers must open an in-app viewer, not a download.'
 );
@@ -273,7 +274,14 @@ lex_inbox_assert(
 lex_inbox_assert(
     'Packed case-file viewer source includes the view-only page',
     function_exists('lex_case_files_view_source')
-    && str_contains(lex_case_files_view_source(), 'case-file-view-text')
+    && str_contains(lex_case_files_view_source(), 'data-case-file-fit')
+);
+lex_inbox_assert(
+    'Case file viewer can fit the screen and stay clickable',
+    str_contains($viewPhp, 'data-case-file-fit')
+    && str_contains($viewPhp, 'data-case-file-fullscreen')
+    && str_contains($viewPhp, 'zoom=page-fit')
+    && str_contains($style, 'pointer-events: auto')
 );
 lex_inbox_assert(
     'Text case files render on the page instead of a blocked iframe',
