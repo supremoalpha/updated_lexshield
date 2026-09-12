@@ -141,7 +141,7 @@
 .client-lawyers-react-card .lawyer-card--directory {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
+  align-items: start;
   gap: 1rem;
   padding: 1rem 1.1rem;
 }
@@ -171,7 +171,6 @@
 }
 
 .client-lawyers-react-card .lawyer-card--directory .status-badge,
-.client-lawyers-react-card .lawyer-card--directory .lawyer-card__rating,
 .client-lawyers-react-card .lawyer-card--directory .lawyer-card__chips {
   display: none;
 }
@@ -18553,7 +18552,7 @@ html[data-theme="dark"] .rating-stars .is-filled {
 .client-lawyers-react-card .lawyer-card.lawyer-card--directory {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
+  align-items: start;
   width: 100%;
   max-width: none;
   min-height: 0;
@@ -18585,9 +18584,16 @@ html[data-theme="dark"] .rating-stars .is-filled {
 
 .client-lawyers-react-card .lawyer-card.lawyer-card--directory .lawyer-card__person-icon,
 .client-lawyers-react-card .lawyer-card.lawyer-card--directory .status-badge,
-.client-lawyers-react-card .lawyer-card.lawyer-card--directory .lawyer-card__rating,
 .client-lawyers-react-card .lawyer-card.lawyer-card--directory .lawyer-card__chips {
   display: none;
+}
+
+.client-lawyers-react-card .lawyer-card.lawyer-card--directory .lawyer-card__rating,
+.client-lawyers-react-card .lawyer-card.lawyer-card--directory .lawyer-card__rating-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0;
 }
 
 .client-lawyers-react-card .lawyer-card.lawyer-card--directory .lawyer-card__body {
@@ -29369,7 +29375,7 @@ body.pao-site .pao-lawyer-card--directory,
 body.pao-home .pao-lawyer-card--directory {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
+  align-items: start;
   gap: 1rem;
   padding: 1rem 1.1rem !important;
   min-height: 0;
@@ -29401,11 +29407,26 @@ body.pao-home .pao-lawyer-card--directory p {
   text-align: left;
 }
 
-body.pao-site .pao-lawyer-card--directory .pao-btn {
-  margin-top: 0.35rem;
+body.pao-site .pao-lawyer-card--directory .pao-rating,
+body.pao-home .pao-lawyer-card--directory .pao-rating {
+  margin-top: 0.15rem;
+  gap: 0.2rem 0.4rem;
+}
+
+body.pao-site .pao-lawyer-card--directory .pao-lawyer-actions,
+body.pao-home .pao-lawyer-card--directory .pao-lawyer-actions {
+  margin-top: 0.2rem;
+  padding-top: 0;
+  width: 100%;
+}
+
+body.pao-site .pao-lawyer-card--directory .pao-btn,
+body.pao-home .pao-lawyer-card--directory .pao-btn {
+  margin-top: 0;
   min-height: 2rem;
   padding: 0 0.85rem;
   width: auto;
+  flex: 0 0 auto;
 }
 
 body.pao-site .pao-directory-search input,

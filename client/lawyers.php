@@ -275,7 +275,7 @@ lex_page_header('Lawyers', 'lawyers', $user);
                 </div>
 
                 <div class="lawyer-card__actions">
-                  <a class="button button-secondary" href="<?= lex_e((string) $lawyer['viewProfileUrl']) ?>">Profile</a>
+                  <a class="button button-secondary" href="<?= lex_e((string) $lawyer['viewProfileUrl']) ?>">View</a>
                   <?php if (!empty($lawyer['canAppoint'])): ?>
                     <a class="button button-primary" href="<?= lex_e((string) $lawyer['appointUrl']) ?>">Book &#8599;</a>
                   <?php else: ?>

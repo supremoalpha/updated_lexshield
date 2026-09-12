@@ -409,11 +409,11 @@
           <div className="lawyer-card__actions">
             {demoMode ? (
               <button className="button button-secondary" type="button" disabled aria-disabled="true" title="Preview profiles are not linked yet">
-                Profile
+                View
               </button>
             ) : (
               <a className="button button-secondary" href={lawyer.viewProfileUrl}>
-                Profile
+                View
               </a>
             )}
             {lawyer.canAppoint && !demoMode ? (
