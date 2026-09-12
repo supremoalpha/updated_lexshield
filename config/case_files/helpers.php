@@ -402,7 +402,19 @@ if (!function_exists('lex_case_files_render_vault_panel')) {
                   <span class="pill payment-status-pill payment-status-<?= lex_e((string) $document['upload_status']) ?>"><?= lex_e(ucfirst((string) $document['upload_status'])) ?></span>
                   <small class="muted">by <?= lex_e((string) $document['uploaded_by_name']) ?> &middot; <?= lex_e(lex_message_timestamp((string) $document['created_at'])) ?></small>
                   <div class="inline-actions">
-                    <a class="button button-secondary" href="<?= lex_e(lex_app_url('case_document_file.php?document_id=' . (int) $document['id'])) ?>">Download</a>
+                    <?php
+                      $docMime = function_exists('lex_case_file_guess_mime')
+                          ? lex_case_file_guess_mime((string) ($document['mime_type'] ?? ''), (string) $document['original_name'])
+                          : (string) ($document['mime_type'] ?? '');
+                      $canPreview = function_exists('lex_case_file_previewable_mime') && lex_case_file_previewable_mime($docMime, (string) $document['original_name']);
+                      $viewOnly = function_exists('lex_case_file_is_view_only') && lex_case_file_is_view_only($access);
+                    ?>
+                    <?php if ($canPreview && function_exists('lex_case_file_view_url')): ?>
+                      <a class="button button-secondary" href="<?= lex_e(lex_case_file_view_url(['document_id' => (int) $document['id']])) ?>">View</a>
+                    <?php endif; ?>
+                    <?php if (!$viewOnly): ?>
+                      <a class="button button-secondary" href="<?= lex_e(lex_app_url('case_document_file.php?document_id=' . (int) $document['id'])) ?>">Download</a>
+                    <?php endif; ?>
                     <?php if ($canManage && (string) $document['upload_status'] === 'pending'): ?>
                       <form method="post" style="display:inline;">
                         <?= lex_csrf_field() ?>
@@ -422,15 +434,18 @@ if (!function_exists('lex_case_files_render_vault_panel')) {
                   </div>
                 </li>
               <?php endforeach; ?>
-              <?php if (!$documents): ?><li class="admin-empty-line">No documents in the vault yet.</li><?php endif; ?>
+              <?php if (!$documents): ?><li class="admin-empty-line">No pictures, videos, or documents in the vault yet.</li><?php endif; ?>
             </ul>
           </details>
-          <?php if ($access !== 'none'): ?>
+          <?php if ($access !== 'none' && !(function_exists('lex_case_file_is_view_only') && lex_case_file_is_view_only($access))): ?>
             <form method="post" enctype="multipart/form-data" class="stack-form">
               <?= lex_csrf_field() ?>
               <input type="hidden" name="action" value="vault_upload">
               <input type="hidden" name="case_file_id" value="<?= (int) $record['id'] ?>">
-              <label>Upload an encrypted document <input type="file" name="document" required></label>
+              <label>Upload a picture, video, or document
+                <input type="file" name="document" accept="<?= lex_e(function_exists('lex_case_file_upload_accept') ? lex_case_file_upload_accept() : 'image/*,video/*,.pdf,.txt') ?>" required>
+              </label>
+              <p class="muted">JPG, PNG, GIF, WEBP pictures and MP4, WEBM, or MOV videos, plus PDF or text documents, up to 80 MB.</p>
               <?php if (!$canManage): ?><p class="muted">Client uploads require your lawyer's approval before they appear as available.</p><?php endif; ?>
               <button class="button button-primary" type="submit">Upload to vault</button>
             </form>

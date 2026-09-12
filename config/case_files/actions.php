@@ -203,16 +203,25 @@ if (!function_exists('lex_case_files_handle_post')) {
                     'created_by_user_id' => (int) $record['created_by_user_id'],
                 ], $user) : 'none';
 
-                if (!$record || $access === 'none') {
+                if (!$record || $access === 'none' || (function_exists('lex_case_file_is_view_only') && lex_case_file_is_view_only($access))) {
                     return ['error' => 'Case file not found or access denied.', 'failed_action' => 'vault_upload'];
                 }
 
                 $file = $_FILES['document'] ?? [];
                 if (empty($file['name']) || ($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
-                    return ['error' => 'Choose a document to upload.', 'failed_action' => 'vault_upload'];
+                    return ['error' => 'Choose a picture, video, or document to upload.', 'failed_action' => 'vault_upload'];
                 }
-                if ((int) ($file['size'] ?? 0) > 25 * 1024 * 1024) {
-                    return ['error' => 'Documents must be smaller than 25 MB.', 'failed_action' => 'vault_upload'];
+                $maxBytes = function_exists('lex_case_file_upload_max_bytes') ? lex_case_file_upload_max_bytes() : (80 * 1024 * 1024);
+                if ((int) ($file['size'] ?? 0) > $maxBytes) {
+                    return ['error' => 'Files must be smaller than 80 MB.', 'failed_action' => 'vault_upload'];
+                }
+
+                $mime = function_exists('lex_case_file_detect_upload_mime')
+                    ? lex_case_file_detect_upload_mime($file)
+                    : 'application/octet-stream';
+                $originalName = lex_sanitize_filename(basename((string) $file['name']));
+                if (function_exists('lex_case_file_is_allowed_upload') && !lex_case_file_is_allowed_upload($mime, $originalName)) {
+                    return ['error' => 'Upload a picture (JPG, PNG, GIF, WEBP), a video (MP4, WEBM, MOV), or a document (PDF, TXT).', 'failed_action' => 'vault_upload'];
                 }
 
                 try {
@@ -235,23 +244,15 @@ if (!function_exists('lex_case_files_handle_post')) {
                 lex_storage_ensure_dir($folderPath);
                 file_put_contents($folderPath . DIRECTORY_SEPARATOR . $storedName, $encrypted['ciphertext'], LOCK_EX);
 
-                $mime = 'application/octet-stream';
-                if (function_exists('finfo_open')) {
-                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                    if ($finfo) {
-                        $mime = (string) finfo_file($finfo, (string) $file['tmp_name']);
-                        finfo_close($finfo);
-                    }
-                }
-
                 $status = $access === 'manage' ? 'approved' : 'pending';
+                $kindLabel = str_starts_with($mime, 'image/') ? 'Picture' : (str_starts_with($mime, 'video/') ? 'Video' : 'File');
                 $pdo->prepare(
                     'INSERT INTO case_file_documents (case_file_id, folder_id, original_name, stored_name, mime_type, file_size, encryption_algorithm, encryption_iv, encryption_tag, upload_status, uploaded_by_user_id)
                      VALUES (:case_file_id, :folder_id, :original_name, :stored_name, :mime_type, :file_size, :algorithm, :iv, :tag, :status, :uploaded_by)'
                 )->execute([
                     'case_file_id' => $caseFileId,
                     'folder_id' => (int) $folder['id'],
-                    'original_name' => lex_sanitize_filename(basename((string) $file['name'])),
+                    'original_name' => $originalName,
                     'stored_name' => $storedName,
                     'mime_type' => $mime,
                     'file_size' => strlen($plaintext),
@@ -263,7 +264,7 @@ if (!function_exists('lex_case_files_handle_post')) {
                 ]);
 
                 lex_audit('vault_upload_case_file_document', 'case_files', (string) $caseFileId);
-                lex_flash_set('success', $status === 'approved' ? 'Document uploaded to the secure vault.' : 'Document uploaded and is pending your lawyer\'s approval.');
+                lex_flash_set('success', $status === 'approved' ? ($kindLabel . ' uploaded to the secure vault.') : ($kindLabel . ' uploaded and is pending your lawyer\'s approval.'));
                 $redirect(['record' => $caseFileId]);
             }
 

@@ -202,7 +202,7 @@ if (!function_exists('lex_case_file_guess_mime')) {
     function lex_case_file_guess_mime(string $mime, string $name): string
     {
         $mime = strtolower(trim($mime));
-        if ($mime !== '' && preg_match('/^(image\/|application\/pdf$|text\/)/', $mime) === 1) {
+        if ($mime !== '' && preg_match('/^(image\/|video\/|application\/pdf$|text\/)/', $mime) === 1) {
             return $mime;
         }
         $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
@@ -210,10 +210,16 @@ if (!function_exists('lex_case_file_guess_mime')) {
         return match ($ext) {
             'txt', 'log', 'md', 'csv' => 'text/plain',
             'pdf' => 'application/pdf',
+            'doc' => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'png' => 'image/png',
             'jpg', 'jpeg' => 'image/jpeg',
             'gif' => 'image/gif',
             'webp' => 'image/webp',
+            'mp4', 'm4v' => 'video/mp4',
+            'webm' => 'video/webm',
+            'mov' => 'video/quicktime',
+            '3gp' => 'video/3gpp',
             default => $mime !== '' ? $mime : 'application/octet-stream',
         };
     }
@@ -226,7 +232,55 @@ if (!function_exists('lex_case_file_previewable_mime')) {
             $mime = lex_case_file_guess_mime($mime, $name);
         }
 
-        return (bool) preg_match('/^(image\/|application\/pdf$|text\/)/', $mime);
+        return (bool) preg_match('/^(image\/|video\/|application\/pdf$|text\/)/', $mime);
+    }
+}
+
+if (!function_exists('lex_case_file_upload_max_bytes')) {
+    function lex_case_file_upload_max_bytes(): int
+    {
+        return 80 * 1024 * 1024;
+    }
+}
+
+if (!function_exists('lex_case_file_upload_accept')) {
+    function lex_case_file_upload_accept(): string
+    {
+        return 'image/*,video/*,.pdf,.txt,.csv,.doc,.docx';
+    }
+}
+
+if (!function_exists('lex_case_file_is_allowed_upload')) {
+    function lex_case_file_is_allowed_upload(string $mime, string $name = ''): bool
+    {
+        if ($name !== '' && function_exists('lex_case_file_guess_mime')) {
+            $mime = lex_case_file_guess_mime($mime, $name);
+        }
+
+        return (bool) preg_match(
+            '/^(image\/(jpeg|png|gif|webp)$|video\/(mp4|webm|quicktime|3gpp|x-m4v)$|application\/pdf$|text\/|application\/(msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document)$)/',
+            $mime
+        );
+    }
+}
+
+if (!function_exists('lex_case_file_detect_upload_mime')) {
+    function lex_case_file_detect_upload_mime(array $file): string
+    {
+        $name = (string) ($file['name'] ?? '');
+        $tmp = (string) ($file['tmp_name'] ?? '');
+        $mime = '';
+        if ($tmp !== '' && is_file($tmp) && function_exists('finfo_open')) {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            if ($finfo) {
+                $mime = (string) finfo_file($finfo, $tmp);
+                finfo_close($finfo);
+            }
+        }
+
+        return function_exists('lex_case_file_guess_mime')
+            ? lex_case_file_guess_mime($mime, $name)
+            : ($mime !== '' ? $mime : 'application/octet-stream');
     }
 }
 
