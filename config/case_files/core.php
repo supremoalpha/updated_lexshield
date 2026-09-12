@@ -191,6 +191,126 @@ if (!function_exists('lex_case_file_vault_access')) {
     }
 }
 
+if (!function_exists('lex_case_file_is_view_only')) {
+    function lex_case_file_is_view_only(string $access): bool
+    {
+        return $access === 'shared';
+    }
+}
+
+if (!function_exists('lex_case_file_guess_mime')) {
+    function lex_case_file_guess_mime(string $mime, string $name): string
+    {
+        $mime = strtolower(trim($mime));
+        if ($mime !== '' && preg_match('/^(image\/|application\/pdf$|text\/)/', $mime) === 1) {
+            return $mime;
+        }
+        $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+
+        return match ($ext) {
+            'txt', 'log', 'md', 'csv' => 'text/plain',
+            'pdf' => 'application/pdf',
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            default => $mime !== '' ? $mime : 'application/octet-stream',
+        };
+    }
+}
+
+if (!function_exists('lex_case_file_previewable_mime')) {
+    function lex_case_file_previewable_mime(string $mime, string $name = ''): bool
+    {
+        if ($name !== '' && function_exists('lex_case_file_guess_mime')) {
+            $mime = lex_case_file_guess_mime($mime, $name);
+        }
+
+        return (bool) preg_match('/^(image\/|application\/pdf$|text\/)/', $mime);
+    }
+}
+
+if (!function_exists('lex_case_file_view_url')) {
+    function lex_case_file_view_url(array $query): string
+    {
+        $query = array_filter($query, static fn ($value) => $value !== '' && $value !== null);
+        $href = 'case_file_view.php';
+        if ($query !== []) {
+            $href .= '?' . http_build_query($query);
+        }
+
+        return function_exists('lex_nav_href') ? lex_nav_href($href) : lex_app_url($href);
+    }
+}
+
+if (!function_exists('lex_case_file_view_token_issue')) {
+    function lex_case_file_view_token_issue(int $userId): string
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            return '';
+        }
+        $token = bin2hex(random_bytes(16));
+        $_SESSION['lex_case_view_token'] = [
+            't' => $token,
+            'exp' => time() + 180,
+            'uid' => $userId,
+        ];
+
+        return $token;
+    }
+}
+
+if (!function_exists('lex_case_file_view_token_ok')) {
+    function lex_case_file_view_token_ok(string $token, int $userId): bool
+    {
+        if ($token === '' || session_status() !== PHP_SESSION_ACTIVE) {
+            return false;
+        }
+        $row = $_SESSION['lex_case_view_token'] ?? null;
+        if (!is_array($row)) {
+            return false;
+        }
+        $stored = (string) ($row['t'] ?? '');
+        $exp = (int) ($row['exp'] ?? 0);
+        $uid = (int) ($row['uid'] ?? 0);
+
+        return $stored !== ''
+            && hash_equals($stored, $token)
+            && $exp >= time()
+            && $uid === $userId;
+    }
+}
+
+if (!function_exists('lex_case_file_send_view_only_headers')) {
+    function lex_case_file_send_view_only_headers(string $mime, string $name, int $size): void
+    {
+        header('Content-Type: ' . $mime);
+        header('Content-Length: ' . $size);
+        header('X-Content-Type-Options: nosniff');
+        header('X-Frame-Options: SAMEORIGIN', true);
+        header(
+            "Content-Security-Policy: default-src 'none'; frame-ancestors 'self'; base-uri 'none'",
+            true
+        );
+        header('Cache-Control: private, no-store, no-cache, must-revalidate');
+        header('Pragma: no-cache');
+        header('Content-Disposition: inline; filename="' . str_replace('"', '', $name) . '"');
+    }
+}
+
+if (!function_exists('lex_case_file_watermark_data_uri')) {
+    function lex_case_file_watermark_data_uri(string $text): string
+    {
+        $safe = htmlspecialchars($text, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="520" height="200" viewBox="0 0 520 200">'
+            . '<text x="260" y="100" fill="rgba(148,163,184,0.28)" font-family="Arial,sans-serif" '
+            . 'font-size="16" font-weight="700" text-anchor="middle" dominant-baseline="middle" '
+            . 'transform="rotate(-18 260 100)">' . $safe . '</text></svg>';
+
+        return 'data:image/svg+xml;charset=UTF-8,' . rawurlencode($svg);
+    }
+}
+
 if (!function_exists('lex_case_file_document_encrypt')) {
     /**
      * AES-256-GCM encrypts $plaintext. Returns the ciphertext plus the

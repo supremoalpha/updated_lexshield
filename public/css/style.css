@@ -31342,3 +31342,40 @@ body:has([data-video-call-page]) .video-call-controls {
   object-fit: contain;
   background: #061225;
 }
+
+/* Case file viewer: keep the view-only stamp on the preview, not in the page text. */
+.case-file-view-head h2,
+.case-file-view-head p {
+  overflow-wrap: anywhere;
+}
+
+.case-file-view-stage {
+  position: relative;
+  overflow: hidden;
+}
+
+.case-file-view-watermark {
+  position: absolute;
+  inset: -12%;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+  background-repeat: repeat;
+  background-size: 520px 200px;
+}
+
+.case-file-view-shield {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.case-file-view-media,
+.case-file-view-frame,
+.case-file-view-text {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
