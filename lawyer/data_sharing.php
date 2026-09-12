@@ -2,14 +2,10 @@
 require_once __DIR__ . '/../config/bootstrap.php';
 
 /**
- * Lawyer-to-lawyer data sharing, gated by admin approval and recorded on
- * the tamper-evident blockchain ledger (config/blockchain/ledger.php).
- * Flow: Lawyer A picks one of their own case files + Lawyer B -> a
- * "share_requested" block is appended and an admin notified -> an admin
- * approves or rejects on admin/data_sharing.php ("share_approved" /
- * "share_rejected" block) -> on approval, Lawyer B gets read access to
- * that case file's secure vault (case_file_shares) and can open it from
- * their own Case Files page.
+ * Lawyer-to-lawyer case file sharing, gated by admin approval and recorded
+ * on the tamper-evident blockchain ledger. After approval, Lawyer B can
+ * see every file in that case in a view-only vault (no download, copy,
+ * or screenshot in the portal).
  */
 
 $user = lex_require_role('lawyer');
@@ -59,11 +55,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     lex_data_sharing_create_request($caseFileId, $lawyerUserId, $toLawyerUserId, $note);
                     foreach (lex_recent('SELECT id FROM users WHERE role = "admin" AND is_active = 1') as $admin) {
-                        lex_notify((int) $admin['id'], 'data_sharing', (string) $user['full_name'] . ' requested to share a case file with another lawyer.');
+                        lex_notify((int) $admin['id'], 'data_sharing', (string) $user['full_name'] . ' requested to share case files with another lawyer.');
                     }
-                    lex_notify($toLawyerUserId, 'data_sharing', (string) $user['full_name'] . ' requested to share a case file with you (pending admin approval).');
+                    lex_notify($toLawyerUserId, 'data_sharing', (string) $user['full_name'] . ' requested to share case files with you (view only, pending admin approval).');
                     lex_audit('request_data_share', 'data_sharing_requests', (string) $caseFileId);
-                    lex_flash_set('success', 'Share request submitted for admin approval and recorded on the blockchain ledger.');
+                    lex_flash_set('success', 'Case file share submitted for admin approval. The other lawyer will see every file but cannot download or copy them.');
                     header('Location: ' . lex_app_url('lawyer/data_sharing.php'));
                     exit;
                 }
@@ -131,15 +127,15 @@ $statusClass = static fn (string $status): string => match ($status) {
     default => 'is-ongoing',
 };
 
-lex_page_header('Data Sharing', 'data-sharing', $user);
+lex_page_header('Case File Sharing', 'data-sharing', $user);
 ?>
 <?php if ($error !== ''): ?><div class="alert alert-error"><?= lex_e($error) ?></div><?php endif; ?>
 
 <section class="card">
   <div class="card-head">
     <div>
-      <h2>Request to share a case file</h2>
-      <p class="muted">Every request is recorded on an append-only, hash-chained ledger and must be approved by an administrator before the other lawyer gains access.</p>
+      <h2>Share a case file (view only)</h2>
+      <p class="muted">The other lawyer can see every file in the case after an administrator approves the request. They cannot download, copy, print, or take a screenshot in the portal. Every request is recorded on the ledger.</p>
     </div>
   </div>
   <form method="post" class="form-grid">
@@ -162,7 +158,7 @@ lex_page_header('Data Sharing', 'data-sharing', $user);
       </select>
     </label>
     <label class="full">Note for the admin (optional)
-      <textarea name="note" rows="3" placeholder="Why does this case file need to be shared?"></textarea>
+      <textarea name="note" rows="3" placeholder="Why do these case files need to be shared view-only?"></textarea>
     </label>
     <button class="button button-primary" type="submit">Submit for admin approval</button>
   </form>
@@ -189,7 +185,7 @@ lex_page_header('Data Sharing', 'data-sharing', $user);
           <?php endif; ?>
         </div>
       <?php endforeach; ?>
-      <?php if (!$outgoing): ?><div class="admin-empty-line">No outgoing share requests yet.</div><?php endif; ?>
+      <?php if (!$outgoing): ?><div class="admin-empty-line">No outgoing case file share requests yet.</div><?php endif; ?>
     </div>
   </article>
   <article class="card">
@@ -218,7 +214,7 @@ lex_page_header('Data Sharing', 'data-sharing', $user);
           <strong><?= lex_e((string) $share['case_file_title']) ?></strong>
           <span><?= lex_e((string) $share['client_full_name']) ?> &middot; granted <?= lex_e(lex_message_timestamp((string) $share['granted_at'])) ?></span>
         </div>
-        <a class="button button-secondary" href="<?= lex_e(lex_app_url('case_files.php?record=' . (int) $share['case_file_id'])) ?>">Open vault</a>
+        <a class="button button-secondary" href="<?= lex_e(lex_app_url('case_files.php?record=' . (int) $share['case_file_id'])) ?>">View files</a>
       </div>
     <?php endforeach; ?>
     <?php if (!$sharedWithMe): ?><div class="admin-empty-line">No case files have been shared with you yet.</div><?php endif; ?>

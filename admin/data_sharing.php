@@ -5,7 +5,7 @@ require_once __DIR__ . '/../config/bootstrap.php';
  * Admin approval queue for lawyer-to-lawyer case file sharing requests.
  * Approving or rejecting a request appends a block to the blockchain
  * ledger (config/blockchain/ledger.php) and, on approval, grants the
- * receiving lawyer read access to that case file's secure vault.
+ * receiving lawyer view-only access to every file in that case.
  */
 
 $user = lex_require_role('admin');
@@ -35,8 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$request) {
                 $error = 'Request not found.';
             } elseif (lex_data_sharing_decide($requestId, $decision, (int) $user['id'], $decisionNote)) {
-                lex_notify((int) $request['from_lawyer_user_id'], 'data_sharing', 'Your data sharing request was ' . $decision . ' by an administrator.');
-                lex_notify((int) $request['to_lawyer_user_id'], 'data_sharing', 'A data sharing request involving you was ' . $decision . ' by an administrator.');
+                lex_notify((int) $request['from_lawyer_user_id'], 'data_sharing', 'Your case file sharing request was ' . $decision . ' by an administrator.');
+                lex_notify((int) $request['to_lawyer_user_id'], 'data_sharing', 'A case file sharing request involving you was ' . $decision . ' by an administrator.');
                 lex_audit($decision === 'approved' ? 'share_approved' : 'share_rejected', 'data_sharing_requests', (string) $requestId);
                 lex_flash_set('success', 'Request ' . $decision . ' and recorded on the blockchain ledger.');
                 header('Location: ' . lex_app_url('admin/data_sharing.php'));
@@ -79,12 +79,12 @@ $statusClass = static fn (string $status): string => match ($status) {
     default => 'is-ongoing',
 };
 
-lex_page_header('Data Sharing Approvals', 'data-sharing', $user);
+lex_page_header('Case File Sharing Approvals', 'data-sharing', $user);
 ?>
 <div data-admin-sharing-page class="admin-sharing-page">
 <?php if ($error !== ''): ?><div class="alert alert-error"><?= lex_e($error) ?></div><?php endif; ?>
 
-<section class="admin-dashboard-stats" aria-label="Data sharing summary">
+<section class="admin-dashboard-stats" aria-label="Case file sharing summary">
   <article class="admin-dashboard-stat-card"><div class="admin-dashboard-stat-copy"><span>Pending approvals</span><strong><?= number_format(count($pending)) ?></strong></div></article>
   <article class="admin-dashboard-stat-card"><div class="admin-dashboard-stat-copy"><span>Decided (recent)</span><strong><?= number_format(count($decided)) ?></strong></div></article>
   <article class="admin-dashboard-stat-card">

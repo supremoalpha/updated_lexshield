@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /**
  * A tamper-evident, hash-chained audit ledger ("blockchain") used to record
- * every step of the lawyer-to-lawyer data sharing approval workflow:
+ * every step of the lawyer-to-lawyer case file sharing approval workflow:
  *   share_requested -> share_approved | share_rejected | share_revoked
  *
  * Each block stores a SHA-256 hash of (index + previous block's hash +
@@ -220,7 +220,7 @@ if (!function_exists('lex_blockchain_event_label')) {
 }
 
 /* ---------------------------------------------------------------------
- * Lawyer-to-lawyer data sharing workflow (requires admin approval).
+ * Lawyer-to-lawyer case file sharing workflow (requires admin approval).
  * ------------------------------------------------------------------- */
 
 if (!function_exists('lex_data_sharing_table_ensure')) {

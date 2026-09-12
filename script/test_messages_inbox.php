@@ -140,6 +140,19 @@ $notifApi = (string) file_get_contents(dirname(__DIR__) . '/notifications_api.ph
 lex_inbox_assert('Sidebar nav can show unread badges', str_contains($bootstrap, 'data-nav-badge') && str_contains($bootstrap, 'lex_nav_badge_counts'));
 lex_inbox_assert('Every sidebar button can show a notify badge', str_contains($bootstrap, 'data-nav-badge="<?= lex_e($navKey) ?>"') && str_contains($bootstrap, 'function lex_nav_badge_type_map'));
 lex_inbox_assert('Messages badge uses unread message count', str_contains($bootstrap, 'function lex_nav_unread_messages') && str_contains($bootstrap, 'receiver_id'));
+lex_inbox_assert(
+    'Messages badge matches inbox partners, not leftover notifications',
+    str_contains($bootstrap, 'function lex_nav_message_partner_roles')
+    && str_contains($bootstrap, "lex_nav_unread_messages(\$userId, \$role)")
+    && !preg_match("/counts\\['messages'\\]\\s*=\\s*max\\(/", $bootstrap)
+    && str_contains($bootstrap, "'admin' => ['lawyer', 'attorney']"),
+    'Admin Messages must count unread lawyer threads only. Leftover message/call notification rows belong on the bell, not the sidebar button.'
+);
+lex_inbox_assert(
+    'Notification poll uses the role-aware unread count',
+    str_contains($notifApi, 'lex_nav_unread_messages($userId, $role)'),
+    'The footer poller would put the ghost badge back if it counted every unread row.'
+);
 lex_inbox_assert('Appointments badge uses unread appointment notifications', str_contains($bootstrap, "['appointment']") && str_contains($bootstrap, 'lex_nav_appointment_count'));
 lex_inbox_assert('Appointments button shows how many appointments are waiting', str_contains($bootstrap, 'function lex_nav_appointment_count') && str_contains($bootstrap, "baseLabel + ' (' + shown + ')'") && str_contains($bootstrap, 'background:#e11d48'));
 lex_inbox_assert('Notification API returns sidebar badge counts', str_contains($notifApi, 'unread_messages') && str_contains($notifApi, 'nav_badges'));
@@ -184,6 +197,35 @@ $sharingPhp = (string) file_get_contents(dirname(__DIR__) . '/admin/data_sharing
 lex_inbox_assert(
     'Data sharing approvals page marks its layout',
     str_contains($sharingPhp, 'data-admin-sharing-page') && str_contains($sharingPhp, 'From ') && str_contains($sharingPhp, 'Decided by')
+);
+lex_inbox_assert(
+    'Sidebar calls the feature Case File Sharing',
+    str_contains($bootstrap, "'label' => 'Case File Sharing'")
+    && !str_contains($bootstrap, "'label' => 'Data Sharing'"),
+    'Admin and lawyer nav must say Case File Sharing.'
+);
+$lawyerSharing = (string) file_get_contents(dirname(__DIR__) . '/lawyer/data_sharing.php');
+$helpersPhp = (string) file_get_contents(dirname(__DIR__) . '/config/case_files/helpers.php');
+$actionsPhp = (string) file_get_contents(dirname(__DIR__) . '/config/case_files/actions.php');
+$documentPhp = (string) file_get_contents(dirname(__DIR__) . '/files/cases/document.php');
+$viewPhp = (string) file_get_contents(dirname(__DIR__) . '/files/cases/view.php');
+lex_inbox_assert(
+    'Shared case files are view-only',
+    str_contains($helpersPhp, 'function lex_case_file_is_view_only') === false
+    && str_contains((string) file_get_contents(dirname(__DIR__) . '/config/case_files/core.php'), 'function lex_case_file_is_view_only')
+    && str_contains($helpersPhp, 'Shared with you')
+    && str_contains($actionsPhp, 'Shared case files are view-only')
+    && str_contains($documentPhp, 'This shared case file is view-only')
+    && str_contains($viewPhp, 'data-case-file-view-only')
+    && is_file(dirname(__DIR__) . '/case_file_view.php'),
+    'Shared lawyers must open an in-app viewer, not a download.'
+);
+lex_inbox_assert(
+    'View-only viewer blocks copy and print',
+    str_contains($style, '.case-file-view-watermark')
+    && str_contains($style, '@media print')
+    && str_contains($viewPhp, "['copy', 'cut', 'paste'")
+    && str_contains($lawyerSharing, 'cannot download, copy, print')
 );
 lex_inbox_assert(
     'Data sharing text stays whole words',
