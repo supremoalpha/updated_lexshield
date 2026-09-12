@@ -168,6 +168,14 @@ lex_inbox_assert(
     'Header and footer share one notification href map',
     str_contains($bootstrap, 'function lex_notif_href_map') && substr_count($bootstrap, 'lex_notif_href_map(') >= 3
 );
+lex_inbox_assert(
+    'Notification times are human-readable on first paint',
+    str_contains($bootstrap, 'lex_message_timestamp') && str_contains($bootstrap, 'notif-bell-item-time')
+);
+lex_inbox_assert(
+    'Notification panel is pinned to the bell in JavaScript',
+    str_contains($bootstrap, 'function placePanel') && str_contains($bootstrap, 'getBoundingClientRect') && str_contains($bootstrap, 'document.body.appendChild(dropdown)')
+);
 lex_inbox_assert('Footer JS refreshes sidebar badges', str_contains($bootstrap, 'nav_badges') && str_contains($bootstrap, 'data-nav-badge'));
 lex_inbox_assert('Clicking a top-bar notification opens the matching page', str_contains($bootstrap, 'data-notif-href') && str_contains($bootstrap, 'window.location.href = href'));
 lex_inbox_assert('Nav badge styles exist', str_contains($style, '.nav-badge') && str_contains($style, 'display: none'));

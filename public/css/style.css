@@ -29753,6 +29753,22 @@ body.pao-login .pao-page {
   word-break: break-word;
 }
 
+/* Titles and nav labels must stay whole words. overflow-wrap: anywhere on
+   .main-content inherits into the topbar and splits "Admin Dashboard" into
+   letter salad on a narrow title column. */
+body.app-workspace .topbar-title,
+body.app-workspace .topbar h1,
+body.app-workspace .nav-link-label,
+body.app-workspace .user-chip,
+body.app-workspace .notif-bell-header,
+body.app-workspace .admin-dashboard-stat-copy span,
+body.app-workspace .admin-dashboard-kicker,
+body.app-workspace .admin-dashboard-card .card-head h2 {
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+
 .kpi-grid,
 .lawyer-dashboard-metrics,
 .lawyer-dashboard-shell .lawyer-dashboard-metrics,

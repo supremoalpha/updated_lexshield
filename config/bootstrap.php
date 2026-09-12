@@ -2175,7 +2175,7 @@ if (!function_exists('lex_page_header')) {
                     <span class="notif-bell-item-dot"></span>
                     <div>
                       <div><?= lex_e((string) ($lexNotifRow['message'] ?? '')) ?></div>
-                      <div class="notif-bell-item-time"><?= lex_e((string) ($lexNotifRow['created_at'] ?? '')) ?></div>
+                      <div class="notif-bell-item-time"><?= lex_e(function_exists('lex_message_timestamp') ? lex_message_timestamp((string) ($lexNotifRow['created_at'] ?? '')) : (string) ($lexNotifRow['created_at'] ?? '')) ?></div>
                     </div>
                   </div>
                 <?php endforeach; ?>
@@ -2435,12 +2435,54 @@ window.lexClosePhishingDetector = function (event) {
       .then(function (d) { if (d && d.ok) render(d); })
       .catch(function () {});
   }
+  function placePanel() {
+    if (!open || !dropdown || !bellBtn) return;
+    // Pin to the viewport with pixel offsets from the bell. CSS
+    // position:absolute + top:calc(100% + 8px) is wrong under position:fixed
+    // (percentage then means "a full screen below the fold"), and any
+    // transform/filter on .topbar would also trap a CSS-only fixed panel.
+    if (dropdown.parentNode !== document.body) {
+      document.body.appendChild(dropdown);
+    }
+    var rect = bellBtn.getBoundingClientRect();
+    var vw = window.innerWidth || document.documentElement.clientWidth;
+    var vh = window.innerHeight || document.documentElement.clientHeight;
+    var phone = vw <= 760;
+    dropdown.style.position = 'fixed';
+    dropdown.style.zIndex = '4300';
+    dropdown.style.maxHeight = Math.min(phone ? vh * 0.78 : vh * 0.7, phone ? 520 : 420) + 'px';
+    if (phone) {
+      dropdown.style.top = '12px';
+      dropdown.style.left = '12px';
+      dropdown.style.right = '12px';
+      dropdown.style.width = 'auto';
+      return;
+    }
+    var width = Math.min(360, Math.max(200, vw - 24));
+    var left = rect.right - width;
+    if (left < 12) left = 12;
+    if (left + width > vw - 12) left = Math.max(12, vw - 12 - width);
+    var top = rect.bottom + 8;
+    var maxH = Math.min(vh * 0.7, 420);
+    if (top + 96 > vh) {
+      top = Math.max(12, rect.top - maxH - 8);
+    }
+    dropdown.style.top = Math.round(top) + 'px';
+    dropdown.style.left = Math.round(left) + 'px';
+    dropdown.style.right = 'auto';
+    dropdown.style.width = width + 'px';
+  }
   function setOpen(next) {
     open = next;
     dropdown.hidden = !open;
     bellBtn.setAttribute('aria-expanded', String(open));
     if (wrap) wrap.classList.toggle('is-open', open);
-    if (open) load();
+    if (open) {
+      placePanel();
+      load();
+    } else if (wrap && dropdown.parentNode === document.body) {
+      wrap.appendChild(dropdown);
+    }
   }
   bellBtn.addEventListener('click', function (e) {
     e.preventDefault();
@@ -2448,10 +2490,13 @@ window.lexClosePhishingDetector = function (event) {
     setOpen(!open);
   });
   document.addEventListener('click', function (e) {
-    if (!open || !wrap) return;
-    if (wrap.contains(e.target)) return;
+    if (!open) return;
+    if (wrap && wrap.contains(e.target)) return;
+    if (dropdown.contains(e.target)) return;
     setOpen(false);
   });
+  window.addEventListener('resize', function () { if (open) placePanel(); });
+  window.addEventListener('scroll', function () { if (open) placePanel(); }, true);
   document.addEventListener('keydown', function (e) {
     if (open && e.key === 'Escape') setOpen(false);
   });
