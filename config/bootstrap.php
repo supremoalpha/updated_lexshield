@@ -2022,6 +2022,29 @@ if (!function_exists('lex_nav_items_for_role')) {
     }
 }
 
+if (!function_exists('lex_notification_type_label')) {
+    function lex_notification_type_label(string $type): string
+    {
+        return match ($type) {
+            'message' => 'Message',
+            'call' => 'Call',
+            'appointment' => 'Appointment',
+            'payment' => 'Payment',
+            'data_sharing' => 'Data sharing',
+            'security' => 'Security',
+            'inquiry' => 'Inquiry',
+            'lawyer' => 'Lawyer',
+            'client' => 'Client',
+            'case_file' => 'Case file',
+            'blockchain' => 'Ledger',
+            'phishing' => 'Phishing',
+            'audit' => 'Audit',
+            'schedule' => 'Schedule',
+            default => 'Update',
+        };
+    }
+}
+
 if (!function_exists('lex_nav_hrefs_by_key')) {
     /**
      * @return array<string, string>
@@ -2037,6 +2060,29 @@ if (!function_exists('lex_nav_hrefs_by_key')) {
         }
 
         return $hrefs;
+    }
+}
+
+if (!function_exists('lex_notification_type_label')) {
+    function lex_notification_type_label(string $type): string
+    {
+        return match ($type) {
+            'message' => 'Message',
+            'call' => 'Call',
+            'appointment' => 'Appointment',
+            'payment' => 'Payment',
+            'data_sharing' => 'Data sharing',
+            'security' => 'Security',
+            'inquiry' => 'Inquiry',
+            'lawyer' => 'Lawyer',
+            'client' => 'Client',
+            'case_file' => 'Case file',
+            'blockchain' => 'Ledger',
+            'phishing' => 'Phishing',
+            'audit' => 'Audit',
+            'schedule' => 'Schedule',
+            default => 'Update',
+        };
     }
 }
 
@@ -2164,17 +2210,24 @@ if (!function_exists('lex_page_header')) {
             <span class="notif-bell-badge"<?= $lexNotifCount > 0 ? '' : ' style="display:none"' ?>><?= $lexNotifCount > 99 ? '99+' : (string) $lexNotifCount ?></span>
           </button>
           <div class="notif-bell-dropdown" id="notifBellDropdown" hidden>
-            <div class="notif-bell-header"><strong>Notifications</strong><button class="notif-bell-mark-read" id="notifMarkAllRead" type="button">Mark all read</button></div>
+            <div class="notif-bell-header">
+              <div class="notif-bell-heading">
+                <strong>Notifications</strong>
+                <span class="notif-bell-unread-label" id="notifUnreadLabel"<?= $lexNotifCount > 0 ? '' : ' hidden' ?>><?= $lexNotifCount === 1 ? '1 new' : (($lexNotifCount > 99 ? '99+' : (string) $lexNotifCount) . ' new') ?></span>
+              </div>
+              <button class="notif-bell-mark-read" id="notifMarkAllRead" type="button">Mark all as read</button>
+            </div>
             <div class="notif-bell-list" id="notifBellList">
               <?php if (!$lexNotifRows): ?>
-                <p class="muted" style="padding:0.75rem;text-align:center;">No notifications yet.</p>
+                <div class="notif-bell-empty"><strong>You're all caught up</strong><p>New alerts will appear here.</p></div>
               <?php else: ?>
                 <?php foreach ($lexNotifRows as $lexNotifRow): ?>
                   <?php $lexNotifType = (string) ($lexNotifRow['type'] ?? ''); ?>
                   <div class="notif-bell-item<?= (int) ($lexNotifRow['is_read'] ?? 0) === 0 ? ' is-unread' : '' ?>" data-notif-id="<?= (int) $lexNotifRow['id'] ?>" data-notif-type="<?= lex_e($lexNotifType) ?>" data-notif-href="<?= lex_e((string) ($notifHrefsByType[$lexNotifType] ?? ($navHrefsByKey['dashboard'] ?? ''))) ?>">
-                    <span class="notif-bell-item-dot"></span>
-                    <div>
-                      <div><?= lex_e((string) ($lexNotifRow['message'] ?? '')) ?></div>
+                    <span class="notif-bell-icon" aria-hidden="true"></span>
+                    <div class="notif-bell-item-body">
+                      <div class="notif-bell-item-kind"><?= lex_e(lex_notification_type_label($lexNotifType)) ?></div>
+                      <div class="notif-bell-item-msg"><?= lex_e((string) ($lexNotifRow['message'] ?? '')) ?></div>
                       <div class="notif-bell-item-time"><?= lex_e(function_exists('lex_message_timestamp') ? lex_message_timestamp((string) ($lexNotifRow['created_at'] ?? '')) : (string) ($lexNotifRow['created_at'] ?? '')) ?></div>
                     </div>
                   </div>
@@ -2348,6 +2401,7 @@ window.lexClosePhishingDetector = function (event) {
   var dropdown = document.getElementById('notifBellDropdown');
   var listEl = document.getElementById('notifBellList');
   var markAllBtn = document.getElementById('notifMarkAllRead');
+  var unreadLabel = document.getElementById('notifUnreadLabel');
   var badge = bellBtn ? bellBtn.querySelector('.notif-bell-badge') : null;
   var notifUrl = <?= json_encode(lex_app_url('notifications_api.php')) ?>;
   var csrf = <?= json_encode(lex_csrf_token()) ?>;
@@ -2361,15 +2415,21 @@ window.lexClosePhishingDetector = function (event) {
     if (s < 86400) return Math.floor(s / 3600) + 'h ago';
     return Math.floor(s / 86400) + 'd ago';
   }
+  var kindLabels = { message: 'Message', call: 'Call', appointment: 'Appointment', payment: 'Payment', data_sharing: 'Data sharing', security: 'Security', inquiry: 'Inquiry', lawyer: 'Lawyer', client: 'Client', case_file: 'Case file', blockchain: 'Ledger', phishing: 'Phishing', audit: 'Audit', schedule: 'Schedule' };
+  function kindLabel(type) { return kindLabels[type] || 'Update'; }
+  function escapeText(value) { return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
   function render(data) {
     if (!data.notifications || !data.notifications.length) {
-      listEl.innerHTML = '<p class="muted" style="padding:0.75rem;text-align:center;">No notifications yet.</p>';
+      listEl.innerHTML = '<div class="notif-bell-empty"><strong>You\'re all caught up</strong><p>New alerts will appear here.</p></div>';
     } else {
       listEl.innerHTML = data.notifications.map(function (n) {
         var href = (notifHrefs && n.type && notifHrefs[n.type]) ? notifHrefs[n.type] : '';
-        return '<div class="notif-bell-item' + (Number(n.is_read) === 0 ? ' is-unread' : '') + '" data-notif-id="' + n.id + '" data-notif-type="' + String(n.type || '').replace(/"/g, '') + '" data-notif-href="' + String(href).replace(/"/g, '') + '">'
-          + '<span class="notif-bell-item-dot"></span>'
-          + '<div><div>' + (n.message || '').replace(/</g, '&lt;') + '</div><div class="notif-bell-item-time">' + timeAgo(n.created_at) + '</div></div></div>';
+        var type = String(n.type || '').replace(/"/g, '');
+        return '<div class="notif-bell-item' + (Number(n.is_read) === 0 ? ' is-unread' : '') + '" data-notif-id="' + n.id + '" data-notif-type="' + type + '" data-notif-href="' + String(href).replace(/"/g, '') + '">'
+          + '<span class="notif-bell-icon" aria-hidden="true"></span>'
+          + '<div class="notif-bell-item-body"><div class="notif-bell-item-kind">' + escapeText(kindLabel(type)) + '</div>'
+          + '<div class="notif-bell-item-msg">' + escapeText(n.message) + '</div>'
+          + '<div class="notif-bell-item-time">' + timeAgo(n.created_at) + '</div></div></div>';
       }).join('');
     }
     if (badge) {
@@ -2378,6 +2438,14 @@ window.lexClosePhishingDetector = function (event) {
         badge.style.display = '';
       } else {
         badge.style.display = 'none';
+      }
+    }
+    if (unreadLabel) {
+      if (data.unread > 0) {
+        unreadLabel.hidden = false;
+        unreadLabel.textContent = data.unread === 1 ? '1 new' : ((data.unread > 99 ? '99+' : String(data.unread)) + ' new');
+      } else {
+        unreadLabel.hidden = true;
       }
     }
     var navCounts = data.nav_badges && typeof data.nav_badges === 'object' ? data.nav_badges : null;

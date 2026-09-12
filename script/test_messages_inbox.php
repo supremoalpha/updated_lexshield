@@ -173,6 +173,14 @@ lex_inbox_assert(
     str_contains($bootstrap, 'lex_message_timestamp') && str_contains($bootstrap, 'notif-bell-item-time')
 );
 lex_inbox_assert(
+    'Notification rows show a type label and icon',
+    str_contains($bootstrap, 'function lex_notification_type_label') && str_contains($bootstrap, 'notif-bell-item-kind') && str_contains($bootstrap, 'notif-bell-icon')
+);
+lex_inbox_assert(
+    'Notification panel uses a professional empty state',
+    str_contains($bootstrap, 'You\'re all caught up') && str_contains($bootstrap, 'Mark all as read')
+);
+lex_inbox_assert(
     'Notification panel is pinned to the bell in JavaScript',
     str_contains($bootstrap, 'function placePanel') && str_contains($bootstrap, 'getBoundingClientRect') && str_contains($bootstrap, 'document.body.appendChild(dropdown)')
 );
