@@ -245,7 +245,7 @@ lex_page_header('Lawyers', 'lawyers', $user);
             $name = (string) ($lawyer['name'] ?? 'Lawyer');
             $reviewsCount = (int) ($lawyer['reviewsCount'] ?? 0);
             ?>
-            <article class="lawyer-card">
+            <article class="lawyer-card lawyer-card--directory">
               <div class="lawyer-card__media">
                 <?php if (!empty($lawyer['avatarUrl'])): ?>
                   <img src="<?= lex_e((string) $lawyer['avatarUrl']) ?>" alt="Avatar for <?= lex_e($name) ?>">
@@ -261,7 +261,7 @@ lex_page_header('Lawyers', 'lawyers', $user);
               <div class="lawyer-card__body">
                 <div class="lawyer-card__identity">
                   <h3><?= lex_e($name) ?></h3>
-                  <p><span aria-hidden="true">&#8863;</span> <?= lex_e((string) ($lawyer['specialization'] ?: 'General Practice')) ?></p>
+                  <p><?= lex_e((string) ($lawyer['specialization'] ?: 'General Practice')) ?></p>
                 </div>
 
                 <div class="lawyer-card__rating lawyer-card__rating-trigger" aria-label="<?= lex_e($name . ' average rating ' . $formatRating($lawyer['rating'] ?? 0) . ' out of 5') ?>">

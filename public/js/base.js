@@ -1038,6 +1038,9 @@
     });
     directory.addEventListener('input', filterLawyers);
     directory.addEventListener('change', filterLawyers);
+    directory.addEventListener('reset', () => {
+      window.setTimeout(filterLawyers, 0);
+    });
   }
 })();
 

@@ -20,11 +20,6 @@ $reserveUrl = $currentUser
         ? (function_exists('lex_nav_href') ? lex_nav_href('client/appointment.php') : lex_app_url('client/appointment.php'))
         : $dashboardUrl)
     : lex_app_url('auth/register.php');
-$resourcesUrl = $currentUser
-    ? ($currentRole === 'client'
-        ? (function_exists('lex_nav_href') ? lex_nav_href('client/lawyers.php') : lex_app_url('client/lawyers.php'))
-        : $dashboardUrl)
-    : lex_app_url('auth/login.php');
 $loginLabel = $currentUser ? 'Open dashboard' : 'Already registered? Login';
 
 $error = '';
@@ -116,8 +111,8 @@ try {
          FROM lawyers l
          JOIN users u ON u.id = l.user_id
          WHERE l.status = 'active' AND u.is_active = 1
-         ORDER BY l.id DESC
-         LIMIT 4"
+         ORDER BY u.full_name ASC
+         LIMIT 24"
     );
     $lawyerQueryOk = true;
 } catch (Throwable $e) {
@@ -152,6 +147,14 @@ $trustBar = (int) min(100, max(16, round(($avgRating / 5) * 100)));
 $reviewBar = (int) min(100, max(16, $reviewTotal > 0 ? min(100, 24 + $reviewTotal) : 16));
 $profileLabel = $lawyerCount === 1 ? '1 profile' : $lawyerCount . ' profiles';
 $reviewLabel = $reviewTotal === 1 ? '1 rating' : $reviewTotal . ' ratings';
+$directorySpecs = [];
+foreach ($featuredLawyers as $lawyer) {
+    $spec = trim((string) ($lawyer['specialization'] ?? ''));
+    if ($spec !== '') {
+        $directorySpecs[$spec] = $spec;
+    }
+}
+ksort($directorySpecs, SORT_NATURAL | SORT_FLAG_CASE);
 
 lex_pao_page_header('Equal Access to Justice for All', 'home', 'pao-home');
 ?>
@@ -250,42 +253,40 @@ lex_pao_page_header('Equal Access to Justice for All', 'home', 'pao-home');
       <div>
         <p class="pao-eyebrow">Lawyer directory</p>
         <h2>Find the right legal professional faster.</h2>
-        <p class="pao-meet-attorneys">Meet Our Attorneys</p>
       </div>
-      <?php if ($currentUser): ?>
-        <a class="pao-btn pao-btn-blue" href="<?= lex_e($resourcesUrl) ?>">View all</a>
-      <?php endif; ?>
     </div>
-    <div class="pao-lawyer-row">
+    <form class="pao-directory-search" method="get" action="#attorneys" role="search">
+      <label class="sr-only" for="directory-search-q">Search lawyers</label>
+      <input id="directory-search-q" type="search" name="q" placeholder="Search by name, specialization, or background">
+      <label class="sr-only" for="directory-search-spec">Specialization</label>
+      <select id="directory-search-spec" name="spec">
+        <option value="">Specialization</option>
+        <?php foreach ($directorySpecs as $specOption): ?>
+          <option value="<?= lex_e($specOption) ?>"><?= lex_e($specOption) ?></option>
+        <?php endforeach; ?>
+      </select>
+      <button class="pao-btn pao-btn-blue" type="submit">Search</button>
+      <button class="pao-btn pao-btn-ghost" type="reset">Clear</button>
+    </form>
+    <div class="pao-lawyer-row pao-lawyer-row--directory">
       <?php foreach ($featuredLawyers as $lawyer): ?>
         <?php
           $avatarUrl = lex_profile_avatar_url((string) ($lawyer['avatar_stored_name'] ?? ''));
           $initials = strtoupper(substr(preg_replace('/\s+/', '', (string) $lawyer['full_name']) ?: 'PA', 0, 2));
-          $rating = $lawyer['avg_rating'] !== null ? (float) $lawyer['avg_rating'] : 0.0;
-          $reviews = (int) ($lawyer['review_count'] ?? 0);
           $specLabel = (string) ($lawyer['specialization'] ?: 'General Practice');
           $lawyerId = (int) ($lawyer['id'] ?? 0);
           $profileUrl = $lawyerId > 0
-              ? lex_app_url('lawyer/view.php?id=' . $lawyerId . '&return_to=' . rawurlencode(lex_app_url('index.php')))
+              ? lex_app_url('lawyer/view.php?id=' . $lawyerId . '&return_to=' . rawurlencode(lex_app_url('index.php') . '#attorneys'))
               : '#attorneys';
         ?>
-        <article class="pao-lawyer-card" data-name="<?= lex_e((string) $lawyer['full_name']) ?>" data-spec="<?= lex_e($specLabel) ?>">
-          <div class="pao-lawyer-media">
-            <div class="pao-lawyer-avatar">
-              <?php if ($avatarUrl !== ''): ?><img src="<?= lex_e($avatarUrl) ?>" alt=""><?php else: ?><?= lex_e($initials) ?><?php endif; ?>
-            </div>
-            <span class="pao-lawyer-status">Active</span>
+        <article class="pao-lawyer-card pao-lawyer-card--directory" data-name="<?= lex_e((string) $lawyer['full_name']) ?>" data-spec="<?= lex_e($specLabel) ?>">
+          <div class="pao-lawyer-avatar">
+            <?php if ($avatarUrl !== ''): ?><img src="<?= lex_e($avatarUrl) ?>" alt=""><?php else: ?><?= lex_e($initials) ?><?php endif; ?>
           </div>
-          <h3><?= lex_e((string) $lawyer['full_name']) ?></h3>
-          <p><?= lex_e($specLabel) ?></p>
-          <?= lex_pao_star_rating($rating, $reviews) ?>
-          <div class="pao-lawyer-tags">
-            <span class="pao-chip">Public attorney</span>
-            <span class="pao-chip">Iloilo</span>
-          </div>
-          <div class="pao-lawyer-actions">
-            <a class="pao-btn pao-btn-ghost" href="<?= lex_e($profileUrl) ?>">Profile</a>
-            <a class="pao-btn pao-btn-blue" href="<?= lex_e($reserveUrl) ?>">Book</a>
+          <div class="pao-lawyer-copy">
+            <h3><?= lex_e((string) $lawyer['full_name']) ?></h3>
+            <p><?= lex_e($specLabel) ?></p>
+            <a class="pao-btn pao-btn-ghost" href="<?= lex_e($profileUrl) ?>">View</a>
           </div>
         </article>
       <?php endforeach; ?>
