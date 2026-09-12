@@ -100,6 +100,12 @@ lex_inbox_assert(
         ? 'The .notif-bell-dropdown desktop anchor (position: absolute; top: calc(100% + 8px)) is missing.'
         : 'position: fixed without a top offset in: ' . implode(' | ', $lexBellFixedNoOffset)
 );
+lex_inbox_assert(
+    'Notification panel outranks the hamburger on phones',
+    (bool) preg_match('/body\.app-workspace\s+\.topbar-actions\s*\{\s*position:\s*relative;\s*z-index:\s*(\d+);/', $style, $lexTopbarActionsZ)
+        && (int) $lexTopbarActionsZ[1] > 60,
+    '.topbar-actions is a stacking context, so it must outrank the z-index:60 on #sidebarToggle or the panel nested inside it cannot paint over the hamburger.'
+);
 lex_inbox_assert('Footer loads the incoming-call ringer', str_contains($bootstrap, 'call-ring.js') && str_contains($bootstrap, 'lex-call-ring-data'));
 lex_inbox_assert('Incoming ring overlay is in the page footer', str_contains($bootstrap, 'lexCallRingOverlay') && str_contains($bootstrap, 'lexCallRingToast'));
 lex_inbox_assert('Incoming ring uses SQL presence so timezones cannot hide it', str_contains($callsPhp, 'DATE_SUB(NOW(), INTERVAL 90 SECOND)'));

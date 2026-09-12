@@ -30565,9 +30565,12 @@ body.app-workspace .admin-dashboard-stat-icon svg {
     background: #070b14;
   }
 
+  /* Must outrank the z-index:60 given to #sidebarToggle above: .topbar-actions
+     is a stacking context, so the notification panel nested inside it cannot
+     paint over the hamburger on its own however high its own z-index is. */
   body.app-workspace .topbar-actions {
     position: relative;
-    z-index: 41;
+    z-index: 61;
   }
 
   body.app-workspace:not(.sidebar-is-open) .sidebar {
