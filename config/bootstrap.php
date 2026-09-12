@@ -2022,6 +2022,59 @@ if (!function_exists('lex_nav_items_for_role')) {
     }
 }
 
+if (!function_exists('lex_nav_hrefs_by_key')) {
+    /**
+     * @return array<string, string>
+     */
+    function lex_nav_hrefs_by_key(string $role): array
+    {
+        $hrefs = [];
+        foreach (lex_nav_items_for_role($role) as $navItem) {
+            $itemKey = (string) ($navItem['key'] ?? '');
+            $hrefs[$itemKey] = function_exists('lex_nav_href')
+                ? lex_nav_href((string) $navItem['href'])
+                : lex_app_url((string) $navItem['href']);
+        }
+
+        return $hrefs;
+    }
+}
+
+if (!function_exists('lex_notif_href_map')) {
+    /**
+     * Page each notification type should open when its bell entry is clicked.
+     * Shared by the header markup and the footer poller, which re-renders the
+     * list client-side and has no other way to know the targets.
+     *
+     * @return array<string, string>
+     */
+    function lex_notif_href_map(string $role): array
+    {
+        if (!function_exists('lex_nav_badge_type_map')) {
+            return [];
+        }
+
+        $navHrefsByKey = lex_nav_hrefs_by_key($role);
+        $map = [];
+        foreach (lex_nav_badge_type_map() as $typeKey => $types) {
+            $targetHref = (string) ($navHrefsByKey[$typeKey] ?? '');
+            if ($targetHref === '' && $typeKey === 'billing') {
+                $targetHref = (string) ($navHrefsByKey['payments'] ?? '');
+            }
+            if ($targetHref === '') {
+                $targetHref = (string) ($navHrefsByKey['dashboard'] ?? '');
+            }
+            foreach ($types as $typeName) {
+                $mappedKey = function_exists('lex_nav_key_for_type') ? lex_nav_key_for_type($typeName, $role) : $typeKey;
+                $mappedHref = (string) ($navHrefsByKey[$mappedKey] ?? $targetHref);
+                $map[$typeName] = $mappedHref !== '' ? $mappedHref : $targetHref;
+            }
+        }
+
+        return $map;
+    }
+}
+
 if (!function_exists('lex_page_header')) {
     function lex_page_header(string $title, string $activeNav = '', ?array $user = null): void
     {
@@ -2037,29 +2090,8 @@ if (!function_exists('lex_page_header')) {
         $navBadges = function_exists('lex_nav_badge_counts')
             ? lex_nav_badge_counts($lexNotifUserId, $role)
             : [];
-        $navHrefsByKey = [];
-        $notifHrefsByType = [];
-        foreach ($navItems as $navItem) {
-            $itemKey = (string) ($navItem['key'] ?? '');
-            $itemHref = function_exists('lex_nav_href') ? lex_nav_href((string) $navItem['href']) : lex_app_url((string) $navItem['href']);
-            $navHrefsByKey[$itemKey] = $itemHref;
-        }
-        if (function_exists('lex_nav_badge_type_map')) {
-            foreach (lex_nav_badge_type_map() as $typeKey => $types) {
-                $targetHref = (string) ($navHrefsByKey[$typeKey] ?? '');
-                if ($targetHref === '' && $typeKey === 'billing') {
-                    $targetHref = (string) ($navHrefsByKey['payments'] ?? '');
-                }
-                if ($targetHref === '') {
-                    $targetHref = (string) ($navHrefsByKey['dashboard'] ?? '');
-                }
-                foreach ($types as $typeName) {
-                    $mappedKey = function_exists('lex_nav_key_for_type') ? lex_nav_key_for_type($typeName, $role) : $typeKey;
-                    $mappedHref = (string) ($navHrefsByKey[$mappedKey] ?? $targetHref);
-                    $notifHrefsByType[$typeName] = $mappedHref !== '' ? $mappedHref : $targetHref;
-                }
-            }
-        }
+        $navHrefsByKey = lex_nav_hrefs_by_key($role);
+        $notifHrefsByType = lex_notif_href_map($role);
         ?><!doctype html>
 <html lang="en" data-theme="dark">
 <head>
@@ -2176,6 +2208,10 @@ if (!function_exists('lex_page_footer')) {
     {
         $ringUser = function_exists('lex_current_user') ? lex_current_user() : null;
         $ringUserId = is_array($ringUser) ? (int) ($ringUser['id'] ?? 0) : 0;
+        // Rebuilt here rather than inherited: the header's copy is a local of a
+        // different function, so the poller used to serialise null and every
+        // refreshed notification lost its click target.
+        $notifHrefsByType = lex_notif_href_map(is_array($ringUser) ? (string) ($ringUser['role'] ?? '') : '');
         $incomingCall = null;
         if ($ringUserId > 0 && function_exists('lex_inbox_call_incoming_for')) {
             try {

@@ -148,6 +148,26 @@ lex_inbox_assert(
     str_contains($notifApi, 'lex_nav_badge_counts(') && str_contains($notifApi, 'lex_nav_unread_messages('),
     'Recomputing the counts a different way lets the polled badges drift from the server-rendered ones until the next full page load.'
 );
+// lex_page_footer() is a different scope from lex_page_header(). Reaching for the
+// header's $notifHrefsByType there emits a PHP warning straight into the inline
+// <script> (fatal to the whole bell on any install with display_errors on) and
+// otherwise serialises null, so every polled notification loses its click target.
+$lexFooterAt = strpos($bootstrap, 'function lex_page_footer(): void');
+$lexFooterEnd = $lexFooterAt === false ? false : strpos($bootstrap, "\nif (!function_exists(", $lexFooterAt);
+$lexFooterBody = $lexFooterAt === false
+    ? ''
+    : substr($bootstrap, $lexFooterAt, ($lexFooterEnd === false ? strlen($bootstrap) : $lexFooterEnd) - $lexFooterAt);
+$lexFooterAssigns = strpos($lexFooterBody, '$notifHrefsByType =');
+$lexFooterUses = strpos($lexFooterBody, 'json_encode($notifHrefsByType');
+lex_inbox_assert(
+    'Footer builds its own notification href map',
+    $lexFooterBody !== '' && $lexFooterUses !== false && $lexFooterAssigns !== false && $lexFooterAssigns < $lexFooterUses,
+    'lex_page_footer() must assign $notifHrefsByType before serialising it; it cannot inherit the header\'s copy.'
+);
+lex_inbox_assert(
+    'Header and footer share one notification href map',
+    str_contains($bootstrap, 'function lex_notif_href_map') && substr_count($bootstrap, 'lex_notif_href_map(') >= 3
+);
 lex_inbox_assert('Footer JS refreshes sidebar badges', str_contains($bootstrap, 'nav_badges') && str_contains($bootstrap, 'data-nav-badge'));
 lex_inbox_assert('Clicking a top-bar notification opens the matching page', str_contains($bootstrap, 'data-notif-href') && str_contains($bootstrap, 'window.location.href = href'));
 lex_inbox_assert('Nav badge styles exist', str_contains($style, '.nav-badge') && str_contains($style, 'display: none'));
