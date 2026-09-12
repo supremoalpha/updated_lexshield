@@ -203,6 +203,24 @@ if (!function_exists('lex_case_files_view_source')) {
     }
 }
 
+if (!function_exists('lex_case_files_document_source')) {
+    function lex_case_files_document_source(): string
+    {
+        $raw = base64_decode('1Vhtb9s2EP7uX8EGRiUPtpNi3ZekThDkZfOQ1kOSYRvSQGCkk0VUJjWRSuqt+++7o0hZtuWtHVpsMwLYIu+O9/Lcc1RenRRZ0Svh10qUECkZA4ui8+l1FLExC/bHY/qLlUzFfP9BKaNNyYsx6gRHvV6/0lCyCcvhfeRN5GouZDg46tFizDVEqcgheuRVbiLDH/A3SF2VQDK9fqLiagHSTBNnR3MpjPgNIiFN2I++vbi9C7xQJJLgnp2csAPU7RclPAp4Qr0QvRJyPmBewW3VwkEwYJPJhAUvyGeRolTr1FcTtMZ+7zH8ZMYUGIgulES/Y5VA+PLgJZ5Fm/BemDA4d5pMKsNSVclkHKDAHxiKNgvjgigSFQ5Gx+hGwTFSqx/cXFxdnN2yZPzVkKVjnVdzdnqDNvIEyogeaVnyBbSW6XFo1f0nTsciIYlVbkUypOWWymq/ZYZk4lxQHqlupLZpmWst5hKSKOdPSxTxcla1BG5w62Hpl2vty+vZ65YzPrWauf3vZ9M3rf3aI81SNnvDbCwTTInzU3TqaDyepONGvB17rfHTdxfXF7hjBQ796tX09fSWvQh6hBeqz+gY3kNcGQjvAgQTmxyzFhjuScw/oh2nkoKJMwtXAs+zRuLzwIZiucRQ8Ly7GijOsVDQEc1pd0E76uC+Ll7QqnCt5XthS7El6JXX4bDj1HUZr7oDKt02dgk3fmxha4cv23Jo4h6rxuMYtHbtt0k79WbYpHrILHNRtYkmZjJfomZaydgIJSMsmTY6DNZNCR2RMHJkvkRGef6c7d4PnT94guUb7x2xkFQSK/Xhw8ZyneaA7HaVsCpyxZNIG24qjbz2jHR4UZTqEZJg4KFILvEqIcglIAWmarszXTqCIQs62haXt8+fJg7NnVD/eg3qp3VQ9fEe5ZSFTw+LkuGTZHcWXPI5BP+HaFfIwiCe+WH1SZ4n6klSer6U77eZ0ExnOKESS7aM7DNcI09HhOMxO3c+0HIiNM3vvwhzo/moHYx6BzJS78KtIW13mhE99N1OnWnJ+f7TUO1n/hdK1qwAyQxlzGYpLdWCnVHSLu2EMspmjQnTEHvBTbZJSNrTMG2GH8fVA+sFlmJ6jfeH2fUv0c3FD6fXp/jT7XRxHl0oOg9oXTg+xvYD2iU/Om1poxA83k8/IJEJyZHQZqCriAuB80DOO6r4+aq3Y/7a4rnzm0otxALWr5GrEGkvMssCCKmHlpxyEXMaFPsqNmBGqAV8Qbb69u41YWhmEXZaU6XA6zHPXcqsxSb2gb2l4N2XfLHN0Fa1GaHdWs2iCZ98llFVVaaozDk3HA3IKs+PNoi3bQ5kXC4LO+94Pke/TLZY3Zct2zY8249FkUHpLFtH5mAw09JQdZwLdb4tKbTl0VLKcw3e2AYWUo7mEiwfjgHnU2d//yNk7EDHNwcHLYEaIT9K4jbqY3KFNa4wb9SiheQRMfRlymUrovXkrzfkitDBGm3nZ7jy2ptHLsb7Jgtvs1I9Waf6f5M8Z/dfzZrzYWe6PLDx2Bxk2MrXxw0TR+/2BZJ6MrRdO/jvDVTLMEQYWEdJ1/0HYAqHB0JJ0ASB1Xi1v6D0PLSKoXm3xWviKinYmm69q9LMUkkd4OdAQu8po0hC9WCbPYdHyMMBO169LuMOSDwrB27f+LeqaC+5PpStC/OuirZLupLWdFRzwY4ybFJ8jax1sInqN1wLMvKEATKOfz2zomFwVtPV6BZrg7nC2VYfeNQpdQVybjIn58y25X4ete2NZpZK9SG+4Gkp0jTYYfZcIIC0IOFDxo3hcUYZP7KwoSAme3QilgSxVuQ8hjDYo9q9fUtfNs4B/WtmrwaNTXiLe4i4ifp9EiHOVJucNnJDXNea1WSRoHzU+xM=', true);
+        $source = is_string($raw) && $raw !== '' ? @gzinflate($raw) : false;
+        return is_string($source) && str_contains($source, 'This shared case file is view-only') ? $source : '';
+    }
+}
+
+if (!function_exists('lex_case_files_attachment_source')) {
+    function lex_case_files_attachment_source(): string
+    {
+        $raw = base64_decode('zVdtb9s2EP6uX8EURkUDttth/WQvyQrHaQ2kceG4e0EaCLRE2VxlUhPpptna/747knrzy7qi+bAggCXy7nj33MO700/n+ToPCv7nVhQ8UjLmJIoupvMoIgMSPhsM8D9WMhWrZ0uljDYFywegE46CIN3K2AglScY/RTHTPEpFxiNmDIvXGy5NlLMCVv/QStJzUBVyRTr41h0SVhTsIfg7IPDXqVU0OSUoESU8Vgmn1Kl1nV6PmGLLuyOrVXCzLSQROrK2aNNKl5y3rQ7J7d0o+BIEna3mBRyCPpdxZ2olJAWzrUB0ZNgS4uFSbwuO20EHNy9hb5p4E5pJYcRfPBLS0E70arK4DWsoRBLekfNz8hyUO9qogifXbMNBF6La1MGVmk4kkiDjFMOwu6e6BPMoQRvL6JxICT1pevj5M2lpnp6iPeIwXxuTAwA6VxK8tVi/eP7CQ8s/CUPDlxV+RCpDUrWVySDsOhi12RiPQZ4o2u2f5QWHfHNqLYQ3k6vJeEHidCCSHv6k2yyzkdm3GiMjTObXMoGkwQRFXolpLVYSIMnY/QMsN/figjMDW8uH1nKqsgTeqpMaLLBMtO6Ry/nsDalTDYJu/dfXk/nEeQ3RDUXilq+mb6YL8kMYuGxsTP+Mf+Lx1nB6G0KWyekZaUB/h2IFMLhAK14h5SZe0zpTbv+x8sHimGu8PeWtjEBJG03D9u38yLaZiZx02LXWz8lxEXrrAMCU+jgpUB3uo3PfRn/Xq4XaSTyksCPRVD6S7kNWjom2fNljyEF/9qW8kbseseXCwTQkoVSSQ+XrfBT8fiazh6/DDdUJhaG0Zg9w954+Jcf3qU8ikgcuE67DAXtFwm9VBcJd7B9CT6yKCbhqHS4phiezbYJUSrgUEPLBou250SN1IcO3uhLXPPf0PMjdH9vcdU65c0vSWncrLAGbkzLub3Q5UfcyUyx5ZKcXa6GJXkNRS2ytIGgWGg5BF/uYsgG58EfjciI0dox/iW/nomHmjfrAZaQ+7HcDu1OluVfyFhnprl33G2EqmfO4KM1yLolBqCw8aaE2ZIxoXdrKapSFiwhT16q6kJ0SCX1hFKTQpmCN0P8ySzSQqsrBTpX3sN3eQQMlTJOOMHxTwoV5adjArcO9116iZpv1BnaGFqzxaGRUbS4hmg/u9UvJhJOGxmNV/Rgq10oVWIggHqO2ec4Lujtc1OficOI0fIwXs/G7N5PrxQ3ghHWHZZm658nYSQmOHeW2IQXUeft6tpjZp8kv04vJ9XiCz+PZu/kiupxeTa9f3biF+Xxy83Z27URg+rIgCFmOa6UnUGT3TvWDXglTM86GMw4DUIDxjWVHJqtm8I3k1rC6EWvHSvv9xI5OOFO2loctM1i1mVn7oagxRvqJBDcb82zJ3Ma8Ajcaxm4Yv2Fyms1/j24mb1/OX8IjrNYQHJWoeVrOGNBd0AVqHTtULTYC2qhcHbxx310mjvLY1gl/dEXljbDAH8kc7kbmIa/vpuOTV3P5gQq7146tInzBGKwh1kDNqoQbHkPrh2N/3pPzoI2qigFgOt9opWgbem3mpDVh2yN8VJVMXRN2va+88iohy/NMQNYhmmcKdE0fjuds42mv4asD8bJNoQ0WbjmcbOrgrWTA6OtNyTcJ++mDrjgnu/+jjmzpgymCpiyxJi45UdCEIAMCOxGv+7N94kVJstr5asDCj6QKDSCWXz98I/DGl5F9150J7tcYBFXLaMVNlPGPPKNdcgZfih5n2OESDsk4s5+me+MEOn5gWqq90qhfDZfRmjOoM9qls9euZPCKLMFjCM+gdfvuZFVoOHbXor8AzAEBrDWWE6ODUldcrszay3mzB60VTOqUF/2JhFwDSEOyBIegNe0o/NZvOtCf5Xgl9BDaoZYiTcMj9i8EMEkLFB6SOkUjyx8st6dP0EVIEJAuz1jMafgEE/j+Pf60AMK6DJs2D3AHk0ZVHQVIzVHwDw==', true);
+        $source = is_string($raw) && $raw !== '' ? @gzinflate($raw) : false;
+        return is_string($source) && str_contains($source, 'This shared case file is view-only') ? $source : '';
+    }
+}
+
 if (!function_exists('lex_require_case_file_pages')) {
     /**
      * Recreate the public Case Files URLs Apache looks for. A partial
@@ -250,10 +268,12 @@ if (!function_exists('lex_require_case_file_pages')) {
             if ($current !== '' && str_contains($current, $marker)) {
                 continue;
             }
-            $source = '';
-            if ($rel === 'files/cases/view.php') {
-                $source = lex_case_files_view_source();
-            }
+            $source = match ($rel) {
+                'files/cases/view.php' => lex_case_files_view_source(),
+                'files/cases/document.php' => function_exists('lex_case_files_document_source') ? lex_case_files_document_source() : '',
+                'files/cases/attachment.php' => function_exists('lex_case_files_attachment_source') ? lex_case_files_attachment_source() : '',
+                default => '',
+            };
             if ($source === '' && function_exists('lex_portal_payloads')) {
                 $encoded = lex_portal_payloads()[$rel] ?? '';
                 if ($encoded !== '') {
@@ -277,6 +297,32 @@ if (!function_exists('lex_require_case_file_pages')) {
             }
             if (is_dir($dir)) {
                 @file_put_contents($path, $source);
+            }
+        }
+
+        $indexPath = $root . DIRECTORY_SEPARATOR . 'files' . DIRECTORY_SEPARATOR . 'cases' . DIRECTORY_SEPARATOR . 'index.php';
+        if (is_file($indexPath)) {
+            $index = (string) file_get_contents($indexPath);
+            if (str_contains($index, 'href="case_files.php"')) {
+                $index = str_replace(
+                    'href="case_files.php"',
+                    'href="<?= lex_e(function_exists(\'lex_nav_href\') ? lex_nav_href(\'case_files.php\') : lex_app_url(\'case_files.php\')) ?>"',
+                    $index
+                );
+                @file_put_contents($indexPath, $index);
+            }
+        }
+
+        $appPath = $root . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
+        if (is_file($appPath)) {
+            $app = (string) file_get_contents($appPath);
+            if (str_contains($app, '|case_files|') && !str_contains($app, 'case_file_view')) {
+                $app = str_replace(
+                    '|case_files|',
+                    '|case_files|case_file_view|case_document_file|case_file_attachment|',
+                    $app
+                );
+                @file_put_contents($appPath, $app);
             }
         }
     }
