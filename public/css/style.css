@@ -21754,6 +21754,11 @@ body.pao-site [data-custom-type-wrap][hidden] {
   display: none !important;
 }
 
+form:has([data-type-choice] option[value="Custom"]:checked) [data-custom-type-wrap],
+form:has([data-appointment-type] option[value="Custom"]:checked) [data-custom-type-wrap] {
+  display: grid !important;
+}
+
 body:has([data-client-appointment-page]) .client-appointment-control {
   position: relative;
   display: block;
