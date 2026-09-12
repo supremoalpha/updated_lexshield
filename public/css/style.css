@@ -27896,6 +27896,35 @@ body.pao-login #main-content {
   width: 100%;
 }
 
+.pao-login-card .pao-login-warning,
+body.pao-login .pao-login-warning {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  background: #fff6d8;
+  border: 1px solid #e3b341;
+  color: #7a4d00;
+}
+
+.pao-login-card .pao-login-warning strong {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #6a3f00;
+}
+
+.pao-login-card .pao-login-warning p {
+  margin: 0;
+  color: #7a4d00;
+}
+
+.pao-login-card input[aria-invalid="true"] {
+  border-color: #d08a12 !important;
+  box-shadow: 0 0 0 3px rgba(227, 179, 65, 0.28);
+}
+
 body.pao-login .auth-otp-overlay {
   z-index: 90;
 }

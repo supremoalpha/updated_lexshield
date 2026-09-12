@@ -4,6 +4,8 @@ require_once __DIR__ . '/../config/bootstrap.php';
 $pdo = lex_pdo();
 $error = '';
 $success = '';
+$loginEmail = '';
+$credentialError = false;
 $otpFlags = lex_otp_enabled_flags();
 $loginOtpEnabled = $otpFlags['login'];
 $adminOtpEnabled = $otpFlags['admin'];
@@ -366,6 +368,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $email = lex_sanitize_email($_POST['email'] ?? '');
             $password = (string) ($_POST['password'] ?? '');
+            $loginEmail = $email;
             $limit = lex_rate_limit_hit(
                 'login_password',
                 lex_rate_limit_key(lex_rate_limit_client_ip(), $email),
@@ -382,8 +385,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute(['email' => $email]);
                 $user = $stmt->fetch();
 
-                if (!$user) {
-                    $error = 'Invalid credentials.';
+                if ($email === '' || $password === '') {
+                    $error = 'Enter your email and password.';
+                    $credentialError = true;
+                } elseif (!$user) {
+                    $error = 'Incorrect email or password. Please try again.';
+                    $credentialError = true;
                 } elseif ((int) $user['is_active'] !== 1) {
                     $error = 'Account is inactive.';
                 } elseif (!empty($user['locked_until']) && strtotime($user['locked_until']) > time()) {
@@ -395,7 +402,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         lex_audit('failed_admin_login', 'users', (string) $user['id'], (int) $user['id']);
                         lex_send_account_activity_alert($user, 'Failed admin login attempt', 'Someone tried to sign in to your LEXSHIELD admin account with an incorrect password.');
                     }
-                    $error = 'Invalid credentials.';
+                    $error = 'Incorrect email or password. Please try again.';
+                    $credentialError = true;
                 } elseif (!lex_login_requires_otp($user)) {
                     lex_login_finish($pdo, $user);
                 } elseif (($user['role'] ?? '') !== 'admin' && lex_login_otp_cookie_valid((int) $user['id'])) {
@@ -431,7 +439,16 @@ lex_pao_page_header('Login', 'login', 'pao-login');
       <span class="is-active">Sign in</span>
       <a href="<?= lex_e(lex_app_url('auth/register.php')) ?>">New client</a>
     </div>
-    <?php if ($error): ?><div class="alert alert-error"><?= lex_e($error) ?></div><?php endif; ?>
+    <?php if ($error): ?>
+      <div class="alert <?= $credentialError ? 'alert-warning pao-login-warning' : 'alert-error' ?>" role="alert" aria-live="assertive">
+        <?php if ($credentialError): ?>
+          <strong>Incorrect email or password</strong>
+          <p><?= lex_e($error) ?></p>
+        <?php else: ?>
+          <?= lex_e($error) ?>
+        <?php endif; ?>
+      </div>
+    <?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?= lex_e($success) ?></div><?php endif; ?>
     <?php if (!lex_mail_is_configured()): ?>
       <div class="alert alert-warning">You can sign in now with your email and password. Email login codes turn on after an admin saves SMTP under System Settings.</div>
@@ -442,11 +459,11 @@ lex_pao_page_header('Login', 'login', 'pao-login');
       <?= lex_csrf_field() ?>
       <input type="hidden" name="action" value="login">
       <label>Email
-        <input type="email" name="email" required placeholder="user@gmail.com">
+        <input type="email" name="email" required placeholder="user@gmail.com" value="<?= lex_e($loginEmail) ?>"<?= $credentialError ? ' aria-invalid="true"' : '' ?>>
       </label>
       <label>Password
         <div class="password-field" data-password-toggle>
-          <input type="password" name="password" required placeholder="Enter your password">
+          <input type="password" name="password" required placeholder="Enter your password"<?= $credentialError ? ' aria-invalid="true" autofocus' : '' ?>>
           <button type="button" class="password-toggle" data-password-toggle-button aria-pressed="false" aria-label="Show password" title="Show password"><span class="sr-only">Show password</span></button>
         </div>
       </label>
