@@ -21749,6 +21749,11 @@ body:has([data-client-appointment-page]) .client-appointment-field--full {
   grid-column: 1 / -1;
 }
 
+body:has([data-client-appointment-page]) [data-custom-type-wrap][hidden],
+body.pao-site [data-custom-type-wrap][hidden] {
+  display: none !important;
+}
+
 body:has([data-client-appointment-page]) .client-appointment-control {
   position: relative;
   display: block;

@@ -10,7 +10,17 @@ $selectedLawyerId = lex_sanitize_int($_GET['lawyer_id'] ?? 0);
 $selectedDate = '';
 $selectedTime = '';
 $selectedAppointmentType = 'Client Intake Consultation';
+$selectedCustomType = '';
 $selectedNotes = '';
+$appointmentTypeChoices = function_exists('lex_appointment_booking_types')
+    ? lex_appointment_booking_types()
+    : ['Client Intake Consultation', 'Document Review', 'Case Follow-up', 'Legal Advice', 'Notary', 'Custom'];
+$appointmentCustomChoice = function_exists('lex_appointment_custom_choice')
+    ? lex_appointment_custom_choice()
+    : 'Custom';
+$appointmentTypeMaxLen = function_exists('lex_appointment_type_max_length')
+    ? lex_appointment_type_max_length()
+    : 120;
 
 $formatAppointmentDate = static function (?string $value): string {
     if (!$value) {
@@ -67,12 +77,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && lex_csrf_validate($_POST['csrf_toke
     $selectedDate = $scheduledDate;
     $selectedTime = $scheduledTime;
     $scheduledAt = ($scheduledDate !== '' && $scheduledTime !== '') ? $scheduledDate . ' ' . $scheduledTime : '';
-    $appointmentType = lex_sanitize_text($_POST['appointment_type'] ?? 'Client Intake Consultation');
-    $allowedAppointmentTypes = ['Client Intake Consultation', 'Document Review', 'Case Follow-up', 'Legal Advice'];
-    if (!in_array($appointmentType, $allowedAppointmentTypes, true)) {
-        $appointmentType = 'Client Intake Consultation';
-    }
-    $selectedAppointmentType = $appointmentType;
+    $resolvedType = function_exists('lex_resolve_typed_choice')
+        ? lex_resolve_typed_choice(
+            lex_sanitize_text($_POST['appointment_type'] ?? ''),
+            lex_sanitize_text($_POST['custom_appointment_type'] ?? ''),
+            $appointmentTypeChoices,
+            $appointmentTypeMaxLen
+        )
+        : [
+            'choice' => 'Client Intake Consultation',
+            'custom' => '',
+            'value' => 'Client Intake Consultation',
+            'ok' => true,
+        ];
+    $appointmentType = (string) $resolvedType['value'];
+    $selectedAppointmentType = (string) ($resolvedType['choice'] !== '' ? $resolvedType['choice'] : 'Client Intake Consultation');
+    $selectedCustomType = (string) $resolvedType['custom'];
     $notes = lex_sanitize_multiline_text($_POST['notes'] ?? '');
     $selectedNotes = $notes;
 
@@ -116,6 +136,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && lex_csrf_validate($_POST['csrf_toke
 
     if (!$lawyerExists) {
         $error = 'Select an available lawyer.';
+    } elseif (empty($resolvedType['ok']) || $appointmentType === '') {
+        $error = $selectedAppointmentType === $appointmentCustomChoice
+            ? 'Enter a custom appointment type.'
+            : 'Choose a valid appointment type.';
     } elseif (!$scheduledDateTime) {
         $error = 'Select a valid appointment date and time.';
     } elseif ($scheduledDateTime <= new DateTimeImmutable()) {
@@ -195,6 +219,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && lex_csrf_validate($_POST['csrf_toke
             $selectedDate = '';
             $selectedTime = '';
             $selectedAppointmentType = 'Client Intake Consultation';
+            $selectedCustomType = '';
             $selectedNotes = '';
         } catch (Throwable $e) {
             if ($pdo->inTransaction()) {
@@ -269,11 +294,20 @@ lex_page_header('Appointments', 'appointments', $user);
             <span class="client-appointment-control-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" focusable="false"><path d="M6.75 4h10.5A1.75 1.75 0 0 1 19 5.75v12.5A1.75 1.75 0 0 1 17.25 20H6.75A1.75 1.75 0 0 1 5 18.25V5.75A1.75 1.75 0 0 1 6.75 4Zm2 4.25a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Zm0 4a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Z" fill="currentColor"/></svg>
             </span>
-            <select name="appointment_type" required data-appointment-type>
-              <?php foreach (['Client Intake Consultation', 'Document Review', 'Case Follow-up', 'Legal Advice'] as $type): ?>
+            <select name="appointment_type" required data-appointment-type data-type-choice>
+              <?php foreach ($appointmentTypeChoices as $type): ?>
                 <option value="<?= lex_e($type) ?>"<?= $selectedAppointmentType === $type ? ' selected' : '' ?>><?= lex_e($type) ?></option>
               <?php endforeach; ?>
             </select>
+          </span>
+        </label>
+        <label class="client-appointment-field client-appointment-field--full" data-custom-type-wrap<?= $selectedAppointmentType === $appointmentCustomChoice ? '' : ' hidden' ?>>
+          Custom type
+          <span class="client-appointment-control">
+            <span class="client-appointment-control-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false"><path d="M5.75 6.5h12.5a.75.75 0 0 1 0 1.5H5.75a.75.75 0 0 1 0-1.5Zm0 4.75h12.5a.75.75 0 0 1 0 1.5H5.75a.75.75 0 0 1 0-1.5Zm0 4.75h8.5a.75.75 0 0 1 0 1.5h-8.5a.75.75 0 0 1 0-1.5Z" fill="currentColor"/></svg>
+            </span>
+            <input type="text" name="custom_appointment_type" value="<?= lex_e($selectedCustomType) ?>" maxlength="<?= (int) $appointmentTypeMaxLen ?>" placeholder="Describe the appointment type" data-custom-type<?= $selectedAppointmentType === $appointmentCustomChoice ? ' required' : '' ?>>
           </span>
         </label>
       </div>
