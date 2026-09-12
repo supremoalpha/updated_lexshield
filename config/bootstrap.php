@@ -771,35 +771,93 @@ if (!function_exists('lex_notifications_mark_types_read')) {
     }
 }
 
+if (!function_exists('lex_nav_message_partner_roles')) {
+    /**
+     * Roles whose threads appear in this viewer's inbox.
+     * Must stay aligned with lex_messages_roles_may_chat() (no client↔admin).
+     *
+     * @return list<string>
+     */
+    function lex_nav_message_partner_roles(string $role): array
+    {
+        $role = strtolower(trim($role));
+        if ($role === 'attorney') {
+            $role = 'lawyer';
+        }
+
+        return match ($role) {
+            'admin' => ['lawyer', 'attorney'],
+            'lawyer' => ['admin', 'client'],
+            'client' => ['lawyer', 'attorney'],
+            default => [],
+        };
+    }
+}
+
 if (!function_exists('lex_nav_unread_messages')) {
-    function lex_nav_unread_messages(int $userId): int
+    function lex_nav_unread_messages(int $userId, string $role = ''): int
     {
         if ($userId <= 0) {
             return 0;
+        }
+
+        if ($role === '') {
+            $current = function_exists('lex_current_user') ? lex_current_user() : null;
+            if (is_array($current) && (int) ($current['id'] ?? 0) === $userId) {
+                $role = (string) ($current['role'] ?? '');
+            }
+        }
+
+        $partnerRoles = function_exists('lex_nav_message_partner_roles')
+            ? lex_nav_message_partner_roles($role)
+            : [];
+        if ($role !== '' && $partnerRoles === []) {
+            return 0;
+        }
+
+        $roleFilter = '';
+        $params = ['uid' => $userId];
+        if ($partnerRoles !== []) {
+            $placeholders = [];
+            foreach (array_values($partnerRoles) as $i => $partnerRole) {
+                $key = 'prole' . $i;
+                $placeholders[] = ':' . $key;
+                $params[$key] = $partnerRole;
+            }
+            $roleFilter = ' AND LOWER(TRIM(u.role)) IN (' . implode(', ', $placeholders) . ')';
         }
 
         try {
             if (function_exists('lex_message_deletions_table_ensure')) {
                 lex_message_deletions_table_ensure();
             }
+            $params['uid2'] = $userId;
             $stmt = lex_pdo()->prepare(
                 'SELECT COUNT(*) FROM messages m
+                 INNER JOIN users u ON u.id = m.sender_id
                  WHERE m.receiver_id = :uid
                    AND m.is_read = 0
                    AND NOT EXISTS (
                        SELECT 1 FROM message_deletions d
                        WHERE d.message_id = m.id AND d.user_id = :uid2
-                   )'
+                   )' . $roleFilter
             );
-            $stmt->execute(['uid' => $userId, 'uid2' => $userId]);
+            $stmt->execute($params);
 
             return (int) $stmt->fetchColumn();
         } catch (Throwable $e) {
             try {
-                $stmt = lex_pdo()->prepare(
-                    'SELECT COUNT(*) FROM messages WHERE receiver_id = :uid AND is_read = 0'
-                );
-                $stmt->execute(['uid' => $userId]);
+                $fallback = ['uid' => $userId];
+                $sql = 'SELECT COUNT(*) FROM messages m
+                        INNER JOIN users u ON u.id = m.sender_id
+                        WHERE m.receiver_id = :uid AND m.is_read = 0' . $roleFilter;
+                foreach ($params as $key => $value) {
+                    if ($key !== 'uid2') {
+                        $fallback[$key] = $value;
+                    }
+                }
+                $stmt = lex_pdo()->prepare($sql);
+                $stmt->execute($fallback);
 
                 return (int) $stmt->fetchColumn();
             } catch (Throwable $e2) {
@@ -1181,8 +1239,7 @@ if (!function_exists('lex_nav_badge_counts')) {
             $role = 'lawyer';
         }
 
-        $counts['messages'] = lex_nav_unread_messages($userId);
-        $messageNotifs = 0;
+        $counts['messages'] = lex_nav_unread_messages($userId, $role);
         lex_notifications_table_ensure();
         try {
             $stmt = lex_pdo()->prepare(
@@ -1195,7 +1252,8 @@ if (!function_exists('lex_nav_badge_counts')) {
             foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
                 $key = lex_nav_key_for_type((string) ($row['type'] ?? ''), $role);
                 if ($key === 'messages') {
-                    $messageNotifs += (int) ($row['total'] ?? 0);
+                    // The Messages button is the inbox unread count, not leftover
+                    // message/call notification rows (those stay on the bell).
                     continue;
                 }
                 $counts[$key] = (int) ($counts[$key] ?? 0) + (int) ($row['total'] ?? 0);
@@ -1203,7 +1261,6 @@ if (!function_exists('lex_nav_badge_counts')) {
         } catch (Throwable $e) {
             // Keep the live message count even if notifications are unavailable.
         }
-        $counts['messages'] = max((int) $counts['messages'], $messageNotifs);
 
         if ($role === 'client') {
             $counts['billing'] = max((int) ($counts['billing'] ?? 0), (int) ($counts['payments'] ?? 0));
