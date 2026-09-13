@@ -1038,8 +1038,8 @@ if (!function_exists('lex_case_files_render_editor')) {
             return '';
         }
         ?>
-        <div class="modal-overlay" id="case-create-modal" data-case-create-modal aria-hidden="true">
-          <div class="modal-card">
+        <div class="modal-overlay case-create-modal-overlay" id="case-create-modal" data-case-create-modal aria-hidden="true">
+          <div class="modal-card case-create-modal case-compact-modal">
             <div class="modal-header"><h2>New case file</h2><a class="icon-button" href="#case-overview" data-case-create-close aria-label="Close">&times;</a></div>
             <form method="post" class="modal-body stack-form" data-casefile-form data-persist-form="create">
               <?= lex_csrf_field() ?>

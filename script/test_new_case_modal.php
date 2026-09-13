@@ -28,6 +28,7 @@ $helpers = (string) file_get_contents($root . '/config/case_files/helpers.php');
 $js = (string) file_get_contents($root . '/public/js/case-files.js');
 
 lex_new_case_assert('Case Files page loads case-files.js', str_contains($index, 'public/js/case-files.js'));
+lex_new_case_assert('New case has an inline opener if the script file is missing', str_contains($index, "closest('[data-case-create-open]')") && str_contains($index, "classList.add('is-open')"));
 lex_new_case_assert('New case opens the create modal', str_contains($index, 'href="#case-create-modal"') && str_contains($index, 'data-case-create-open'));
 lex_new_case_assert('Create modal has a target id', str_contains($helpers, 'id="case-create-modal"') && str_contains($helpers, 'data-case-create-modal'));
 lex_new_case_assert('Script still opens the create modal', str_contains($js, 'data-case-create-open') && str_contains($js, 'openCreateModal'));

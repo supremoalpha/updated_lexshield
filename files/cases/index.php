@@ -153,6 +153,25 @@ window.LEX_CASE_FILES_STATE = <?= json_encode([
   'failedAction' => $failedAction,
   'error' => $error,
 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
+document.addEventListener('click', function (event) {
+  var trigger = event.target && event.target.closest ? event.target.closest('[data-case-create-open]') : null;
+  if (!trigger) return;
+  var modal = document.querySelector('[data-case-create-modal]');
+  if (!modal) return;
+  event.preventDefault();
+  modal.classList.add('is-open');
+  modal.setAttribute('aria-hidden', 'false');
+});
+document.addEventListener('click', function (event) {
+  var closer = event.target && event.target.closest ? event.target.closest('[data-case-create-close]') : null;
+  var modal = document.querySelector('[data-case-create-modal]');
+  if (!modal) return;
+  if (closer || event.target === modal) {
+    event.preventDefault();
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+});
 </script>
 <script src="<?= lex_e(function_exists('lex_asset_url') ? lex_asset_url('public/js/case-files.js') : lex_app_url('public/js/case-files.js')) ?>"></script>
 <?php lex_page_footer(); ?>
