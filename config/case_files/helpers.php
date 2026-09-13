@@ -487,9 +487,8 @@ if (!function_exists('lex_case_files_fetch_state')) {
         $params = [];
 
         if ($filters['role'] === 'lawyer') {
-            $where[] = '(cf.assigned_lawyer_user_id = :uid1 OR cf.created_by_user_id = :uid2)';
+            $where[] = 'cf.assigned_lawyer_user_id = :uid1';
             $params['uid1'] = $filters['user_id'];
-            $params['uid2'] = $filters['user_id'];
         } else {
             $where[] = 'cf.client_user_id = :uid1';
             $params['uid1'] = $filters['user_id'];
@@ -530,9 +529,9 @@ if (!function_exists('lex_case_files_fetch_state')) {
 
         $counts = [
             'total' => $total,
-            'open' => lex_stats("SELECT COUNT(*) FROM case_files cf WHERE " . implode(' AND ', array_slice($where, 0, 1)) . " AND cf.status = 'open'", array_intersect_key($params, ['uid1' => 1, 'uid2' => 1])),
-            'ongoing' => lex_stats("SELECT COUNT(*) FROM case_files cf WHERE " . implode(' AND ', array_slice($where, 0, 1)) . " AND cf.status = 'ongoing'", array_intersect_key($params, ['uid1' => 1, 'uid2' => 1])),
-            'closed' => lex_stats("SELECT COUNT(*) FROM case_files cf WHERE " . implode(' AND ', array_slice($where, 0, 1)) . " AND cf.status = 'closed'", array_intersect_key($params, ['uid1' => 1, 'uid2' => 1])),
+            'open' => lex_stats("SELECT COUNT(*) FROM case_files cf WHERE " . implode(' AND ', array_slice($where, 0, 1)) . " AND cf.status = 'open'", array_intersect_key($params, ['uid1' => 1])),
+            'ongoing' => lex_stats("SELECT COUNT(*) FROM case_files cf WHERE " . implode(' AND ', array_slice($where, 0, 1)) . " AND cf.status = 'ongoing'", array_intersect_key($params, ['uid1' => 1])),
+            'closed' => lex_stats("SELECT COUNT(*) FROM case_files cf WHERE " . implode(' AND ', array_slice($where, 0, 1)) . " AND cf.status = 'closed'", array_intersect_key($params, ['uid1' => 1])),
         ];
 
         $selectedId = $filters['record'] > 0 ? $filters['record'] : (int) ($records[0]['id'] ?? 0);
@@ -1046,14 +1045,9 @@ if (!function_exists('lex_case_files_render_editor')) {
               <div class="alert alert-error" data-form-errors hidden></div>
               <label>Full name <input type="text" name="full_name" data-casefile-fullname required></label>
               <label>Client
-                <select name="client_user_id" data-casefile-client-select required>
-                  <option value="">Select a client…</option>
+                <select name="client_user_id" data-casefile-client-select required<?= $clients === [] ? ' disabled' : '' ?>>
+                  <option value=""><?= $clients === [] ? 'No booked clients yet' : 'Select a client…' ?></option>
                   <?php foreach ($clients as $client): ?><option value="<?= (int) $client['id'] ?>"><?= lex_e((string) $client['full_name']) ?> - Client</option><?php endforeach; ?>
-                </select>
-              </label>
-              <label>Assigned lawyer
-                <select name="assigned_lawyer_user_id" required>
-                  <?php foreach ($lawyers as $lawyer): ?><option value="<?= (int) $lawyer['id'] ?>" <?= (int) $lawyer['id'] === (int) $user['id'] ? 'selected' : '' ?>><?= lex_e((string) $lawyer['full_name']) ?></option><?php endforeach; ?>
                 </select>
               </label>
               <label>Case file title <input type="text" name="case_file_title" required></label>

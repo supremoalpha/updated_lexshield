@@ -33,6 +33,8 @@ lex_new_case_assert('New case opens the create modal', str_contains($index, 'hre
 lex_new_case_assert('Create modal has a target id', str_contains($helpers, 'id="case-create-modal"') && str_contains($helpers, 'data-case-create-modal'));
 lex_new_case_assert('Script still opens the create modal', str_contains($js, 'data-case-create-open') && str_contains($js, 'openCreateModal'));
 lex_new_case_assert('Attorney role is treated as lawyer for case files', str_contains($helpers, "\$role === 'attorney'"));
+lex_new_case_assert('New case has no assigned-lawyer picker', !str_contains($helpers, 'name="assigned_lawyer_user_id"'));
+lex_new_case_assert('Case list is limited to the assigned attorney', str_contains($helpers, 'cf.assigned_lawyer_user_id = :uid1') && !str_contains($helpers, 'created_by_user_id = :uid2'));
 
 echo "\n{$passed} passed, {$failed} failed\n";
 exit($failed > 0 ? 1 : 0);

@@ -405,7 +405,6 @@
           const fullName = form.querySelector('[name="full_name"]');
           const caseFileTitle = form.querySelector('[name="case_file_title"]');
           const client = form.querySelector('[name="client_user_id"]');
-          const lawyer = form.querySelector('[name="assigned_lawyer_user_id"]');
           const status = form.querySelector('[name="status"]');
           const errorBox = form.querySelector('[data-form-errors]');
           const mark = (field, invalid) => {
@@ -414,7 +413,6 @@
           if (fullName && !fullName.value.trim()) { errors.push('FULLNAME is required.'); mark(fullName, true); } else { mark(fullName, false); }
           if (caseFileTitle && !caseFileTitle.value.trim()) { errors.push('CASE FILE is required.'); mark(caseFileTitle, true); } else { mark(caseFileTitle, false); }
           if (client && !client.value) { errors.push('Select a client.'); mark(client, true); } else { mark(client, false); }
-          if (lawyer && !lawyer.value) { errors.push('Select an assigned lawyer.'); mark(lawyer, true); } else { mark(lawyer, false); }
           if (status && !status.value) { errors.push('Select a status.'); mark(status, true); } else { mark(status, false); }
           if (errorBox) {
             errorBox.textContent = errors.join(' ');
