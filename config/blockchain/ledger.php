@@ -214,8 +214,65 @@ if (!function_exists('lex_blockchain_event_label')) {
             'share_approved' => 'Share approved',
             'share_rejected' => 'Share rejected',
             'share_revoked' => 'Share access revoked',
+            'vault_file_uploaded' => 'Vault file uploaded',
+            'vault_folder_created' => 'Vault folder created',
+            'vault_file_approved' => 'Vault file approved',
+            'vault_file_rejected' => 'Vault file rejected',
             default => ucwords(str_replace('_', ' ', $eventType)),
         };
+    }
+}
+
+if (!function_exists('lex_vault_blockchain_record')) {
+    /**
+     * Seals a vault event onto the shared hash chain.
+     *
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>|null
+     */
+    function lex_vault_blockchain_record(string $eventType, array $data, ?int $actorUserId = null): ?array
+    {
+        if (!function_exists('lex_blockchain_add_block')) {
+            return null;
+        }
+
+        $data['scope'] = 'vault';
+        try {
+            return lex_blockchain_add_block($eventType, $data, $actorUserId);
+        } catch (Throwable $e) {
+            error_log('Vault blockchain record failed: ' . $e->getMessage());
+            return null;
+        }
+    }
+}
+
+if (!function_exists('lex_blockchain_blocks_for_case')) {
+    /**
+     * @return list<array<string, mixed>>
+     */
+    function lex_blockchain_blocks_for_case(int $caseFileId, int $limit = 20): array
+    {
+        if ($caseFileId <= 0) {
+            return [];
+        }
+
+        lex_blockchain_table_ensure();
+        $stmt = lex_pdo()->prepare(
+            'SELECT bl.*, u.full_name AS actor_name
+             FROM blockchain_ledger bl
+             LEFT JOIN users u ON u.id = bl.actor_user_id
+             WHERE bl.event_type LIKE :prefix
+               AND (bl.data_json LIKE :like_mid OR bl.data_json LIKE :like_end)
+             ORDER BY bl.block_index DESC
+             LIMIT :limit'
+        );
+        $stmt->bindValue('prefix', 'vault_%');
+        $stmt->bindValue('like_mid', '%"case_file_id":' . $caseFileId . ',%');
+        $stmt->bindValue('like_end', '%"case_file_id":' . $caseFileId . '}%');
+        $stmt->bindValue('limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll() ?: [];
     }
 }
 
