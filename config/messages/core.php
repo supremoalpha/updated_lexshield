@@ -230,6 +230,9 @@ if (!function_exists('lex_messages_store_attachment')) {
             'image/png' => 'png',
             'image/gif' => 'gif',
             'image/webp' => 'webp',
+            'video/mp4' => 'mp4',
+            'video/webm' => 'webm',
+            'video/quicktime' => 'mov',
             'application/pdf' => 'pdf',
             'application/msword' => 'doc',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
@@ -272,6 +275,40 @@ if (!function_exists('lex_messages_store_attachment')) {
             'encryption_iv' => $encrypted['iv'],
             'encryption_tag' => $encrypted['tag'],
         ];
+    }
+}
+
+if (!function_exists('lex_messages_previewable_mime')) {
+    function lex_messages_previewable_mime(string $mime, string $name = ''): bool
+    {
+        $mime = strtolower(trim($mime));
+        $ext = strtolower((string) pathinfo($name, PATHINFO_EXTENSION));
+        if (preg_match('/^(image\/|video\/|application\/pdf$|text\/)/', $mime) === 1) {
+            return true;
+        }
+
+        return in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'm4v', 'webm', 'mov', 'pdf', 'txt'], true);
+    }
+}
+
+if (!function_exists('lex_messages_attachment_url')) {
+    function lex_messages_attachment_url(int $messageId, bool $preview = false): string
+    {
+        $href = 'message_attachment.php?id=' . $messageId;
+        if ($preview) {
+            $href .= '&preview=1';
+        }
+
+        return function_exists('lex_nav_href') ? lex_nav_href($href) : lex_app_url($href);
+    }
+}
+
+if (!function_exists('lex_messages_view_url')) {
+    function lex_messages_view_url(int $messageId): string
+    {
+        $href = 'message_view.php?id=' . $messageId;
+
+        return function_exists('lex_nav_href') ? lex_nav_href($href) : lex_app_url($href);
     }
 }
 
@@ -338,6 +375,8 @@ if (!function_exists('lex_messages_send_attachment')) {
         }
 
         $mime = (string) ($message['attachment_mime_type'] ?? 'application/octet-stream');
+        $preview = (string) ($_GET['preview'] ?? '') === '1';
+        $canInline = $preview && lex_messages_previewable_mime($mime, $originalName);
         $cipherData = (string) file_get_contents($path);
         $algorithm = (string) ($message['attachment_encryption_algorithm'] ?? '');
         if ($algorithm !== '') {
@@ -357,7 +396,7 @@ if (!function_exists('lex_messages_send_attachment')) {
             $outputData = $cipherData;
         }
 
-        lex_audit('download_message_attachment', 'messages', (string) $messageId);
+        lex_audit($canInline ? 'preview_message_attachment' : 'download_message_attachment', 'messages', (string) $messageId);
 
         while (ob_get_level() > 0) {
             ob_end_clean();
@@ -367,7 +406,12 @@ if (!function_exists('lex_messages_send_attachment')) {
         header('Content-Length: ' . (string) strlen($outputData));
         header('Content-Transfer-Encoding: binary');
         header('X-Content-Type-Options: nosniff');
-        header('Content-Disposition: attachment; filename="' . str_replace('"', '\\"', $originalName) . '"');
+        if ($canInline) {
+            header('X-Frame-Options: SAMEORIGIN', true);
+            header('Content-Disposition: inline; filename="' . str_replace('"', '\\"', $originalName) . '"');
+        } else {
+            header('Content-Disposition: attachment; filename="' . str_replace('"', '\\"', $originalName) . '"');
+        }
         echo $outputData;
         exit;
     }
