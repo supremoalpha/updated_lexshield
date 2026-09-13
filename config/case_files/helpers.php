@@ -261,21 +261,13 @@ if (!function_exists('lex_case_files_ensure_client_vault_tree')) {
             }
         }
         if (!$clientFolder) {
-            foreach ($rootFolders as $folder) {
-                if (!lex_case_file_is_default_vault_type_slug((string) ($folder['slug'] ?? ''))) {
-                    $clientFolder = $folder;
-                    break;
-                }
-            }
-        }
-        if (!$clientFolder) {
             $clientFolder = lex_case_files_ensure_vault_folder($pdo, $caseFileId, $clientName, $createdByUserId, 0);
         }
 
         $clientId = (int) $clientFolder['id'];
         $move = $pdo->prepare(
             'UPDATE case_file_folders SET parent_id = :parent_id
-             WHERE id = :id AND case_file_id = :case_file_id AND parent_id = 0'
+             WHERE id = :id AND case_file_id = :case_file_id AND id <> :client_id'
         );
         foreach ($rootFolders as $folder) {
             $folderId = (int) ($folder['id'] ?? 0);
@@ -287,9 +279,30 @@ if (!function_exists('lex_case_files_ensure_client_vault_tree')) {
                     'parent_id' => $clientId,
                     'id' => $folderId,
                     'case_file_id' => $caseFileId,
+                    'client_id' => $clientId,
                 ]);
             } catch (Throwable $e) {
                 // Keep going if a slug already exists under the client folder.
+            }
+        }
+
+        $stray = $pdo->prepare(
+            'SELECT * FROM case_file_folders
+             WHERE case_file_id = :case_file_id
+               AND parent_id <> :parent_id
+               AND slug IN ("documents", "pictures", "videos")'
+        );
+        $stray->execute(['case_file_id' => $caseFileId, 'parent_id' => $clientId]);
+        foreach ($stray->fetchAll() ?: [] as $folder) {
+            try {
+                $move->execute([
+                    'parent_id' => $clientId,
+                    'id' => (int) $folder['id'],
+                    'case_file_id' => $caseFileId,
+                    'client_id' => $clientId,
+                ]);
+            } catch (Throwable $e) {
+                // Leave the stray folder if this case already has that type folder.
             }
         }
 
