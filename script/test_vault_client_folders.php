@@ -28,7 +28,7 @@ require_once $root . '/config/case_files/helpers.php';
 
 $core = (string) file_get_contents($root . '/config/case_files/core.php');
 $helpers = (string) file_get_contents($root . '/config/case_files/helpers.php');
-$actions = (string) file_get_contents($root . '/config/case_files/actions.php');
+$actions = (string) file_get_contents($root . '/config/case_files/core.php');
 $appointment = (string) file_get_contents($root . '/client/appointment.php');
 $js = (string) file_get_contents($root . '/public/js/case-files.js');
 
