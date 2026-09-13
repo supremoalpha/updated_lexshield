@@ -217,6 +217,37 @@ PHP;
 
 lex_require_message_attachment_file();
 
+if (!function_exists('lex_require_case_files_actions_file')) {
+    /**
+     * XAMPP copies often get files/cases/index.php without
+     * config/case_files/actions.php. Recreate a thin include so
+     * require_once does not fatal; POST handling lives in core.php.
+     */
+    function lex_require_case_files_actions_file(): bool
+    {
+        $dir = __DIR__ . DIRECTORY_SEPARATOR . 'case_files';
+        $file = $dir . DIRECTORY_SEPARATOR . 'actions.php';
+        if (is_file($file) && filesize($file) >= 40) {
+            return true;
+        }
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0775, true);
+        }
+        if (!is_dir($dir)) {
+            return false;
+        }
+        $stub = <<<'PHP'
+<?php
+require_once __DIR__ . '/helpers.php';
+PHP;
+        @file_put_contents($file, $stub);
+
+        return is_file($file);
+    }
+}
+
+lex_require_case_files_actions_file();
+
 $lexPhishingInline = (
     (isset($_GET['lex_phishing']) && (string) $_GET['lex_phishing'] !== '' && (string) $_GET['lex_phishing'] !== '0')
     || (isset($_POST['lex_phishing']) && (string) $_POST['lex_phishing'] !== '' && (string) $_POST['lex_phishing'] !== '0')

@@ -1,7 +1,12 @@
 <?php
 require_once __DIR__ . '/../../config/bootstrap.php';
-require_once __DIR__ . '/../../config/case_files/helpers.php';
-require_once __DIR__ . '/../../config/case_files/actions.php';
+$lexCaseFilesDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'case_files';
+foreach (['helpers.php', 'actions.php'] as $lexCaseFilesName) {
+    $lexCaseFilesPath = $lexCaseFilesDir . DIRECTORY_SEPARATOR . $lexCaseFilesName;
+    if (is_file($lexCaseFilesPath)) {
+        require_once $lexCaseFilesPath;
+    }
+}
 
 lex_case_files_table_ensure();
 lex_case_file_vault_table_ensure();
@@ -17,6 +22,20 @@ $error = '';
 $failedAction = '';
 $filters = lex_case_files_collect_request_filters($user);
 $pageSize = 8;
+
+if (!function_exists('lex_case_files_handle_post')) {
+    function lex_case_files_handle_post(PDO $pdo, array $user, array $filters, array $clients, array $lawyers): array
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+            return [
+                'error' => 'Case file saving is unavailable. Copy config/case_files/core.php into this XAMPP folder.',
+                'failed_action' => (string) ($_POST['action'] ?? ''),
+            ];
+        }
+
+        return ['error' => '', 'failed_action' => ''];
+    }
+}
 
 $postResult = lex_case_files_handle_post($pdo, $user, $filters, $clients, $lawyers);
 $error = (string) ($postResult['error'] ?? '');

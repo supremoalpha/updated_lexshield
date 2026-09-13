@@ -42,7 +42,7 @@ lex_vault_assert('EXE uploads are blocked', !lex_case_file_is_allowed_upload('ap
 lex_vault_assert('Vault upload limit is 80 MB', lex_case_file_upload_max_bytes() === 80 * 1024 * 1024);
 lex_vault_assert('File picker accepts images and videos', str_contains(lex_case_file_upload_accept(), 'image/*') && str_contains(lex_case_file_upload_accept(), 'video/*'));
 lex_vault_assert('Vault form mentions picture and video', str_contains($helpers, 'Upload a picture, video, or document') && str_contains($helpers, 'accept='));
-lex_vault_assert('Vault upload action validates media types', str_contains($actions, 'lex_case_file_is_allowed_upload') && str_contains($actions, '80 MB'));
+lex_vault_assert('Vault upload action validates media types', str_contains($core, 'lex_case_file_is_allowed_upload') && (str_contains($core, '80 MB') || str_contains($actions, '80 MB')));
 lex_vault_assert('Viewer renders a video player', str_contains($view, 'case-file-view-video') && str_contains($view, '<video'));
 lex_vault_assert('Preview headers include video', str_contains($document, 'video\\/') || str_contains($document, 'video/'));
 lex_vault_assert('PHP upload limit file allows 80M', str_contains($userIni, 'upload_max_filesize = 80M') && str_contains($userIni, 'post_max_size = 80M'));
