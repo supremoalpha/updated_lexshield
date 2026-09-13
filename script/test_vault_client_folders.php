@@ -38,6 +38,7 @@ lex_vcf_assert('Client folder uses the client name', lex_case_file_client_folder
 lex_vcf_assert('Type-name clients get a distinct folder title', lex_case_file_client_folder_name(['full_name' => 'Documents']) === 'Documents folder');
 lex_vcf_assert('Booking creates the client vault', str_contains($appointment, 'lex_case_files_ensure_for_case'));
 lex_vcf_assert('Vault UI opens the client folder', str_contains($helpers, 'data-vault-folder') && str_contains($helpers, 'Client folders'));
+lex_vcf_assert('Vault does not mention a pre-made booking folder', !str_contains($helpers, 'When a client books an appointment'));
 lex_vcf_assert('Inner folders are created under the client folder', str_contains($helpers, 'lex_case_files_ensure_client_vault_tree'));
 lex_vcf_assert('Custom folders are created inside the open folder', str_contains($actions, 'parent_folder_id') && str_contains($helpers, 'parent_folder_id'));
 lex_vcf_assert('Folder navigation is in the case files script', str_contains($js, 'data-vault-folder') && str_contains($js, 'folder:'));

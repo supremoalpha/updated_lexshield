@@ -867,7 +867,6 @@ if (!function_exists('lex_case_files_render_vault_panel')) {
             <span class="pill">AES-256 encrypted</span>
             <span class="pill">Blockchain ledger</span>
           </div>
-          <p class="muted">When a client books an appointment, a folder for that client is already here. Open it to use Documents, Pictures, Videos, or folders you add inside.</p>
           <nav class="case-vault-crumbs" aria-label="Vault folders">
             <a href="<?= lex_e($vaultUrl(0)) ?>" data-vault-folder="0">Vault</a>
             <?php foreach ($ancestors as $crumb): ?>
