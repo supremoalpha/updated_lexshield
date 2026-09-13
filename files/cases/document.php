@@ -50,11 +50,13 @@ if ((string) $document['upload_status'] !== 'approved' && $access !== 'manage') 
     exit('Access denied.');
 }
 
-$path = lex_case_files_folder_path((string) $document['case_folder_name'])
-    . DIRECTORY_SEPARATOR
-    . lex_case_file_vault_slug((string) $document['folder_slug'])
-    . DIRECTORY_SEPARATOR
-    . basename((string) $document['stored_name']);
+$path = function_exists('lex_case_file_document_abs_path')
+    ? lex_case_file_document_abs_path((string) $document['case_folder_name'], $document, (string) $document['stored_name'])
+    : (lex_case_files_folder_path((string) $document['case_folder_name'])
+        . DIRECTORY_SEPARATOR
+        . lex_case_file_vault_slug((string) $document['folder_slug'])
+        . DIRECTORY_SEPARATOR
+        . basename((string) $document['stored_name']));
 
 if (!is_file($path)) {
     lex_audit('missing_case_file_document', 'case_file_documents', (string) $documentId);

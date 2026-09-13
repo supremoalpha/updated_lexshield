@@ -69,12 +69,14 @@ CREATE TABLE IF NOT EXISTS `case_files` (
 CREATE TABLE IF NOT EXISTS `case_file_folders` (
     `id` INT NOT NULL AUTO_INCREMENT,
     `case_file_id` INT NOT NULL,
+    `parent_id` INT NOT NULL DEFAULT 0,
     `slug` VARCHAR(64) NOT NULL,
     `name` VARCHAR(190) NOT NULL,
     `created_by_user_id` INT DEFAULT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uq_case_file_folders` (`case_file_id`, `slug`),
+    UNIQUE KEY `uq_case_file_folders_parent` (`case_file_id`, `parent_id`, `slug`),
+    KEY `idx_case_file_folders_parent` (`parent_id`),
     CONSTRAINT `fk_case_file_folders_case_file` FOREIGN KEY (`case_file_id`) REFERENCES `case_files` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

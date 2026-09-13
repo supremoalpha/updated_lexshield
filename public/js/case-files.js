@@ -62,6 +62,7 @@
       dir: hiddenDirInput ? (hiddenDirInput.value || 'desc') : 'desc',
       page: 1,
       record: 0,
+      folder: 0,
     });
 
     const readStateFromUrl = () => {
@@ -73,6 +74,7 @@
         dir: params.get('dir') || 'desc',
         page: Math.max(1, parseInt(params.get('page') || '1', 10) || 1),
         record: Math.max(0, parseInt(params.get('record') || '0', 10) || 0),
+        folder: Math.max(0, parseInt(params.get('folder') || '0', 10) || 0),
       };
     };
 
@@ -85,6 +87,7 @@
       if (state.dir && state.dir !== 'desc') url.searchParams.set('dir', state.dir); else url.searchParams.delete('dir');
       if (state.page && state.page > 1) url.searchParams.set('page', String(state.page)); else url.searchParams.delete('page');
       if (state.record && state.record > 0) url.searchParams.set('record', String(state.record)); else url.searchParams.delete('record');
+      if (state.folder && state.folder > 0) url.searchParams.set('folder', String(state.folder)); else url.searchParams.delete('folder');
       return url;
     };
 
@@ -96,6 +99,7 @@
       if (state.dir && state.dir !== 'desc') url.searchParams.set('dir', state.dir); else url.searchParams.delete('dir');
       if (state.page && state.page > 1) url.searchParams.set('page', String(state.page)); else url.searchParams.delete('page');
       if (state.record && state.record > 0) url.searchParams.set('record', String(state.record)); else url.searchParams.delete('record');
+      if (state.folder && state.folder > 0) url.searchParams.set('folder', String(state.folder)); else url.searchParams.delete('folder');
       url.searchParams.delete('format');
       if (mode === 'push') {
         history.pushState({}, '', url);
@@ -473,6 +477,7 @@
         dir: state.dir || 'desc',
         page: Math.max(1, parseInt(state.page || 1, 10) || 1),
         record: Math.max(0, parseInt(state.record || 0, 10) || 0),
+        folder: Math.max(0, parseInt(state.folder || 0, 10) || 0),
       };
       const url = buildUrl(nextState);
       setBusy(true, 'Loading case files...');
@@ -494,6 +499,7 @@
           dir: meta.dir || nextState.dir,
           page: meta.page || nextState.page,
           record: meta.selectedId || nextState.record,
+          folder: Number.isInteger(meta.folder) ? meta.folder : nextState.folder,
         };
         updateFilterForm(syncedState);
         syncUrl(syncedState, options.push ? 'push' : 'replace');
@@ -517,6 +523,7 @@
           ...readFilters(),
           page: 1,
           record: 0,
+          folder: 0,
         }, { push: true });
       });
     }
@@ -530,6 +537,7 @@
               ...readFilters(),
               page: 1,
               record: 0,
+              folder: 0,
             }, { push: false });
           }, 220);
         });
@@ -546,6 +554,7 @@
             ...readFilters(),
             page: 1,
             record: 0,
+            folder: 0,
           }, { push: true });
         });
       }
@@ -575,7 +584,22 @@
           ...readFilters(),
           page: Math.max(1, parseInt(readStateFromUrl().page || 1, 10) || 1),
           record: recordId,
+          folder: 0,
         }, { push: true, openDetail: true });
+        return;
+      }
+
+      const folderTrigger = event.target.closest('[data-vault-folder]');
+      if (folderTrigger) {
+        event.preventDefault();
+        const folderId = parseInt(folderTrigger.dataset.vaultFolder || '0', 10) || 0;
+        const current = readStateFromUrl();
+        fetchState({
+          ...readFilters(),
+          page: Math.max(1, parseInt(current.page || 1, 10) || 1),
+          record: current.record || 0,
+          folder: folderId,
+        }, { push: true, openVault: true });
         return;
       }
 
@@ -588,6 +612,7 @@
           ...readFilters(),
           page: Math.max(1, parseInt(readStateFromUrl().page || 1, 10) || 1),
           record: recordId,
+          folder: 0,
         }, { push: true, openVault: true });
         return;
       }
@@ -600,6 +625,7 @@
           ...readFilters(),
           page,
           record: 0,
+          folder: 0,
         }, { push: true });
         return;
       }
@@ -614,6 +640,7 @@
           dir: 'desc',
           page: 1,
           record: 0,
+          folder: 0,
         }, { push: true });
       }
     });

@@ -56,6 +56,9 @@ if (!function_exists('lex_case_files_handle_post')) {
                 'sort' => $filters['sort'] !== 'updated_at' ? $filters['sort'] : null,
                 'dir' => strtoupper($filters['dir']) !== 'DESC' ? $filters['dir'] : null,
                 'page' => $filters['page'] > 1 ? $filters['page'] : null,
+                'folder' => (($overrides['folder'] ?? $filters['folder'] ?? 0) > 0)
+                    ? (int) ($overrides['folder'] ?? $filters['folder'])
+                    : null,
             ] + $overrides, static fn ($v) => $v !== null && $v !== '');
             header('Location: ' . lex_app_url('case_files.php') . (($params) ? ('?' . http_build_query($params)) : ''));
             exit;
@@ -90,7 +93,14 @@ if (!function_exists('lex_case_files_handle_post')) {
                     'status' => $status,
                 ]);
                 $newId = (int) $pdo->lastInsertId();
-                if (function_exists('lex_case_files_ensure_default_vault_folders')) {
+                if (function_exists('lex_case_files_ensure_client_vault_tree')) {
+                    lex_case_file_vault_table_ensure();
+                    lex_case_files_ensure_client_vault_tree($pdo, [
+                        'id' => $newId,
+                        'full_name' => $fullName,
+                        'client_user_id' => $clientUserId,
+                    ], (int) $user['id']);
+                } elseif (function_exists('lex_case_files_ensure_default_vault_folders')) {
                     lex_case_file_vault_table_ensure();
                     lex_case_files_ensure_default_vault_folders($pdo, $newId, (int) $user['id']);
                 }
@@ -237,6 +247,10 @@ if (!function_exists('lex_case_files_handle_post')) {
                 lex_case_file_vault_table_ensure();
                 $folder = null;
                 $postedFolderId = lex_sanitize_int($_POST['folder_id'] ?? 0);
+                $stayFolderId = lex_sanitize_int($_POST['folder'] ?? $filters['folder'] ?? 0);
+                $clientFolder = function_exists('lex_case_files_ensure_client_vault_tree')
+                    ? lex_case_files_ensure_client_vault_tree($pdo, $record, (int) $user['id'])
+                    : null;
                 if ($postedFolderId > 0) {
                     $folderStmt = $pdo->prepare('SELECT * FROM case_file_folders WHERE id = :id AND case_file_id = :case_file_id LIMIT 1');
                     $folderStmt->execute(['id' => $postedFolderId, 'case_file_id' => $caseFileId]);
@@ -246,7 +260,8 @@ if (!function_exists('lex_case_files_handle_post')) {
                     $suggested = function_exists('lex_case_file_suggested_folder_name')
                         ? lex_case_file_suggested_folder_name($mime, $originalName)
                         : 'Documents';
-                    $folder = lex_case_files_ensure_vault_folder($pdo, $caseFileId, $suggested, (int) $user['id']);
+                    $typeParentId = $clientFolder ? (int) $clientFolder['id'] : 0;
+                    $folder = lex_case_files_ensure_vault_folder($pdo, $caseFileId, $suggested, (int) $user['id'], $typeParentId);
                 }
 
                 $plaintext = file_get_contents((string) $file['tmp_name']);
@@ -256,7 +271,10 @@ if (!function_exists('lex_case_files_handle_post')) {
                 $encrypted = lex_case_file_document_encrypt($plaintext);
 
                 $storedName = bin2hex(random_bytes(16)) . '.enc';
-                $folderPath = lex_case_files_folder_path((string) $record['folder_name']) . DIRECTORY_SEPARATOR . lex_case_file_vault_slug((string) $folder['slug']);
+                $relativeDir = function_exists('lex_case_file_vault_relative_dir')
+                    ? lex_case_file_vault_relative_dir($folder)
+                    : lex_case_file_vault_slug((string) $folder['slug']);
+                $folderPath = lex_case_files_folder_path((string) $record['folder_name']) . DIRECTORY_SEPARATOR . $relativeDir;
                 lex_storage_ensure_dir($folderPath);
                 file_put_contents($folderPath . DIRECTORY_SEPARATOR . $storedName, $encrypted['ciphertext'], LOCK_EX);
 
@@ -281,7 +299,7 @@ if (!function_exists('lex_case_files_handle_post')) {
 
                 lex_audit('vault_upload_case_file_document', 'case_files', (string) $caseFileId);
                 lex_flash_set('success', $status === 'approved' ? ($kindLabel . ' uploaded to the ' . (string) $folder['name'] . ' folder.') : ($kindLabel . ' uploaded and is pending your lawyer\'s approval.'));
-                $redirect(['record' => $caseFileId]);
+                $redirect(['record' => $caseFileId, 'folder' => $stayFolderId > 0 ? $stayFolderId : (int) $folder['id']]);
             }
 
             if ($action === 'vault_folder_create') {
@@ -310,16 +328,32 @@ if (!function_exists('lex_case_files_handle_post')) {
                 }
 
                 lex_case_file_vault_table_ensure();
-                $exists = $pdo->prepare('SELECT id FROM case_file_folders WHERE case_file_id = :case_file_id AND slug = :slug LIMIT 1');
-                $exists->execute(['case_file_id' => $caseFileId, 'slug' => $slug]);
+                $clientFolder = function_exists('lex_case_files_ensure_client_vault_tree')
+                    ? lex_case_files_ensure_client_vault_tree($pdo, $record, (int) $user['id'])
+                    : null;
+                $parentId = lex_sanitize_int($_POST['parent_folder_id'] ?? 0);
+                $stayFolderId = lex_sanitize_int($_POST['folder'] ?? $filters['folder'] ?? 0);
+                if ($parentId > 0) {
+                    $parent = lex_case_files_get_vault_folder($pdo, $caseFileId, $parentId);
+                    $parentId = $parent ? (int) $parent['id'] : ($clientFolder ? (int) $clientFolder['id'] : 0);
+                } else {
+                    $parentId = $clientFolder ? (int) $clientFolder['id'] : 0;
+                }
+
+                $exists = $pdo->prepare(
+                    'SELECT id FROM case_file_folders
+                     WHERE case_file_id = :case_file_id AND slug = :slug AND parent_id = :parent_id
+                     LIMIT 1'
+                );
+                $exists->execute(['case_file_id' => $caseFileId, 'slug' => $slug, 'parent_id' => $parentId]);
                 if ($exists->fetch()) {
                     return ['error' => 'That folder already exists.', 'failed_action' => 'vault_folder_create'];
                 }
 
-                lex_case_files_ensure_vault_folder($pdo, $caseFileId, $folderName, (int) $user['id']);
+                $created = lex_case_files_ensure_vault_folder($pdo, $caseFileId, $folderName, (int) $user['id'], $parentId);
                 lex_audit('create_case_file_vault_folder', 'case_files', (string) $caseFileId);
                 lex_flash_set('success', 'Folder created.');
-                $redirect(['record' => $caseFileId]);
+                $redirect(['record' => $caseFileId, 'folder' => $stayFolderId > 0 ? $stayFolderId : (int) ($created['parent_id'] ?? $parentId)]);
             }
 
             if ($action === 'vault_decision') {
@@ -348,7 +382,10 @@ if (!function_exists('lex_case_files_handle_post')) {
                     ->execute(['status' => $decision, 'reviewer' => (int) $user['id'], 'id' => $documentId]);
                 lex_audit('vault_' . $decision . '_case_file_document', 'case_file_documents', (string) $documentId);
                 lex_flash_set('success', 'Document ' . $decision . '.');
-                $redirect(['record' => (int) $document['case_file_id']]);
+                $redirect([
+                    'record' => (int) $document['case_file_id'],
+                    'folder' => lex_sanitize_int($_POST['folder'] ?? $filters['folder'] ?? 0),
+                ]);
             }
         } catch (RuntimeException $e) {
             return ['error' => $e->getMessage(), 'failed_action' => $action];

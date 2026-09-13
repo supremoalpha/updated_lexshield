@@ -45,7 +45,7 @@ lex_mvf_assert('Videos go to the Videos folder', lex_case_file_suggested_folder_
 lex_mvf_assert('PDFs go to the Documents folder', lex_case_file_suggested_folder_name('application/pdf', 'a.pdf') === 'Documents');
 lex_mvf_assert('Vault can create a custom folder', str_contains($actions, 'vault_folder_create') && str_contains($helpers, 'Create folder'));
 lex_mvf_assert('Vault upload can choose a folder', str_contains($actions, "\$_POST['folder_id']") && str_contains($helpers, 'Auto (Documents, Pictures, or Videos)'));
-lex_mvf_assert('New case files get default folders', str_contains($actions, 'lex_case_files_ensure_default_vault_folders'));
+lex_mvf_assert('New case files get client vault folders', str_contains($actions, 'lex_case_files_ensure_client_vault_tree') || str_contains($actions, 'lex_case_files_ensure_default_vault_folders'));
 
 echo "\n{$passed} passed, {$failed} failed\n";
 exit($failed > 0 ? 1 : 0);

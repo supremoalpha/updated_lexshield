@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/bootstrap.php';
+require_once __DIR__ . '/../config/case_files/helpers.php';
 
 $user = lex_require_role('client');
 $pdo = lex_pdo();
@@ -199,6 +200,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && lex_csrf_validate($_POST['csrf_toke
             $appointmentId = (string) $pdo->lastInsertId();
             lex_audit('book_appointment', 'appointments', $appointmentId);
             $pdo->commit();
+            try {
+                if (function_exists('lex_case_files_ensure_for_case')) {
+                    lex_case_files_ensure_for_case($pdo, $caseId, (int) $user['id']);
+                }
+            } catch (Throwable $e) {
+                error_log('Vault folder create after booking failed: ' . $e->getMessage());
+            }
             try {
                 $lawyerUserStmt = $pdo->prepare('SELECT user_id FROM lawyers WHERE id = :id LIMIT 1');
                 $lawyerUserStmt->execute(['id' => $lawyerId]);
