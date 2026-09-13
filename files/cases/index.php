@@ -15,8 +15,14 @@ $pdo = lex_pdo();
 lex_case_files_seed_from_cases($pdo);
 
 $user = lex_require_role(['lawyer', 'client']);
-$clients = lex_recent('SELECT u.id, u.full_name, u.email FROM users u JOIN clients c ON c.user_id = u.id WHERE u.role = "client" AND u.is_active = 1 ORDER BY u.full_name ASC');
-$lawyers = lex_recent('SELECT u.id, u.full_name, u.email FROM users u JOIN lawyers l ON l.user_id = u.id WHERE u.role = "lawyer" AND u.is_active = 1 AND l.status = "active" ORDER BY u.full_name ASC');
+$role = strtolower(trim((string) ($user['role'] ?? '')));
+if ($role === 'attorney') {
+    $role = 'lawyer';
+}
+$clients = $role === 'lawyer' && function_exists('lex_case_files_clients_for_lawyer')
+    ? lex_case_files_clients_for_lawyer((int) $user['id'])
+    : [];
+$lawyers = [];
 
 $error = '';
 $failedAction = '';

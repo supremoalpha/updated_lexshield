@@ -499,6 +499,72 @@ if (!function_exists('lex_case_file_document_decrypt')) {
     }
 }
 
+if (!function_exists('lex_case_files_clients_for_lawyer')) {
+    /**
+     * Clients who booked this attorney, or already have a case with them.
+     *
+     * @return list<array{id:int, full_name:string, email:string}>
+     */
+    function lex_case_files_clients_for_lawyer(int $lawyerUserId): array
+    {
+        if ($lawyerUserId <= 0) {
+            return [];
+        }
+
+        $stmt = lex_pdo()->prepare(
+            'SELECT DISTINCT u.id, u.full_name, u.email
+             FROM users u
+             JOIN clients c ON c.user_id = u.id
+             WHERE u.role = "client" AND u.is_active = 1
+               AND (
+                 EXISTS (
+                   SELECT 1 FROM appointments a
+                   JOIN lawyers l ON l.id = a.lawyer_id
+                   WHERE a.client_id = c.id
+                     AND l.user_id = :uid1
+                     AND a.status <> "deleted"
+                 )
+                 OR EXISTS (
+                   SELECT 1 FROM cases cs
+                   JOIN lawyers l2 ON l2.id = cs.lawyer_id
+                   WHERE cs.client_id = c.id AND l2.user_id = :uid2
+                 )
+                 OR EXISTS (
+                   SELECT 1 FROM case_files cf
+                   WHERE cf.client_user_id = u.id
+                     AND (cf.assigned_lawyer_user_id = :uid3 OR cf.created_by_user_id = :uid4)
+                 )
+               )
+             ORDER BY u.full_name ASC'
+        );
+        $stmt->execute([
+            'uid1' => $lawyerUserId,
+            'uid2' => $lawyerUserId,
+            'uid3' => $lawyerUserId,
+            'uid4' => $lawyerUserId,
+        ]);
+
+        return $stmt->fetchAll() ?: [];
+    }
+}
+
+if (!function_exists('lex_case_files_client_booked_with_lawyer')) {
+    function lex_case_files_client_booked_with_lawyer(int $clientUserId, int $lawyerUserId): bool
+    {
+        if ($clientUserId <= 0 || $lawyerUserId <= 0) {
+            return false;
+        }
+
+        foreach (lex_case_files_clients_for_lawyer($lawyerUserId) as $client) {
+            if ((int) ($client['id'] ?? 0) === $clientUserId) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
+
 if (!function_exists('lex_case_files_owns_or_manages')) {
     function lex_case_files_owns_or_manages(PDO $pdo, int $caseFileId, array $user): ?array
     {
@@ -569,12 +635,15 @@ if (!function_exists('lex_case_files_handle_post')) {
                 $fullName = lex_sanitize_text($_POST['full_name'] ?? '');
                 $title = lex_sanitize_text($_POST['case_file_title'] ?? '');
                 $clientUserId = lex_sanitize_int($_POST['client_user_id'] ?? 0);
-                $lawyerUserId = lex_sanitize_int($_POST['assigned_lawyer_user_id'] ?? $user['id']);
+                $lawyerUserId = (int) $user['id'];
                 $status = lex_safe_identifier((string) ($_POST['status'] ?? 'open'), ['open', 'ongoing', 'closed'], 'open');
                 $description = lex_sanitize_multiline_text($_POST['description'] ?? '');
 
                 if ($fullName === '' || $title === '' || $clientUserId <= 0) {
                     return ['error' => 'Full name, client, and case file title are required.', 'failed_action' => 'create'];
+                }
+                if (!lex_case_files_client_booked_with_lawyer($clientUserId, $lawyerUserId)) {
+                    return ['error' => 'Choose a client who booked with you. The case file stays with that attorney.', 'failed_action' => 'create'];
                 }
 
                 $folderName = 'CF-' . bin2hex(random_bytes(6));
