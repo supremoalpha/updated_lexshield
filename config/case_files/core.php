@@ -91,6 +91,8 @@ if (!function_exists('lex_case_file_vault_table_ensure')) {
                     `uploaded_by_user_id` INT NOT NULL,
                     `reviewed_by_user_id` INT DEFAULT NULL,
                     `reviewed_at` DATETIME DEFAULT NULL,
+                    `ledger_hash` CHAR(64) DEFAULT NULL,
+                    `ledger_block_index` INT DEFAULT NULL,
                     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     PRIMARY KEY (`id`),
                     KEY `idx_case_file_documents_folder` (`folder_id`),
@@ -100,6 +102,7 @@ if (!function_exists('lex_case_file_vault_table_ensure')) {
                     CONSTRAINT `fk_case_file_documents_case_file` FOREIGN KEY (`case_file_id`) REFERENCES `case_files` (`id`) ON DELETE CASCADE
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
             );
+            lex_case_file_document_ledger_columns_ensure($pdo);
             $done = true;
         });
     }
@@ -130,6 +133,22 @@ if (!function_exists('lex_case_file_vault_folder_parent_ensure')) {
             $pdo->exec('ALTER TABLE `case_file_folders` ADD KEY `idx_case_file_folders_parent` (`parent_id`)');
         } catch (PDOException $e) {
             // Parent index already exists.
+        }
+    }
+}
+
+if (!function_exists('lex_case_file_document_ledger_columns_ensure')) {
+    function lex_case_file_document_ledger_columns_ensure(PDO $pdo): void
+    {
+        try {
+            $pdo->exec('ALTER TABLE `case_file_documents` ADD COLUMN `ledger_hash` CHAR(64) DEFAULT NULL');
+        } catch (PDOException $e) {
+            // Column already exists.
+        }
+        try {
+            $pdo->exec('ALTER TABLE `case_file_documents` ADD COLUMN `ledger_block_index` INT DEFAULT NULL');
+        } catch (PDOException $e) {
+            // Column already exists.
         }
     }
 }
@@ -780,6 +799,34 @@ if (!function_exists('lex_case_files_handle_post')) {
                     'uploaded_by' => (int) $user['id'],
                 ]);
 
+                $documentId = (int) $pdo->lastInsertId();
+                $contentHash = hash('sha256', $plaintext);
+                $block = function_exists('lex_vault_blockchain_record')
+                    ? lex_vault_blockchain_record('vault_file_uploaded', [
+                        'case_file_id' => $caseFileId,
+                        'document_id' => $documentId,
+                        'folder_id' => (int) $folder['id'],
+                        'folder_name' => (string) $folder['name'],
+                        'original_name' => $originalName,
+                        'mime_type' => $mime,
+                        'file_size' => strlen($plaintext),
+                        'content_hash' => $contentHash,
+                        'upload_status' => $status,
+                    ], (int) $user['id'])
+                    : null;
+                if ($block) {
+                    try {
+                        $pdo->prepare('UPDATE case_file_documents SET ledger_hash = :hash, ledger_block_index = :block_index WHERE id = :id')
+                            ->execute([
+                                'hash' => (string) $block['hash'],
+                                'block_index' => (int) $block['block_index'],
+                                'id' => $documentId,
+                            ]);
+                    } catch (Throwable $e) {
+                        error_log('Vault document ledger columns update failed: ' . $e->getMessage());
+                    }
+                }
+
                 lex_audit('vault_upload_case_file_document', 'case_files', (string) $caseFileId);
                 lex_flash_set('success', $status === 'approved' ? ($kindLabel . ' uploaded to the ' . (string) $folder['name'] . ' folder.') : ($kindLabel . ' uploaded and is pending your lawyer\'s approval.'));
                 $redirect(['record' => $caseFileId, 'folder' => $stayFolderId > 0 ? $stayFolderId : (int) $folder['id']]);
@@ -834,6 +881,14 @@ if (!function_exists('lex_case_files_handle_post')) {
                 }
 
                 $created = lex_case_files_ensure_vault_folder($pdo, $caseFileId, $folderName, (int) $user['id'], $parentId);
+                if (function_exists('lex_vault_blockchain_record')) {
+                    lex_vault_blockchain_record('vault_folder_created', [
+                        'case_file_id' => $caseFileId,
+                        'folder_id' => (int) ($created['id'] ?? 0),
+                        'folder_name' => $folderName,
+                        'parent_id' => $parentId,
+                    ], (int) $user['id']);
+                }
                 lex_audit('create_case_file_vault_folder', 'case_files', (string) $caseFileId);
                 lex_flash_set('success', 'Folder created.');
                 $redirect(['record' => $caseFileId, 'folder' => $stayFolderId > 0 ? $stayFolderId : (int) ($created['parent_id'] ?? $parentId)]);
@@ -844,7 +899,7 @@ if (!function_exists('lex_case_files_handle_post')) {
                 $decision = lex_safe_identifier((string) ($_POST['decision'] ?? ''), ['approved', 'rejected'], '');
 
                 $stmt = $pdo->prepare(
-                    'SELECT d.id, d.case_file_id, cf.client_user_id, cf.assigned_lawyer_user_id, cf.created_by_user_id
+                    'SELECT d.id, d.case_file_id, d.original_name, d.ledger_hash, cf.client_user_id, cf.assigned_lawyer_user_id, cf.created_by_user_id
                      FROM case_file_documents d JOIN case_files cf ON cf.id = d.case_file_id
                      WHERE d.id = :id LIMIT 1'
                 );
@@ -863,6 +918,14 @@ if (!function_exists('lex_case_files_handle_post')) {
 
                 $pdo->prepare('UPDATE case_file_documents SET upload_status = :status, reviewed_by_user_id = :reviewer, reviewed_at = NOW() WHERE id = :id')
                     ->execute(['status' => $decision, 'reviewer' => (int) $user['id'], 'id' => $documentId]);
+                if (function_exists('lex_vault_blockchain_record')) {
+                    lex_vault_blockchain_record('vault_file_' . $decision, [
+                        'case_file_id' => (int) $document['case_file_id'],
+                        'document_id' => $documentId,
+                        'original_name' => (string) ($document['original_name'] ?? ''),
+                        'previous_ledger_hash' => (string) ($document['ledger_hash'] ?? ''),
+                    ], (int) $user['id']);
+                }
                 lex_audit('vault_' . $decision . '_case_file_document', 'case_file_documents', (string) $documentId);
                 lex_flash_set('success', 'Document ' . $decision . '.');
                 $redirect([

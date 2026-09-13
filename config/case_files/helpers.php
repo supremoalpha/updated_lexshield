@@ -718,6 +718,58 @@ if (!function_exists('lex_case_files_render_detail')) {
     }
 }
 
+if (!function_exists('lex_case_files_render_vault_ledger')) {
+    function lex_case_files_render_vault_ledger(int $caseFileId): string
+    {
+        if ($caseFileId <= 0 || !function_exists('lex_blockchain_blocks_for_case')) {
+            return '';
+        }
+
+        $verification = function_exists('lex_blockchain_verify_chain')
+            ? lex_blockchain_verify_chain()
+            : ['valid' => true, 'blocks_checked' => 0];
+        $blocks = lex_blockchain_blocks_for_case($caseFileId, 12);
+
+        ob_start();
+        ?>
+        <div class="case-vault-ledger" data-vault-ledger>
+          <div class="card-head">
+            <h3>Vault blockchain</h3>
+            <?php if (!empty($verification['valid'])): ?>
+              <span class="pill case-vault-ledger-ok">Chain intact</span>
+            <?php else: ?>
+              <span class="pill case-vault-ledger-bad">Chain broken</span>
+            <?php endif; ?>
+          </div>
+          <p class="muted">Each upload, folder, and approval is sealed as a hash-chained block. Changing an old record breaks every hash after it.</p>
+          <ul class="admin-audit-list">
+            <?php foreach ($blocks as $block): ?>
+              <?php
+                $payload = json_decode((string) ($block['data_json'] ?? ''), true);
+                $payload = is_array($payload) ? $payload : [];
+                $detail = (string) ($payload['original_name'] ?? $payload['folder_name'] ?? '');
+                $contentHash = (string) ($payload['content_hash'] ?? '');
+              ?>
+              <li class="admin-audit-row case-vault-ledger-row">
+                <span><?= lex_e(function_exists('lex_blockchain_event_label') ? lex_blockchain_event_label((string) $block['event_type']) : (string) $block['event_type']) ?></span>
+                <?php if ($detail !== ''): ?><strong><?= lex_e($detail) ?></strong><?php endif; ?>
+                <small class="muted">#<?= (int) $block['block_index'] ?> · <?= lex_e((string) ($block['actor_name'] ?? 'System')) ?> · <?= lex_e(lex_message_timestamp((string) $block['created_at'])) ?></small>
+                <code class="case-vault-ledger-hash" title="<?= lex_e((string) $block['hash']) ?>"><?= lex_e(substr((string) $block['hash'], 0, 16)) ?>&hellip;</code>
+                <?php if ($contentHash !== ''): ?>
+                  <small class="muted">File hash <?= lex_e(substr($contentHash, 0, 12)) ?>&hellip;</small>
+                <?php endif; ?>
+              </li>
+            <?php endforeach; ?>
+            <?php if (!$blocks): ?>
+              <li class="admin-empty-line">No vault blocks yet. Upload a file or create a folder to write the first block.</li>
+            <?php endif; ?>
+          </ul>
+        </div>
+        <?php
+        return (string) ob_get_clean();
+    }
+}
+
 if (!function_exists('lex_case_files_render_vault_panel')) {
     function lex_case_files_render_vault_panel(array $state, array $filters, array $user): string
     {
@@ -808,6 +860,7 @@ if (!function_exists('lex_case_files_render_vault_panel')) {
           <div class="card-head">
             <h2>Secure Vault - <?= lex_e((string) $record['case_file_title']) ?></h2>
             <span class="pill">AES-256 encrypted</span>
+            <span class="pill">Blockchain ledger</span>
           </div>
           <p class="muted">When a client books an appointment, a folder for that client is already here. Open it to use Documents, Pictures, Videos, or folders you add inside.</p>
           <nav class="case-vault-crumbs" aria-label="Vault folders">
@@ -859,6 +912,9 @@ if (!function_exists('lex_case_files_render_vault_panel')) {
                 <li class="admin-audit-row">
                   <span><?= lex_e((string) $document['original_name']) ?></span>
                   <span class="pill payment-status-pill payment-status-<?= lex_e((string) $document['upload_status']) ?>"><?= lex_e(ucfirst((string) $document['upload_status'])) ?></span>
+                  <?php if (!empty($document['ledger_hash'])): ?>
+                    <span class="pill case-vault-seal" title="<?= lex_e((string) $document['ledger_hash']) ?>">Sealed #<?= (int) ($document['ledger_block_index'] ?? 0) ?></span>
+                  <?php endif; ?>
                   <small class="muted">by <?= lex_e((string) $document['uploaded_by_name']) ?> &middot; <?= lex_e(lex_message_timestamp((string) $document['created_at'])) ?></small>
                   <div class="inline-actions">
                     <?php
@@ -930,6 +986,7 @@ if (!function_exists('lex_case_files_render_vault_panel')) {
               <button class="button button-primary" type="submit">Upload to vault</button>
             </form>
           <?php endif; ?>
+          <?= lex_case_files_render_vault_ledger((int) $record['id']) ?>
         </section>
         <?php
         return (string) ob_get_clean();

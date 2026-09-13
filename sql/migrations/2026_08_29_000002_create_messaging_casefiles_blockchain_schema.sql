@@ -95,6 +95,8 @@ CREATE TABLE IF NOT EXISTS `case_file_documents` (
     `uploaded_by_user_id` INT NOT NULL,
     `reviewed_by_user_id` INT DEFAULT NULL,
     `reviewed_at` DATETIME DEFAULT NULL,
+    `ledger_hash` CHAR(64) DEFAULT NULL,
+    `ledger_block_index` INT DEFAULT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     KEY `idx_case_file_documents_folder` (`folder_id`),
