@@ -460,6 +460,11 @@ if (!function_exists('lex_case_files_collect_request_filters')) {
             $status = 'all';
         }
 
+        $role = strtolower(trim((string) ($user['role'] ?? '')));
+        if ($role === 'attorney') {
+            $role = 'lawyer';
+        }
+
         return [
             'q' => trim(lex_sanitize_text($_GET['q'] ?? '')),
             'status' => $status,
@@ -468,7 +473,7 @@ if (!function_exists('lex_case_files_collect_request_filters')) {
             'page' => max(1, lex_sanitize_int($_GET['page'] ?? 1, 1)),
             'record' => lex_sanitize_int($_GET['record'] ?? 0),
             'folder' => lex_sanitize_int($_GET['folder'] ?? 0),
-            'role' => (string) $user['role'],
+            'role' => $role,
             'user_id' => (int) $user['id'],
         ];
     }
@@ -1033,9 +1038,9 @@ if (!function_exists('lex_case_files_render_editor')) {
             return '';
         }
         ?>
-        <div class="modal-overlay" data-case-create-modal aria-hidden="true">
+        <div class="modal-overlay" id="case-create-modal" data-case-create-modal aria-hidden="true">
           <div class="modal-card">
-            <div class="modal-header"><h2>New case file</h2><button class="icon-button" type="button" data-case-create-close aria-label="Close">&times;</button></div>
+            <div class="modal-header"><h2>New case file</h2><a class="icon-button" href="#case-overview" data-case-create-close aria-label="Close">&times;</a></div>
             <form method="post" class="modal-body stack-form" data-casefile-form data-persist-form="create">
               <?= lex_csrf_field() ?>
               <input type="hidden" name="action" value="create">

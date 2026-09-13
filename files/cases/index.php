@@ -106,8 +106,8 @@ lex_page_header('Case Files', 'case-files', $user);
     <div class="case-search-actions">
       <button class="button button-primary" type="submit">Apply</button>
       <a class="button button-secondary" href="case_files.php" data-case-reset>Reset</a>
-      <?php if ($user['role'] === 'lawyer'): ?>
-        <button class="button button-accent" type="button" data-case-create-open>New case</button>
+      <?php if (($filters['role'] ?? $user['role']) === 'lawyer'): ?>
+        <a class="button button-accent" href="#case-create-modal" data-case-create-open>New case</a>
       <?php endif; ?>
     </div>
   </form>
@@ -154,4 +154,5 @@ window.LEX_CASE_FILES_STATE = <?= json_encode([
   'error' => $error,
 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
 </script>
+<script src="<?= lex_e(function_exists('lex_asset_url') ? lex_asset_url('public/js/case-files.js') : lex_app_url('public/js/case-files.js')) ?>"></script>
 <?php lex_page_footer(); ?>

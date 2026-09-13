@@ -229,6 +229,9 @@
       restoreModalFocus(activeCreateModal, createModalReturnFocus);
       activeCreateModal.classList.remove('is-open');
       activeCreateModal.setAttribute('aria-hidden', 'true');
+      if (window.location.hash === '#case-create-modal') {
+        history.replaceState({}, '', window.location.pathname + window.location.search);
+      }
       if (activeCreateModal.dataset.lexModalInertApplied === '1') {
         setModalInertSiblings(activeCreateModal, false);
         delete activeCreateModal.dataset.lexModalInertApplied;
@@ -429,7 +432,6 @@
             event.preventDefault();
           }
         });
-        validate();
       });
     };
 
