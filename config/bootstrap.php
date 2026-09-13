@@ -248,6 +248,182 @@ PHP;
 
 lex_require_case_files_actions_file();
 
+if (!function_exists('lex_php_source_parses')) {
+    function lex_php_source_parses(string $source): bool
+    {
+        if ($source === '' || !str_contains($source, '<?php')) {
+            return false;
+        }
+        try {
+            token_get_all($source, TOKEN_PARSE);
+            return true;
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+}
+
+if (!function_exists('lex_case_file_viewer_stub_source')) {
+    function lex_case_file_viewer_stub_source(): string
+    {
+        return <<<'PHP'
+<?php
+
+require_once __DIR__ . '/../../config/bootstrap.php';
+
+$user = lex_require_login();
+
+$viewer = __DIR__ . '/../../config/case_files/viewer.php';
+if (!is_file($viewer)) {
+    http_response_code(500);
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo 'Case file viewer is missing. Open /lexshield/go.php once to restore it, then refresh.';
+    exit;
+}
+
+require $viewer;
+PHP;
+    }
+}
+
+if (!function_exists('lex_case_file_viewer_packed_source')) {
+    function lex_case_file_viewer_packed_source(): string
+    {
+        $encoded =
+            '1Vtbd9u4EX73r8CqaUi1ujrJNke25JNN5K7bJE5tZ9s9Xh8diIQkrCmSS4CSvWv/rr73l3UG4AW8yc6l'
+          . 'Pa0fbAmYGcwM5vIBpA+PwlW4t+cyx6MRs4WMuCNn8jZkYjxsH+zt8QWxv+FCMGk/iQWL2uTujsDAjEYR'
+          . 'vU3G2uS3PQI/6hsZE4/dzCL2S8wjNvOCJfdtEHW/t4fjDhVstuAeEzNJ5x6bMV/EsDRQFKZnGxp7skKz'
+          . '98QNnHjNfHniJisJ6nPJf2Uz7oOSsz9PLy6tlGjGXeuKHB2RAfA+QeHHIHsna65BgVfIIGLue7pmwDsH'
+          . 'Gh8+2uCvta3c5i/bJBWhaWdIoSVYVrutlJdceijA+oGzLcGlCC5lwQL4NxFvHSdja66/42cRxJHDPkZe'
+          . 'OuBQ/0PENihoTBbUEwwG8eup790aQ5LdyO8C9zblCzXTBypXpaE3iddg+PIKhrdUsmhNo2sYKFuKW31p'
+          . 'LWLPM+1Es1gE1pIesci//kmUegEqBF8sGHVBpm29Iz93yI9kOeLkldU2l/oYcdQ99h3JA3/GbriQwraK'
+          . 'sZFRz0AcncURt9oqAo/IQ4R2vpRmGREL50Z8TZesLzbLP96svQNnRSMI+vHHi+Puyw4qHtFtHHnMdwKX'
+          . '2YoTf6xD4CDA4YtxayVlOOr3t9ttb/usF0TL/v5gMECZLbLlrlyNWy/2By2yYny5kuMWzLYmViYLXHaI'
+          . 'm0VuYOpboLsdt4ZAgiHijVvRck7t4fOXneG3zzrDl887g97+yzbMBr7sCohioP62RVBCl/rOKojGrTV3'
+          . 'XY+1SGERGVFfLIJoDTIDifvRHb4ksCKB1dqgERCt5NoTIXM49ZQrDLd1yPT9xewf794OyZ36+LePpxfT'
+          . '8w6xlLMstfeHfdRjcojGJyam5cTM4AkkV1o8hFzLJC9DN7Db3QmEZYhlKff2+fTt9PUFcXt/6JBFT3jx'
+          . 'krw6Bw94Lotm+LVDnEWPuzhqJrIazgdUGnYysekP0CSiMKRzGfmYluNxLC2YASi6TgwVgi99qAEe3d4C'
+          . 'WUqr2CMGrnRn89t0OJdwfHb6zlA89ZQgBs1fTk/eGzRaO0EW5PQ9UbaPwT+JzryRT4AqyOFkLKa/cq6/'
+          . 'fz89m8KsIhqZM29P3p1ckGG2udkmdifshjkxxNWlBTWUjCfE2POrlNTNq03CtmDSWdnJvOo8GVEaJfiD'
+          . 'aQb9RYSBDxqrfHw+eJ6w4Q8UDWlbWTXzAwkhEvtuz0qI7rUG1HGYEEnMlTuPnrQv8+BLbLE5qpNpVu4Y'
+          . 'eTxYxUBpYC7SmOwNQVQvp4m4oE8l8hp0qtIlYq46uskbe5R5cQzNxA98ZiFEyFuFITcOvYC6MwE1JxbQ'
+          . 'Mb5BFhqGUbBhoMrTp9mWqJk19aEkW21z73GnaOzi/rrM56BkNVuSrbOgItWkEgxXdTtxjfCpja9nlfh6'
+          . 'pVXVapRDy+jDxeAC6IRzM+yJqe/SjDAgQLnd5k4MIg6IiuZtFxtYMmu1U1Ep0KgVUSqEundrlpQ/QR4P'
+          . '9OFlDNrPkDbpv3U9OCeqNwhnFOTMsFInd0UudkQe5h6pcPK4Q1HpfuBIBq1RQjiv0/0pwqaipgkMUpBT'
+          . '6avcYGqTyKjipUyjIkUCsh5wYx64czELgWWHNyu0tZlW7lsWJm46XZcAJdBacHsJtidiP2HtdqFF9sib'
+          . 'kzPo4qdnP87Opx9enb2CjyWKuoKM7b0+goz+n+PtT14zA/UPeyeNg19iFmGKFw8cpYYHZSiJBjUzvDJq'
+          . 'Z1omzBKnpV5aMrhmPthTaU9YPtQkFBMRg766fmtEjrW6WIrMg0NtIPp0M1tFbFGJunTC1nua2Yhq9ODg'
+          . 'eKSRIlTLecw9d6YUt7X+bTOEVNUOQ8Df3ufJ0gYZxT8IwfyarNjoA8inlv57wuCwpLbEOCQCOlVNyTj7'
+          . 'qcZkfQ5mVUCrFofWYMpdGLIOb1Y7dqeEZrVIKamzUr6Y/SwCvwl4IjgsQ8AUKH4+Bsw9m2HAiDlB5O5E'
+          . 'gJrkM/Dfq8zY/xAC1JrplHsU6ksZvgzzpVK+HPFl+nwZ3nssPsujrw6hFbMzj5WvDMxyJWDX/djz0tMI'
+          . 'Q3kYipgYM/3VbDeZ20s5lHScyyvELTKKU5AAB2wGhODr7LIsWaMN5TVbb0QurwgV5AmXbG16En1tLI/T'
+          . '9TdLaieMGmUKqZqsBB0UCOag6HU+dG+4S6dgLuA/lIZfGy3nCl9ahq9yVXYC5Swt/gdgsmnJ5wDlXfz/'
+          . 'FagM8tkyUCgJpMsgDkMW2bs2LOVItHxz+vrju+n7i3N9h6oj2vOCLXNfa0rOhMJgOSXUlQ/fn16cqk/T'
+          . 'H07eTN+/nuLn16cfzy5mxydvT97/+VwPnJ1Nzz+cvtckBjb7hvtp3qYadWpWTnK+AOAMmw2lChFfPB88'
+          . 'CmGnYdkArXdD3F6u1eM58ppSxrtGhzEvP0pt3mhEZuFSVLlsg6qAk5MO9P+Klkst7wvx8idLewgxG824'
+          . 'BjPvaMYaKic7sLMH6PqPjKXKf68vgu2kfCpIjZdGxvfm2oSIHOJkOVtTxIpW/6eeLW/knRcs79bunSM2'
+          . '7Sd9bpmlSIkcZqA9faqCN9T90KPct+oKHuZ1piusjvdWETT9LYe0TMqdlqGVKuS0PifgMLQwVMQ2p/Mn'
+          . 'ZvNbqapX8rAmC/XyDQPKA6AA8oyqWSK6tJjvRLehClnqYX2Sq3WOE3KdHnsfASAF5Vml8sbDFYveUElR'
+          . 'cdW7mITN9yWCoqKhBwU8Y7KiNsrqMl6RUGJ+qxxyMk/tVtVcolO5qGkXgc89nHgkQrSLVRSoXkaeVNRp'
+          . '2qYiXDKAk5kfRebHuCrHXRA4eqttLUEHmRZWPIamHEDuMT8jn5D9FwP4qQDCVCERz4Eloe+QQSdj6JHW'
+          . 'T/5P/mWaDZALPvYP96pVBooaReXPGLW01Jivneqhu3hkdptigevhFP965WgdPr9bP9/cbdl8fbcONnfP'
+          . 'luEji9InIMldCLKCxvAx54a7LOiDcrt98YSLE3wWqhFbbdXTz0rVg1sufkCxO4j1sor4mvvqsJ+FS1KS'
+          . 'jnQhtRC7ZssfJeuko3qdo0QgjlqLCPEENjtVXbR4FKkn9OVN1tDz+qfKOWYh1H6RKYpRot5veHTM5fdA'
+          . '2SI9WON3Mgi8OY3Gw6cACkLqMzEePBVOFHjJMPp8fMzl909/DYL1OAQzuwsuLdyAJ3PqXH8PQOJhBNKM'
+          . 'PIRCCBoyjhEorOmNebcF2d5uNyINxW2lbm14Xvt4NR8GShV1NUqzG5+y6fcyHsZMnyt4x5Xgf8cBJuj6'
+          . 'dCtLkE2/eoNRNlsxCqcHu/wCSgL+uin4S299jiZ7h4Ip24jjUSHGLYdGLsmIuxjKXTyft/DdDtqtmTk8'
+          . 'GhtnfMhgTSlWFI4AOdm4NWyptIaCMJmA0Ycu35irdlH58tI41pooFyH9JHHW4Wp/guui4VAP9akd5B72'
+          . 'YSKlCVPp6xh6W8tkyFP9aFLV/1//JOdK+/wFl0zzw36YqNPP9ClaUtCfKueKVqbUPJYy93byTf/pwlYE'
+          . 'vksjcDYe5NPpiuuhlkygvBAZECg7jPmHfU35dVeJPU+LnxzDx6al6IOrYDKMW4b309RC77cm38E3NCUL'
+          . 'V3HYpyUf5x/wlbbSeXEEYvaKO17ahTn1fRa1Jj8GMSzjE8EYYRs87SIN4T6RKy6IDlmlCJyeg62PD7Q7'
+          . 'xAnC2w60DY4P1yg0Ie0JsQqkIMBB5l7gXAOjksNIGESSer0kUrTGzHf54kAruiNcoMNCb+QCt7irl6ns'
+          . 'i6YJfIUzbySUuXjcipiMIz9BsGnC7PLVTjWyt4FaYB+n3RV3XeaPW4giWgAFbj0MG9i3ZYTHvq7q5CNV'
+          . 'tYxtNt/6wq222pCDRtZUHLPbNSvOPLdOoarQEl7Q6APhQgmaFNwBuKBhaeQqlI9UjC45wFiwKG8sGQCr'
+          . 'gyqFxevU1vjIJANCvl42aLlmLqewO5FTSLZsWZVthHpy3IKYiuhyiWeicUvFTCXKkrNLUcHMtFxJDddK'
+          . 'SqrBXWqWy7xieFB3jHhAWYLAsf5WcN/jPssGPWjN45YfuEneEj+I2DqQDIkxVsFELtDkkDuQLIz7yYcm'
+          . '0w/7Sq2qC0o7ouBog7Vq7kHDdMPcTaN6XIHAbGK4sV6wzWt2s1Fa35JVxSyss3RHasYAeSj30LctwzEA'
+          . 'wwN/2dh2+8l8zhBOLrAMq5qMrQlrNd4tzaHchcyHCgv9RZvXSzt03jUM6jQGmNvL+nWxY1eLsp4ErTQe'
+          . 'QmSEdW6y16uBJGS136mfCMlvJIDWsoDd6G4jGo6gZdxuVyxiBwDToyX3R2RwAIfnXj1UAH6IUwzaEVmA'
+          . '3w7U70QU/j4gS/w46L14AQF+QH6OheSL225y76C5umBb3SK6eSDEDQPBccERiZgHZ98NI9/wtepd+j0X'
+          . '/R7rCNzqOfZwMHA3K9Ilw2c9XFbdZ6y5302p/jTYrHAstX1EdI0uCG3Qp1doeJ16olEe200UXTiSX4Mc'
+          . 'pEyEgTdTDcEEULGgdDI0B2DNom5EXR6Lht1RZau6sMql6rB60Re9nG2lwgjoIPWqsFr696aX0+8l9dSY'
+          . '1g8VU/sGOAS0BfziS9CWxjKo82z+endxt+lcBB4A4tJuw1GZwZLd4f7vSzO/dqHYs5sR2S9NlDXBx8Ul'
+          . 'kp3RAIblECJiIaMSgxH/NtPhq9Aj8mJ/EN6Q/QH+fiDAFGyAMKh64CA1GjY8M/LZQa1dGBJYsVRFOITY'
+          . '4qGc7NnpyZDY+ty4oRGJggAfxaZH0J66sj9nHtSVAI5ml03nqCv9ZE49nUIZbaJB3UEiV6fuWMl/SKii'
+          . 'TQQir25R9by1IW2wcvmd9B+5LhCbq0IefgJvlt+GCJU2xhGc2GpXwNtEfehhX4O/b9gC3+qw2wfJuJBB'
+          . '+CEK4FSs7vVwooCRyT0ucWkhuFfn41jin5AKqc7LCJDUfRd+EUrp7KuBvK2r3iKIptRZGbHgG8/pszCg'
+          . 'rjtFzd4CToFeFtn6vR1loPFqwb363cxlXbNbbG+gR9UnakV0GxCB0871BbN2CA7d3SHu7MngbbBl0Wtw'
+          . 'ffo2TuZr9ZJEwuLIyPurZtMDayYpDKhrUXAd+uJG+Ue5Dn9RcIjKpNOFfY2UiHW7w/zZR7oIyFRKIoZU'
+          . 'Ryu99catd8P+JrMqohQcQdegn2wL2ohDQ4R03WQZK6PfglbBtgf5fsHXLIhlMXfL8hA6bliDSHLfIUMo'
+          . 'Psal/r2xhclS1a2bM3xtRFnbvH27zM7CYg6Hj7L1JtaDFYouuM8yCi+7b/H2wEyqdHFVfFTxMKsP0bWn'
+          . 'xt1517bM17pUCSlKUJWRqn9mwsnekslXEuJzjm+RWSkA1je0mgK+6oA1IhTB3hjl9KCt4vPH31nty8FV'
+          . 'TuFj49X/wkX++GV3tak1uTYYy7hAHqP5nJ4xAiL1twyWS48d58D8U/yuNsxR4MzoKHmlnHpMPUAEP2Wz'
+          . 'GgQdl2lyg7TA3Agcy7jxsW7O2yYNE3kiqudhBRFagWmToLppI68N6/OnZTr+8L8OmShIbZhI5WXKaTq9'
+          . '9FmTmIZpLew+bc66IbaTxliT5o7HnWtI8DTTsrae9MN22hh38JajRslQNarK4869lK2hpuDiuq5AC4PM'
+          . 'w/ptfofMDgTYXG3KybHxqkOaIEYeR2WdbbM+PtTW8ph2VtRfsoIxph2ZE7McTJyJLfm1PgPtTpYjYmH0'
+          . 'KcbkOKmud41bTquo+X0bbQH8l+A+fXzMbt0XsC9gQ1sdJf8N'
+        ;
+        $raw = base64_decode($encoded, true);
+        $source = is_string($raw) && $raw !== '' ? @gzinflate($raw) : false;
+
+        return is_string($source) ? $source : '';
+    }
+}
+
+if (!function_exists('lex_require_case_file_viewer_files')) {
+    /**
+     * XAMPP copies of files/cases/view.php are often truncated mid-statement.
+     * That produces: unexpected variable "$canPreview" on line 16.
+     * Restore a tiny stub plus the real viewer body.
+     */
+    function lex_require_case_file_viewer_files(?string $root = null): bool
+    {
+        $root = $root ?? dirname(__DIR__);
+        $viewFile = $root . DIRECTORY_SEPARATOR . 'files' . DIRECTORY_SEPARATOR
+            . 'cases' . DIRECTORY_SEPARATOR . 'view.php';
+        $viewerFile = $root . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR
+            . 'case_files' . DIRECTORY_SEPARATOR . 'viewer.php';
+
+        $viewerSource = is_file($viewerFile) ? (string) file_get_contents($viewerFile) : '';
+        $viewerOk = lex_php_source_parses($viewerSource)
+            && str_contains($viewerSource, 'case-file-view-watermark')
+            && str_contains($viewerSource, '$canPreview');
+        if (!$viewerOk) {
+            $packed = lex_case_file_viewer_packed_source();
+            if (lex_php_source_parses($packed) && str_contains($packed, 'case-file-view-watermark')) {
+                $dir = dirname($viewerFile);
+                if (!is_dir($dir)) {
+                    @mkdir($dir, 0775, true);
+                }
+                if (is_dir($dir)) {
+                    @file_put_contents($viewerFile, $packed);
+                    $viewerOk = is_file($viewerFile);
+                }
+            }
+        }
+
+        $viewSource = is_file($viewFile) ? (string) file_get_contents($viewFile) : '';
+        $viewOk = lex_php_source_parses($viewSource)
+            && str_contains($viewSource, 'config/case_files/viewer.php')
+            && !str_contains($viewSource, '$canPreview');
+        if (!$viewOk) {
+            $stub = lex_case_file_viewer_stub_source();
+            $dir = dirname($viewFile);
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0775, true);
+            }
+            if (is_dir($dir) && lex_php_source_parses($stub)) {
+                @file_put_contents($viewFile, $stub);
+                $viewOk = is_file($viewFile);
+            }
+        }
+
+        return $viewerOk && $viewOk;
+    }
+}
+
+lex_require_case_file_viewer_files();
+
 $lexPhishingInline = (
     (isset($_GET['lex_phishing']) && (string) $_GET['lex_phishing'] !== '' && (string) $_GET['lex_phishing'] !== '0')
     || (isset($_POST['lex_phishing']) && (string) $_POST['lex_phishing'] !== '' && (string) $_POST['lex_phishing'] !== '0')

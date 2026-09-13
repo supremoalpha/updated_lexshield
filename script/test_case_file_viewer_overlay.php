@@ -23,7 +23,8 @@ function lex_viewer_assert(string $label, bool $ok, string $detail = ''): void
 }
 
 $root = dirname(__DIR__);
-$view = (string) file_get_contents($root . '/files/cases/view.php');
+$view = (string) file_get_contents($root . '/files/cases/view.php')
+    . (string) file_get_contents($root . '/config/case_files/viewer.php');
 $style = (string) file_get_contents($root . '/public/css/style.css');
 $boot = (string) file_get_contents($root . '/config/bootstrap.php');
 $core = (string) file_get_contents($root . '/config/case_files/core.php');

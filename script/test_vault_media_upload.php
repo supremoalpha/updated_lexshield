@@ -28,7 +28,8 @@ require_once $root . '/config/bootstrap.php';
 $core = (string) file_get_contents($root . '/config/case_files/core.php');
 $actions = (string) file_get_contents($root . '/config/case_files/actions.php');
 $helpers = (string) file_get_contents($root . '/config/case_files/helpers.php');
-$view = (string) file_get_contents($root . '/files/cases/view.php');
+$view = (string) file_get_contents($root . '/files/cases/view.php')
+    . (string) file_get_contents($root . '/config/case_files/viewer.php');
 $document = (string) file_get_contents($root . '/files/cases/document.php');
 $userIni = (string) file_get_contents($root . '/.user.ini');
 
