@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/bootstrap.php';
+require_once __DIR__ . '/../config/case_files/helpers.php';
 
 $user = lex_require_role('lawyer');
 $pdo = lex_pdo();
@@ -319,9 +320,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && lex_csrf_validate($_POST['csrf_toke
         exit;
     } elseif ($action === 'update') {
         $status = (string) ($_POST['status'] ?? 'pending');
-        $stmt = $pdo->prepare("SELECT id FROM appointments WHERE id = :id AND lawyer_id = :lawyer_id");
+        $stmt = $pdo->prepare("SELECT id, case_id FROM appointments WHERE id = :id AND lawyer_id = :lawyer_id");
         $stmt->execute(['id' => $appointmentId, 'lawyer_id' => $lawyerId]);
-        if ($stmt->fetchColumn()) {
+        $appointmentRow = $stmt->fetch();
+        if ($appointmentRow) {
             if (in_array($status, ['pending', 'confirmed', 'cancelled'], true)) {
                 $pdo->prepare('UPDATE appointments SET status = :status, scheduled_at = COALESCE(NULLIF(:scheduled_at, ""), scheduled_at), notes = COALESCE(NULLIF(:notes, ""), notes) WHERE id = :id AND lawyer_id = :lawyer_id')->execute([
                     'status' => $status,
@@ -331,6 +333,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && lex_csrf_validate($_POST['csrf_toke
                     'lawyer_id' => $lawyerId,
                 ]);
                 lex_audit('update_appointment', 'appointments', (string) $appointmentId);
+                try {
+                    if (function_exists('lex_case_files_ensure_for_case')) {
+                        lex_case_files_ensure_for_case($pdo, (int) ($appointmentRow['case_id'] ?? 0), (int) $user['id']);
+                    }
+                } catch (Throwable $e) {
+                    error_log('Vault folder create after appointment update failed: ' . $e->getMessage());
+                }
                 try {
                     $clientStmt = $pdo->prepare(
                         'SELECT cl.user_id FROM appointments a JOIN clients cl ON cl.id = a.client_id WHERE a.id = :id LIMIT 1'

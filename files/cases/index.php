@@ -130,6 +130,7 @@ window.LEX_CASE_FILES_STATE = <?= json_encode([
   'sort' => (string) $state['sort'],
   'dir' => (string) $state['dir'],
   'record' => (int) (($state['selected']['id'] ?? 0) ?: 0),
+  'folder' => (int) ($state['folder'] ?? $filters['folder'] ?? 0),
   'failedAction' => $failedAction,
   'error' => $error,
 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;

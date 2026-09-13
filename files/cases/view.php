@@ -63,11 +63,13 @@ if ($documentId > 0) {
         : (string) ($document['mime_type'] ?: 'application/octet-stream');
     $canPreview = lex_case_file_previewable_mime($mime, $fileName);
     $previewDocument = $document;
-    $previewPath = lex_case_files_folder_path((string) $document['case_folder_name'])
-        . DIRECTORY_SEPARATOR
-        . lex_case_file_vault_slug((string) ($document['folder_slug'] ?? ''))
-        . DIRECTORY_SEPARATOR
-        . basename((string) $document['stored_name']);
+    $previewPath = function_exists('lex_case_file_document_abs_path')
+        ? lex_case_file_document_abs_path((string) $document['case_folder_name'], $document, (string) $document['stored_name'])
+        : (lex_case_files_folder_path((string) $document['case_folder_name'])
+            . DIRECTORY_SEPARATOR
+            . lex_case_file_vault_slug((string) ($document['folder_slug'] ?? ''))
+            . DIRECTORY_SEPARATOR
+            . basename((string) $document['stored_name']));
     $query = ['document_id' => $documentId, 'preview' => 1];
     if ($viewOnly) {
         $query['token'] = lex_case_file_view_token_issue((int) $user['id']);
