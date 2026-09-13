@@ -31385,3 +31385,16 @@ body:has([data-video-call-page]) .video-call-controls {
   background: #061225;
   max-width: 100%;
 }
+
+.case-vault-folder-section {
+  margin: 0.65rem 0;
+  border: 1px solid var(--ws-line, rgba(148, 163, 184, 0.22));
+  border-radius: 12px;
+  padding: 0.35rem 0.75rem 0.55rem;
+}
+
+.case-vault-folder-section summary {
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0.45rem 0;
+}

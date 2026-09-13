@@ -263,6 +263,7 @@ if (!headers_sent()) {
             'case_file_attachment.php',
             'document.php',
             'attachment.php',
+            'message_attachment.php',
         ], true);
     header('X-Content-Type-Options: nosniff');
     header('X-Frame-Options: ' . ($lexCaseFilePreviewEmbed ? 'SAMEORIGIN' : 'DENY'));

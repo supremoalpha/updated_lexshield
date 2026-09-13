@@ -91,6 +91,64 @@ if (!function_exists('lex_case_files_ensure_vault_folder')) {
     }
 }
 
+if (!function_exists('lex_case_file_default_vault_folder_names')) {
+    function lex_case_file_default_vault_folder_names(): array
+    {
+        return ['Documents', 'Pictures', 'Videos'];
+    }
+}
+
+if (!function_exists('lex_case_file_suggested_folder_name')) {
+    function lex_case_file_suggested_folder_name(string $mime, string $name = ''): string
+    {
+        if (function_exists('lex_case_file_guess_mime')) {
+            $mime = lex_case_file_guess_mime($mime, $name);
+        }
+        if (str_starts_with($mime, 'image/')) {
+            return 'Pictures';
+        }
+        if (str_starts_with($mime, 'video/')) {
+            return 'Videos';
+        }
+
+        return 'Documents';
+    }
+}
+
+if (!function_exists('lex_case_files_list_vault_folders')) {
+    function lex_case_files_list_vault_folders(PDO $pdo, int $caseFileId): array
+    {
+        $stmt = $pdo->prepare(
+            'SELECT * FROM case_file_folders WHERE case_file_id = :case_file_id ORDER BY name ASC'
+        );
+        $stmt->execute(['case_file_id' => $caseFileId]);
+        $folders = $stmt->fetchAll() ?: [];
+        $rank = ['documents' => 0, 'pictures' => 1, 'videos' => 2, 'general' => 90];
+        usort($folders, static function (array $a, array $b) use ($rank): int {
+            $as = $rank[(string) ($a['slug'] ?? '')] ?? 10;
+            $bs = $rank[(string) ($b['slug'] ?? '')] ?? 10;
+            if ($as !== $bs) {
+                return $as <=> $bs;
+            }
+
+            return strcasecmp((string) ($a['name'] ?? ''), (string) ($b['name'] ?? ''));
+        });
+
+        return $folders;
+    }
+}
+
+if (!function_exists('lex_case_files_ensure_default_vault_folders')) {
+    function lex_case_files_ensure_default_vault_folders(PDO $pdo, int $caseFileId, ?int $createdByUserId = null): array
+    {
+        foreach (lex_case_file_default_vault_folder_names() as $name) {
+            lex_case_files_ensure_vault_folder($pdo, $caseFileId, $name, $createdByUserId);
+        }
+
+        return lex_case_files_list_vault_folders($pdo, $caseFileId);
+    }
+}
+
 if (!function_exists('lex_case_files_collect_request_filters')) {
     function lex_case_files_collect_request_filters(array $user): array
     {
@@ -372,80 +430,107 @@ if (!function_exists('lex_case_files_render_vault_panel')) {
 
         lex_case_file_vault_table_ensure();
         $pdo = lex_pdo();
-        $folder = lex_case_files_ensure_vault_folder($pdo, (int) $record['id'], 'General', (int) $user['id']);
+        $folders = function_exists('lex_case_files_ensure_default_vault_folders')
+            ? lex_case_files_ensure_default_vault_folders($pdo, (int) $record['id'], (int) $user['id'])
+            : [lex_case_files_ensure_vault_folder($pdo, (int) $record['id'], 'Documents', (int) $user['id'])];
+        $viewOnly = function_exists('lex_case_file_is_view_only') && lex_case_file_is_view_only($access);
+        $canUpload = $access !== 'none' && !$viewOnly;
 
-        $stmt = $pdo->prepare(
+        $docStmt = $pdo->prepare(
             'SELECT d.*, u.full_name AS uploaded_by_name
              FROM case_file_documents d
              JOIN users u ON u.id = d.uploaded_by_user_id
-             WHERE d.folder_id = :folder_id
+             WHERE d.case_file_id = :case_file_id
              ORDER BY d.created_at DESC'
         );
-        $stmt->execute(['folder_id' => (int) $folder['id']]);
-        $documents = $stmt->fetchAll() ?: [];
+        $docStmt->execute(['case_file_id' => (int) $record['id']]);
+        $documentsByFolder = [];
+        foreach ($docStmt->fetchAll() ?: [] as $document) {
+            $documentsByFolder[(int) $document['folder_id']][] = $document;
+        }
         ?>
         <section class="card">
           <div class="card-head">
             <h2>Secure Vault - <?= lex_e((string) $record['case_file_title']) ?></h2>
             <span class="pill">AES-256 encrypted</span>
           </div>
-          <details class="case-vault-folder-section" open>
-            <summary><?= lex_e((string) $folder['name']) ?> (<?= count($documents) ?>)</summary>
-            <ul class="admin-audit-list">
-              <?php foreach ($documents as $document): ?>
-                <?php
-                  $canSee = $access === 'manage' || (string) $document['upload_status'] === 'approved';
-                  if (!$canSee) { continue; }
-                ?>
-                <li class="admin-audit-row">
-                  <span><?= lex_e((string) $document['original_name']) ?></span>
-                  <span class="pill payment-status-pill payment-status-<?= lex_e((string) $document['upload_status']) ?>"><?= lex_e(ucfirst((string) $document['upload_status'])) ?></span>
-                  <small class="muted">by <?= lex_e((string) $document['uploaded_by_name']) ?> &middot; <?= lex_e(lex_message_timestamp((string) $document['created_at'])) ?></small>
-                  <div class="inline-actions">
-                    <?php
-                      $docMime = function_exists('lex_case_file_guess_mime')
-                          ? lex_case_file_guess_mime((string) ($document['mime_type'] ?? ''), (string) $document['original_name'])
-                          : (string) ($document['mime_type'] ?? '');
-                      $canPreview = function_exists('lex_case_file_previewable_mime') && lex_case_file_previewable_mime($docMime, (string) $document['original_name']);
-                      $viewOnly = function_exists('lex_case_file_is_view_only') && lex_case_file_is_view_only($access);
-                    ?>
-                    <?php if ($canPreview && function_exists('lex_case_file_view_url')): ?>
-                      <a class="button button-secondary" href="<?= lex_e(lex_case_file_view_url(['document_id' => (int) $document['id']])) ?>">View</a>
-                    <?php endif; ?>
-                    <?php if (!$viewOnly): ?>
-                      <a class="button button-secondary" href="<?= lex_e(lex_app_url('case_document_file.php?document_id=' . (int) $document['id'])) ?>">Download</a>
-                    <?php endif; ?>
-                    <?php if ($canManage && (string) $document['upload_status'] === 'pending'): ?>
-                      <form method="post" style="display:inline;">
-                        <?= lex_csrf_field() ?>
-                        <input type="hidden" name="action" value="vault_decision">
-                        <input type="hidden" name="document_id" value="<?= (int) $document['id'] ?>">
-                        <input type="hidden" name="decision" value="approved">
-                        <button class="button button-primary" type="submit">Approve</button>
-                      </form>
-                      <form method="post" style="display:inline;">
-                        <?= lex_csrf_field() ?>
-                        <input type="hidden" name="action" value="vault_decision">
-                        <input type="hidden" name="document_id" value="<?= (int) $document['id'] ?>">
-                        <input type="hidden" name="decision" value="rejected">
-                        <button class="button button-secondary" type="submit">Reject</button>
-                      </form>
-                    <?php endif; ?>
-                  </div>
-                </li>
-              <?php endforeach; ?>
-              <?php if (!$documents): ?><li class="admin-empty-line">No pictures, videos, or documents in the vault yet.</li><?php endif; ?>
-            </ul>
-          </details>
-          <?php if ($access !== 'none' && !(function_exists('lex_case_file_is_view_only') && lex_case_file_is_view_only($access))): ?>
+          <p class="muted">Each case has its own Documents, Pictures, and Videos folders. You can also add folders of your own.</p>
+          <?php foreach ($folders as $index => $folder): ?>
+            <?php $documents = $documentsByFolder[(int) $folder['id']] ?? []; ?>
+            <details class="case-vault-folder-section"<?= $index === 0 ? ' open' : '' ?>>
+              <summary><?= lex_e((string) $folder['name']) ?> (<?= count($documents) ?>)</summary>
+              <ul class="admin-audit-list">
+                <?php foreach ($documents as $document): ?>
+                  <?php
+                    $canSee = $access === 'manage' || (string) $document['upload_status'] === 'approved';
+                    if (!$canSee) { continue; }
+                  ?>
+                  <li class="admin-audit-row">
+                    <span><?= lex_e((string) $document['original_name']) ?></span>
+                    <span class="pill payment-status-pill payment-status-<?= lex_e((string) $document['upload_status']) ?>"><?= lex_e(ucfirst((string) $document['upload_status'])) ?></span>
+                    <small class="muted">by <?= lex_e((string) $document['uploaded_by_name']) ?> &middot; <?= lex_e(lex_message_timestamp((string) $document['created_at'])) ?></small>
+                    <div class="inline-actions">
+                      <?php
+                        $docMime = function_exists('lex_case_file_guess_mime')
+                            ? lex_case_file_guess_mime((string) ($document['mime_type'] ?? ''), (string) $document['original_name'])
+                            : (string) ($document['mime_type'] ?? '');
+                        $canPreview = function_exists('lex_case_file_previewable_mime') && lex_case_file_previewable_mime($docMime, (string) $document['original_name']);
+                      ?>
+                      <?php if ($canPreview && function_exists('lex_case_file_view_url')): ?>
+                        <a class="button button-secondary" href="<?= lex_e(lex_case_file_view_url(['document_id' => (int) $document['id']])) ?>">View</a>
+                      <?php endif; ?>
+                      <?php if (!$viewOnly): ?>
+                        <a class="button button-secondary" href="<?= lex_e(lex_app_url('case_document_file.php?document_id=' . (int) $document['id'])) ?>">Download</a>
+                      <?php endif; ?>
+                      <?php if ($canManage && (string) $document['upload_status'] === 'pending'): ?>
+                        <form method="post" style="display:inline;">
+                          <?= lex_csrf_field() ?>
+                          <input type="hidden" name="action" value="vault_decision">
+                          <input type="hidden" name="document_id" value="<?= (int) $document['id'] ?>">
+                          <input type="hidden" name="decision" value="approved">
+                          <button class="button button-primary" type="submit">Approve</button>
+                        </form>
+                        <form method="post" style="display:inline;">
+                          <?= lex_csrf_field() ?>
+                          <input type="hidden" name="action" value="vault_decision">
+                          <input type="hidden" name="document_id" value="<?= (int) $document['id'] ?>">
+                          <input type="hidden" name="decision" value="rejected">
+                          <button class="button button-secondary" type="submit">Reject</button>
+                        </form>
+                      <?php endif; ?>
+                    </div>
+                  </li>
+                <?php endforeach; ?>
+                <?php if (!$documents): ?><li class="admin-empty-line">This folder is empty.</li><?php endif; ?>
+              </ul>
+            </details>
+          <?php endforeach; ?>
+          <?php if ($canUpload): ?>
+            <form method="post" class="stack-form" style="margin-top:1rem;">
+              <?= lex_csrf_field() ?>
+              <input type="hidden" name="action" value="vault_folder_create">
+              <input type="hidden" name="case_file_id" value="<?= (int) $record['id'] ?>">
+              <label>New folder inside this vault
+                <input type="text" name="folder_name" maxlength="80" placeholder="Example: Court filings" required>
+              </label>
+              <button class="button button-secondary" type="submit">Create folder</button>
+            </form>
             <form method="post" enctype="multipart/form-data" class="stack-form">
               <?= lex_csrf_field() ?>
               <input type="hidden" name="action" value="vault_upload">
               <input type="hidden" name="case_file_id" value="<?= (int) $record['id'] ?>">
+              <label>Folder
+                <select name="folder_id">
+                  <option value="0">Auto (Documents, Pictures, or Videos)</option>
+                  <?php foreach ($folders as $folder): ?>
+                    <option value="<?= (int) $folder['id'] ?>"><?= lex_e((string) $folder['name']) ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </label>
               <label>Upload a picture, video, or document
                 <input type="file" name="document" accept="<?= lex_e(function_exists('lex_case_file_upload_accept') ? lex_case_file_upload_accept() : 'image/*,video/*,.pdf,.txt') ?>" required>
               </label>
-              <p class="muted">JPG, PNG, GIF, WEBP pictures and MP4, WEBM, or MOV videos, plus PDF or text documents, up to 80 MB.</p>
+              <p class="muted">JPG, PNG, GIF, WEBP pictures and MP4, WEBM, or MOV videos, plus PDF or text documents, up to 80 MB. Auto puts pictures in Pictures, videos in Videos, and other files in Documents.</p>
               <?php if (!$canManage): ?><p class="muted">Client uploads require your lawyer's approval before they appear as available.</p><?php endif; ?>
               <button class="button button-primary" type="submit">Upload to vault</button>
             </form>

@@ -760,16 +760,31 @@ if (!function_exists('lex_messages_render_page')) {
             <?php if (!empty($message['body'])): ?><p class="bubble-text"><?= nl2br(lex_e((string) $message['body'])) ?></p><?php endif; ?>
             <?php if (!empty($message['attachment_stored_name'])): ?>
               <?php
+                $attachName = (string) ($message['attachment_original_name'] ?? 'Attachment');
                 $attachMime = strtolower((string) ($message['attachment_mime_type'] ?? ''));
-                $attachUrl = lex_app_url('message_attachment.php?id=' . (int) $message['id']);
+                $attachId = (int) $message['id'];
+                $canPreview = function_exists('lex_messages_previewable_mime')
+                    && lex_messages_previewable_mime($attachMime, $attachName);
+                $viewUrl = function_exists('lex_messages_view_url')
+                    ? lex_messages_view_url($attachId)
+                    : lex_app_url('message_view.php?id=' . $attachId);
+                $previewUrl = function_exists('lex_messages_attachment_url')
+                    ? lex_messages_attachment_url($attachId, true)
+                    : lex_app_url('message_attachment.php?id=' . $attachId . '&preview=1');
+                $downloadUrl = function_exists('lex_messages_attachment_url')
+                    ? lex_messages_attachment_url($attachId, false)
+                    : lex_app_url('message_attachment.php?id=' . $attachId);
                 $isImage = str_starts_with($attachMime, 'image/');
               ?>
-              <?php if ($isImage): ?>
-                <div class="attachment-preview"><a href="<?= lex_e($attachUrl) ?>" target="_blank"><img src="<?= lex_e($attachUrl) ?>" alt="<?= lex_e((string) $message['attachment_original_name']) ?>" style="max-width:220px;max-height:200px;border-radius:8px;display:block;margin:0.3rem 0;"></a></div>
+              <?php if ($isImage && $canPreview): ?>
+                <div class="attachment-preview"><a href="<?= lex_e($viewUrl) ?>"><img src="<?= lex_e($previewUrl) ?>" alt="<?= lex_e($attachName) ?>" style="max-width:220px;max-height:200px;border-radius:8px;display:block;margin:0.3rem 0;"></a></div>
               <?php endif; ?>
               <div class="attachment-card">
-                <span><?= lex_e((string) $message['attachment_original_name']) ?></span>
-                <a class="button button-secondary" href="<?= lex_e($attachUrl) ?>">Download</a>
+                <span><?= lex_e($attachName) ?></span>
+                <?php if ($canPreview): ?>
+                  <a class="button button-primary" href="<?= lex_e($viewUrl) ?>">View</a>
+                <?php endif; ?>
+                <a class="button button-secondary" href="<?= lex_e($downloadUrl) ?>">Download</a>
               </div>
             <?php endif; ?>
             <div class="bubble-meta">
@@ -847,7 +862,7 @@ if (!function_exists('lex_messages_render_page')) {
       <div class="composer-row">
         <div class="composer-tools">
           <label class="icon-button ghost" title="Attach file">
-            📎<input type="file" name="attachment" data-attachment-input hidden>
+            📎<input type="file" name="attachment" accept="image/*,video/*,.pdf,.txt,.doc,.docx" data-attachment-input hidden>
           </label>
         </div>
         <textarea class="composer-input" name="message" rows="1" placeholder="Aa"></textarea>
@@ -887,7 +902,7 @@ if (!function_exists('lex_messages_render_page')) {
         <textarea name="message" rows="4" data-message-input placeholder="Write your message…"></textarea>
       </label>
       <label class="full">Attachment
-        <input type="file" data-modal-attachment-input name="attachment">
+        <input type="file" data-modal-attachment-input name="attachment" accept="image/*,video/*,.pdf,.txt,.doc,.docx">
         <div data-modal-attachment-name class="muted">No file selected</div>
       </label>
       <div class="alert alert-error" data-modal-errors hidden></div>
