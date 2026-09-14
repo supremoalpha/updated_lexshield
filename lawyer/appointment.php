@@ -146,11 +146,6 @@ function lex_appointment_render_results(array $appointments, array $state, strin
               </td>
               <td data-label="Actions">
                 <div class="appointment-actions">
-                  <?php if (strtolower((string) $appointment['status']) === 'confirmed'): ?>
-                    <a class="button button-primary appointment-action-button" href="<?= lex_e(lex_app_url('lawyer/video-call.php') . '?appointment_id=' . (int) $appointment['id']) ?>">
-                      Join call
-                    </a>
-                  <?php endif; ?>
                   <form method="post" action="<?= lex_e($currentUrl) ?>" class="appointment-inline-form" data-no-loading>
                     <?= lex_csrf_field() ?>
                     <input type="hidden" name="action" value="update">

@@ -77,6 +77,47 @@ if (!function_exists('lex_availability_normalize_time')) {
     }
 }
 
+if (!function_exists('lex_availability_hm')) {
+    function lex_availability_hm(string $value, string $fallback = '09:00'): string
+    {
+        return substr(lex_availability_normalize_time($value, $fallback), 0, 5);
+    }
+}
+
+if (!function_exists('lex_availability_collect_day_hours')) {
+    /**
+     * @param array<string, mixed> $starts
+     * @param array<string, mixed> $ends
+     * @return array<string, array{start:string,end:string}>
+     */
+    function lex_availability_collect_day_hours(array $starts, array $ends): array
+    {
+        $hours = [];
+        foreach ($starts as $date => $start) {
+            $date = (string) $date;
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1) {
+                continue;
+            }
+            $hours[$date] = [
+                'start' => (string) $start,
+                'end' => (string) ($ends[$date] ?? ''),
+            ];
+        }
+        foreach ($ends as $date => $end) {
+            $date = (string) $date;
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1 || isset($hours[$date])) {
+                continue;
+            }
+            $hours[$date] = [
+                'start' => '',
+                'end' => (string) $end,
+            ];
+        }
+
+        return $hours;
+    }
+}
+
 if (!function_exists('lex_availability_parse_month')) {
     /**
      * @return array{0:int,1:int}
@@ -187,6 +228,7 @@ if (!function_exists('lex_availability_get_month')) {
 if (!function_exists('lex_availability_save_month')) {
     /**
      * @param list<string> $onDates Y-m-d dates that are on duty
+     * @param array<string, array{start?:string,end?:string}> $dayHours
      */
     function lex_availability_save_month(
         int $lawyerId,
@@ -194,7 +236,8 @@ if (!function_exists('lex_availability_save_month')) {
         int $month,
         array $onDates,
         string $startTime = '09:00',
-        string $endTime = '17:00'
+        string $endTime = '17:00',
+        array $dayHours = []
     ): void {
         lex_availability_tables_ensure();
         $pdo = lex_pdo();
@@ -207,6 +250,12 @@ if (!function_exists('lex_availability_save_month')) {
         }
         $start = lex_availability_normalize_time($startTime, '09:00');
         $end = lex_availability_normalize_time($endTime, '17:00');
+        if ($start >= $end) {
+            $end = '17:00:00';
+            if ($start >= $end) {
+                $end = '23:59:00';
+            }
+        }
 
         $pdo->beginTransaction();
         try {
@@ -237,11 +286,23 @@ if (!function_exists('lex_availability_save_month')) {
             );
             foreach ($allDates as $date) {
                 if (isset($onSet[$date])) {
+                    $dayStart = $start;
+                    $dayEnd = $end;
+                    if (isset($dayHours[$date]) && is_array($dayHours[$date])) {
+                        $dayStart = lex_availability_normalize_time((string) ($dayHours[$date]['start'] ?? $startTime), $startTime);
+                        $dayEnd = lex_availability_normalize_time((string) ($dayHours[$date]['end'] ?? $endTime), $endTime);
+                    }
+                    if ($dayStart >= $dayEnd) {
+                        $dayEnd = $end;
+                    }
+                    if ($dayStart >= $dayEnd) {
+                        $dayEnd = '23:59:00';
+                    }
                     $insertOn->execute([
                         'id' => $lawyerId,
                         'd' => $date,
-                        'start' => $start,
-                        'end' => $end,
+                        'start' => $dayStart,
+                        'end' => $dayEnd,
                     ]);
                 } else {
                     $insertOff->execute([

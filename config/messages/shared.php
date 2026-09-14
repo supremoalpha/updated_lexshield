@@ -722,10 +722,12 @@ if (!function_exists('lex_messages_render_page')) {
           </button>
         </form>
       <?php endif; ?>
+      <?php if (function_exists('lex_phishing_ui_enabled') && lex_phishing_ui_enabled($user)): ?>
       <button class="inbox-vc-btn phishing-detector-trigger" type="button" title="Check a link for phishing" aria-label="Check a link for phishing" style="cursor:pointer;pointer-events:auto;position:relative;z-index:6;touch-action:manipulation;" onclick="<?= lex_e(function_exists('lex_phishing_open_onclick') ? lex_phishing_open_onclick() : 'return false;') ?>">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 11 4.6-2.3 8-6 8-11V5Z" fill="currentColor"/></svg>
         Check link
       </button>
+      <?php endif; ?>
       <?php if ($activeOtherId > 0 && $callHref !== ''): ?>
         <a class="inbox-vc-btn" href="<?= lex_e($callHref) ?>" title="Video call" aria-label="Video call" style="display:inline-flex;min-width:44px;min-height:44px;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;position:relative;z-index:6;touch-action:manipulation;box-sizing:border-box;flex:0 0 auto;">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 10.5 21 7v10l-4-3.5V16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2.5Z" fill="currentColor"/></svg>

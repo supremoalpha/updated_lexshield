@@ -84,6 +84,47 @@ if (!function_exists('lex_availability_normalize_time')) {
     }
 }
 
+if (!function_exists('lex_availability_hm')) {
+    function lex_availability_hm(string $value, string $fallback = '09:00'): string
+    {
+        return substr(lex_availability_normalize_time($value, $fallback), 0, 5);
+    }
+}
+
+if (!function_exists('lex_availability_collect_day_hours')) {
+    /**
+     * @param array<string, mixed> $starts
+     * @param array<string, mixed> $ends
+     * @return array<string, array{start:string,end:string}>
+     */
+    function lex_availability_collect_day_hours(array $starts, array $ends): array
+    {
+        $hours = [];
+        foreach ($starts as $date => $start) {
+            $date = (string) $date;
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1) {
+                continue;
+            }
+            $hours[$date] = [
+                'start' => (string) $start,
+                'end' => (string) ($ends[$date] ?? ''),
+            ];
+        }
+        foreach ($ends as $date => $end) {
+            $date = (string) $date;
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1 || isset($hours[$date])) {
+                continue;
+            }
+            $hours[$date] = [
+                'start' => '',
+                'end' => (string) $end,
+            ];
+        }
+
+        return $hours;
+    }
+}
+
 if (!function_exists('lex_availability_parse_month')) {
     /**
      * @return array{0:int,1:int}
@@ -194,6 +235,7 @@ if (!function_exists('lex_availability_get_month')) {
 if (!function_exists('lex_availability_save_month')) {
     /**
      * @param list<string> $onDates Y-m-d dates that are on duty
+     * @param array<string, array{start?:string,end?:string}> $dayHours
      */
     function lex_availability_save_month(
         int $lawyerId,
@@ -201,7 +243,8 @@ if (!function_exists('lex_availability_save_month')) {
         int $month,
         array $onDates,
         string $startTime = '09:00',
-        string $endTime = '17:00'
+        string $endTime = '17:00',
+        array $dayHours = []
     ): void {
         lex_availability_tables_ensure();
         $pdo = lex_pdo();
@@ -214,6 +257,12 @@ if (!function_exists('lex_availability_save_month')) {
         }
         $start = lex_availability_normalize_time($startTime, '09:00');
         $end = lex_availability_normalize_time($endTime, '17:00');
+        if ($start >= $end) {
+            $end = '17:00:00';
+            if ($start >= $end) {
+                $end = '23:59:00';
+            }
+        }
 
         $pdo->beginTransaction();
         try {
@@ -244,11 +293,23 @@ if (!function_exists('lex_availability_save_month')) {
             );
             foreach ($allDates as $date) {
                 if (isset($onSet[$date])) {
+                    $dayStart = $start;
+                    $dayEnd = $end;
+                    if (isset($dayHours[$date]) && is_array($dayHours[$date])) {
+                        $dayStart = lex_availability_normalize_time((string) ($dayHours[$date]['start'] ?? $startTime), $startTime);
+                        $dayEnd = lex_availability_normalize_time((string) ($dayHours[$date]['end'] ?? $endTime), $endTime);
+                    }
+                    if ($dayStart >= $dayEnd) {
+                        $dayEnd = $end;
+                    }
+                    if ($dayStart >= $dayEnd) {
+                        $dayEnd = '23:59:00';
+                    }
                     $insertOn->execute([
                         'id' => $lawyerId,
                         'd' => $date,
-                        'start' => $start,
-                        'end' => $end,
+                        'start' => $dayStart,
+                        'end' => $dayEnd,
                     ]);
                 } else {
                     $insertOff->execute([
@@ -522,9 +583,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && lex_csrf_validate($_POST['csrf_toke
         }));
         $start = lex_sanitize_text($_POST['start_time'] ?? '09:00');
         $end = lex_sanitize_text($_POST['end_time'] ?? '17:00');
-        lex_availability_save_month($lawyerId, $viewYear, $viewMonth, $onDates, $start, $end);
+        $dayHours = function_exists('lex_availability_collect_day_hours')
+            ? lex_availability_collect_day_hours(
+                is_array($_POST['duty_start'] ?? null) ? $_POST['duty_start'] : [],
+                is_array($_POST['duty_end'] ?? null) ? $_POST['duty_end'] : []
+            )
+            : [];
+        lex_availability_save_month($lawyerId, $viewYear, $viewMonth, $onDates, $start, $end, $dayHours);
         lex_audit('update_month_schedule', 'lawyer_duty_day', $monthKey);
-        $message = 'Your month schedule has been saved. Clients can book only the days you marked On Duty.';
+        $message = 'Your month schedule has been saved. Clients can book only the days and hours you marked On Duty.';
     }
 }
 
@@ -543,7 +610,7 @@ lex_page_header('My Schedule', 'appointments', $user);
   <div class="card-head">
     <div>
       <h2>Monthly duty calendar</h2>
-      <p class="muted">Mark each date On Duty or Off. Clients cannot book Off days, and a booked day stays taken.</p>
+      <p class="muted">Turn a day on or off, then set that day's start and end time. Clients can book only those hours.</p>
     </div>
   </div>
   <?php if ($message): ?><div class="alert alert-success"><?= lex_e($message) ?></div><?php endif; ?>
@@ -560,8 +627,9 @@ lex_page_header('My Schedule', 'appointments', $user);
     <input type="hidden" name="action" value="save_month">
     <input type="hidden" name="month" value="<?= lex_e($monthKey) ?>">
     <div class="schedule-month-hours">
-      <label>On-duty start <input type="time" name="start_time" value="<?= lex_e($monthData['start']) ?>" required></label>
-      <label>On-duty end <input type="time" name="end_time" value="<?= lex_e($monthData['end']) ?>" required></label>
+      <label>Default start <input type="time" name="start_time" value="<?= lex_e($monthData['start']) ?>" required data-schedule-default-start></label>
+      <label>Default end <input type="time" name="end_time" value="<?= lex_e($monthData['end']) ?>" required data-schedule-default-end></label>
+      <p class="muted schedule-month-hours-note">Used when you turn a day on. You can still change any day's hours below.</p>
     </div>
     <div class="schedule-month-legend">
       <span class="is-on">On duty</span>
@@ -580,15 +648,29 @@ lex_page_header('My Schedule', 'appointments', $user);
           $isOn = isset($monthData['on'][$date]) || (!$configured && ((int) date('w', strtotime($date)) >= 1 && (int) date('w', strtotime($date)) <= 5));
           $bookedCount = (int) ($monthData['booked'][$date] ?? 0);
           $isToday = $date === $today;
+          $dayStart = isset($monthData['on'][$date]['start_time'])
+              ? substr((string) $monthData['on'][$date]['start_time'], 0, 5)
+              : $monthData['start'];
+          $dayEnd = isset($monthData['on'][$date]['end_time'])
+              ? substr((string) $monthData['on'][$date]['end_time'], 0, 5)
+              : $monthData['end'];
+          $weekday = date('D', strtotime($date));
         ?>
-        <label class="schedule-month-day<?= $isOn ? ' is-on' : ' is-off' ?><?= $bookedCount > 0 ? ' is-booked' : '' ?><?= $isToday ? ' is-today' : '' ?>">
-          <input type="checkbox" name="duty[]" value="<?= lex_e($date) ?>"<?= $isOn ? ' checked' : '' ?>>
-          <span class="schedule-month-num"><?= (int) substr($date, 8, 2) ?></span>
-          <span class="schedule-month-state"><?= $isOn ? 'On duty' : 'Off' ?></span>
+        <div class="schedule-month-day<?= $isOn ? ' is-on' : ' is-off' ?><?= $bookedCount > 0 ? ' is-booked' : '' ?><?= $isToday ? ' is-today' : '' ?>">
+          <label class="schedule-month-day-toggle">
+            <input type="checkbox" name="duty[]" value="<?= lex_e($date) ?>"<?= $isOn ? ' checked' : '' ?>>
+            <span class="schedule-month-dow-name"><?= lex_e($weekday) ?></span>
+            <span class="schedule-month-num"><?= (int) substr($date, 8, 2) ?></span>
+            <span class="schedule-month-state"><?= $isOn ? 'On duty' : 'Off' ?></span>
+          </label>
           <?php if ($bookedCount > 0): ?>
             <span class="schedule-month-booked"><?= $bookedCount === 1 ? '1 booked' : $bookedCount . ' booked' ?></span>
           <?php endif; ?>
-        </label>
+          <div class="schedule-month-day-hours">
+            <label>From <input type="time" name="duty_start[<?= lex_e($date) ?>]" value="<?= lex_e($dayStart) ?>"<?= $isOn ? '' : ' disabled' ?>></label>
+            <label>To <input type="time" name="duty_end[<?= lex_e($date) ?>]" value="<?= lex_e($dayEnd) ?>"<?= $isOn ? '' : ' disabled' ?>></label>
+          </div>
+        </div>
       <?php endforeach; ?>
     </div>
     <div class="schedule-month-actions">
@@ -599,16 +681,36 @@ lex_page_header('My Schedule', 'appointments', $user);
 </section>
 <script>
 (function () {
-  document.querySelectorAll('.schedule-month-day input[type="checkbox"]').forEach(function (box) {
+  var defaultStart = document.querySelector('[data-schedule-default-start]');
+  var defaultEnd = document.querySelector('[data-schedule-default-end]');
+  document.querySelectorAll('.schedule-month-day').forEach(function (day) {
+    var box = day.querySelector('input[type="checkbox"]');
+    if (!box) return;
+    var times = day.querySelectorAll('.schedule-month-day-hours input[type="time"]');
     box.addEventListener('change', function () {
-      var day = box.closest('.schedule-month-day');
-      if (!day) return;
       day.classList.toggle('is-on', box.checked);
       day.classList.toggle('is-off', !box.checked);
       var state = day.querySelector('.schedule-month-state');
       if (state) state.textContent = box.checked ? 'On duty' : 'Off';
+      times.forEach(function (input) {
+        input.disabled = !box.checked;
+        if (box.checked && defaultStart && input.name.indexOf('duty_start') === 0 && !input.value) {
+          input.value = defaultStart.value;
+        }
+        if (box.checked && defaultEnd && input.name.indexOf('duty_end') === 0 && !input.value) {
+          input.value = defaultEnd.value;
+        }
+      });
     });
   });
+  var form = document.querySelector('.schedule-month-card form');
+  if (form) {
+    form.addEventListener('submit', function () {
+      document.querySelectorAll('.schedule-month-day.is-on .schedule-month-day-hours input[type="time"]').forEach(function (input) {
+        input.disabled = false;
+      });
+    });
+  }
 })();
 </script>
 <?php lex_page_footer(); ?>
