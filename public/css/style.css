@@ -33359,3 +33359,85 @@ body:has(.inbox-messenger) .inbox-messenger .typing-indicator {
     display: none !important;
   }
 }
+
+body.app-workspace:has(.inbox-messenger) .app-shell {
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+}
+
+html[data-theme="dark"] body.app-workspace:has(.inbox-messenger) .main-content,
+body.app-workspace:has(.inbox-messenger) .main-content {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+body.app-workspace:has(.inbox-messenger) .topbar {
+  flex: 0 0 auto;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .messages-layout.inbox-messenger,
+body:has(.inbox-messenger) .messages-layout.inbox-messenger {
+  flex: 1 1 auto !important;
+  height: auto !important;
+  max-height: none !important;
+  min-height: 0 !important;
+}
+
+body:has(.inbox-messenger) .inbox-messenger .chat-panel {
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) auto !important;
+  min-height: 0 !important;
+  height: 100% !important;
+}
+
+body:has(.inbox-messenger) .inbox-messenger .chat-header {
+  flex-wrap: nowrap !important;
+  overflow: hidden;
+}
+
+body:has(.inbox-messenger) .inbox-messenger .chat-header-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+body:has(.inbox-messenger) .inbox-messenger .chat-feed {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-end !important;
+  min-height: 0 !important;
+}
+
+@media (max-width: 1100px) {
+  body:has(.inbox-messenger) .inbox-messenger .chat-header {
+    flex-wrap: nowrap !important;
+    gap: 0.25rem !important;
+  }
+
+  body:has(.inbox-messenger) .inbox-messenger .chat-header-title h2 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+body:has(.inbox-messenger) .inbox-messenger .chat-header-title {
+  flex: 1 1 0 !important;
+  width: auto !important;
+}
+
+@media (max-width: 1100px) {
+  body:has(.inbox-messenger) .inbox-messenger .chat-header {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+  }
+
+  body:has(.inbox-messenger) .inbox-messenger .inbox-header-delete-form,
+  body:has(.inbox-messenger) .inbox-messenger .inbox-vc-btn {
+    flex: 0 0 40px !important;
+  }
+}
