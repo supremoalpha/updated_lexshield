@@ -31500,3 +31500,288 @@ html[data-theme="light"] .case-vault-folder-card {
   font-size: 0.78rem;
   word-break: break-all;
 }
+
+/* Case Files layout repair: match current HTML, dark vault, usable modal. */
+body:has([data-case-files-app]) #case-files-editor {
+  display: contents;
+}
+
+body:has([data-case-files-app]) .case-create-modal-overlay,
+body:has([data-case-files-app]) [data-case-edit-modal],
+body:has([data-case-files-app]) [data-case-detail-modal] {
+  z-index: 6200;
+}
+
+body:has([data-case-files-app]) #case-files-summary .case-stats {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+body:has([data-case-files-app]) #case-files-summary .kpi-card {
+  min-height: 84px;
+  padding: 1rem 1.05rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto;
+  gap: 0.22rem;
+  align-content: center;
+  border-radius: 8px;
+  background: #06162a;
+  border: 1px solid rgba(70, 98, 138, 0.28);
+  box-shadow: none;
+}
+
+body:has([data-case-files-app]) #case-files-summary .kpi-card span {
+  color: #a8b4c6;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+body:has([data-case-files-app]) #case-files-summary .kpi-card strong {
+  grid-column: auto;
+  display: block;
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.65rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+body:has([data-case-files-app]) #case-files-summary .kpi-card strong.tone-success {
+  color: #8df1c4;
+}
+
+body:has([data-case-files-app]) #case-files-summary .kpi-card strong.tone-danger {
+  color: #ff9eaa;
+}
+
+body:has([data-case-files-app]) .case-hero,
+body:has([data-case-files-app]) .case-compact-hero {
+  padding: 1rem;
+  border-radius: 8px;
+  background: #06162a;
+  border: 1px solid rgba(70, 98, 138, 0.28);
+  box-shadow: none;
+}
+
+body:has([data-case-files-app]) .case-compact-hero input,
+body:has([data-case-files-app]) .case-compact-hero select {
+  min-height: 40px;
+  border-radius: 7px;
+  background: #0a1b31;
+  border: 1px solid rgba(71, 100, 141, 0.34);
+  color: #f5f8ff;
+  box-shadow: none;
+}
+
+body:has([data-case-files-app]) .case-hero .button-primary,
+body:has([data-case-files-app]) .case-hero .button-secondary {
+  background: #08182d;
+  border: 1px solid rgba(71, 100, 141, 0.38);
+  color: #ffffff;
+}
+
+body:has([data-case-files-app]) .case-hero .button-accent {
+  background: #0877ff;
+  border-color: #0877ff;
+  color: #ffffff;
+}
+
+body:has([data-case-files-app]) #case-files-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+body:has([data-case-files-app]) .case-list-item {
+  cursor: pointer;
+  padding: 0.9rem 1rem;
+  border-radius: 8px;
+  background: #06162a;
+  border: 1px solid rgba(70, 98, 138, 0.28);
+  box-shadow: none;
+  color: #e8edf7;
+}
+
+body:has([data-case-files-app]) .case-list-item .card-head {
+  min-height: 0;
+  margin-bottom: 0.35rem;
+}
+
+body:has([data-case-files-app]) .case-list-item .card-head strong {
+  color: #f5f8ff;
+  font-size: 0.98rem;
+}
+
+body:has([data-case-files-app]) .case-list-item .muted {
+  color: #9fb0c8;
+}
+
+body:has([data-case-files-app]) .case-list-item:hover,
+body:has([data-case-files-app]) .case-list-item.is-active,
+body:has([data-case-files-app]) .case-list-item.is-selected {
+  border-color: rgba(201, 162, 39, 0.62);
+  box-shadow: 0 0 0 1px rgba(201, 162, 39, 0.28);
+}
+
+body:has([data-case-files-app]) .case-vault-panel {
+  padding: 0.95rem 1rem 1.1rem;
+  border-radius: 8px;
+  background: #06162a;
+  border: 1px solid rgba(70, 98, 138, 0.28);
+  box-shadow: none;
+  color: #e8edf7;
+}
+
+body:has([data-case-files-app]) .case-vault-panel .card-head h2,
+body:has([data-case-files-app]) .case-vault-current-name {
+  color: #f5f8ff;
+}
+
+body:has([data-case-files-app]) .case-vault-crumbs {
+  color: #9fb0c8;
+}
+
+body:has([data-case-files-app]) .case-vault-crumbs a {
+  color: #7db8ff;
+}
+
+body:has([data-case-files-app]) .case-vault-folder-card {
+  background: linear-gradient(180deg, #13243f, #0d1a30);
+  border: 1px solid rgba(201, 162, 39, 0.28);
+  color: #e8edf7;
+  box-shadow: none;
+}
+
+body:has([data-case-files-app]) .case-vault-folder-card:hover {
+  border-color: rgba(201, 162, 39, 0.7);
+}
+
+body:has([data-case-files-app]) .case-vault-folder-card strong {
+  color: #f5f8ff;
+}
+
+body:has([data-case-files-app]) .case-vault-ledger-ok {
+  background: rgba(22, 163, 74, 0.18);
+  color: #8df1c4;
+}
+
+body:has([data-case-files-app]) .case-vault-ledger-bad {
+  background: rgba(185, 28, 28, 0.2);
+  color: #ff9eaa;
+}
+
+body:has([data-case-files-app]) .case-vault-seal {
+  background: rgba(28, 78, 216, 0.22);
+  color: #cfe4ff;
+}
+
+body:has([data-case-files-app]) .case-compact-modal .case-form,
+body:has([data-case-files-app]) .case-compact-modal .stack-form {
+  gap: 0.55rem 0.75rem;
+}
+
+body:has([data-case-files-app]) .case-compact-modal .case-form input[type="hidden"] {
+  display: none;
+}
+
+body:has([data-case-files-app]) .case-compact-modal .case-form.form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body:has([data-case-files-app]) .case-compact-modal .case-form .full,
+body:has([data-case-files-app]) .case-compact-modal .case-form .button.full {
+  grid-column: 1 / -1;
+}
+
+body:has([data-case-files-app]) .case-compact-modal .case-form input,
+body:has([data-case-files-app]) .case-compact-modal .case-form select,
+body:has([data-case-files-app]) .case-compact-modal .case-form textarea,
+body:has([data-case-files-app]) .case-compact-modal .stack-form input,
+body:has([data-case-files-app]) .case-compact-modal .stack-form select,
+body:has([data-case-files-app]) .case-compact-modal .stack-form textarea {
+  min-height: 40px;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #0d2344 0%, #0b1c39 100%);
+  border: 1px solid rgba(58, 102, 176, 0.28);
+  color: #eef4ff;
+}
+
+html[data-theme="light"] body:has([data-case-files-app]) #case-files-summary .kpi-card,
+html[data-theme="light"] body:has([data-case-files-app]) .case-hero,
+html[data-theme="light"] body:has([data-case-files-app]) .case-list-item,
+html[data-theme="light"] body:has([data-case-files-app]) .case-vault-panel {
+  background: #ffffff;
+  border-color: rgba(148, 163, 184, 0.28);
+  color: #10243e;
+}
+
+html[data-theme="light"] body:has([data-case-files-app]) #case-files-summary .kpi-card span,
+html[data-theme="light"] body:has([data-case-files-app]) .case-list-item .muted,
+html[data-theme="light"] body:has([data-case-files-app]) .case-vault-crumbs {
+  color: #5f738f;
+}
+
+html[data-theme="light"] body:has([data-case-files-app]) #case-files-summary .kpi-card strong,
+html[data-theme="light"] body:has([data-case-files-app]) .case-list-item .card-head strong,
+html[data-theme="light"] body:has([data-case-files-app]) .case-vault-folder-card strong,
+html[data-theme="light"] body:has([data-case-files-app]) .case-vault-panel .card-head h2 {
+  color: #10243e;
+}
+
+html[data-theme="light"] body:has([data-case-files-app]) .case-compact-hero input,
+html[data-theme="light"] body:has([data-case-files-app]) .case-compact-hero select {
+  background: #ffffff;
+  border-color: rgba(148, 163, 184, 0.28);
+  color: #10243e;
+}
+
+html[data-theme="light"] body:has([data-case-files-app]) .case-vault-folder-card {
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  border-color: rgba(148, 163, 184, 0.28);
+  color: #10243e;
+}
+
+html[data-theme="light"] body:has([data-case-files-app]) .case-vault-crumbs a {
+  color: #1c6bb8;
+}
+
+html[data-theme="light"] body:has([data-case-files-app]) .case-vault-ledger-ok {
+  background: #ecfdf3;
+  color: #166534;
+}
+
+html[data-theme="light"] body:has([data-case-files-app]) .case-vault-ledger-bad {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+html[data-theme="light"] body:has([data-case-files-app]) .case-vault-seal {
+  background: #eef4ff;
+  color: #1c4ed8;
+}
+
+html[data-theme="light"] body:has([data-case-files-app]) .case-hero .button-primary,
+html[data-theme="light"] body:has([data-case-files-app]) .case-hero .button-secondary {
+  background: #ffffff;
+  border-color: rgba(148, 163, 184, 0.28);
+  color: #172033;
+}
+
+@media (max-width: 900px) {
+  body:has([data-case-files-app]) #case-files-summary .case-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body:has([data-case-files-app]) .case-compact-modal .case-form.form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  body:has([data-case-files-app]) #case-files-summary .case-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

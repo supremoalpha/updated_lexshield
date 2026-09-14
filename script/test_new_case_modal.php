@@ -35,6 +35,7 @@ lex_new_case_assert('Script still opens the create modal', str_contains($js, 'da
 lex_new_case_assert('Attorney role is treated as lawyer for case files', str_contains($helpers, "\$role === 'attorney'"));
 lex_new_case_assert('New case has no assigned-lawyer picker', !str_contains($helpers, 'name="assigned_lawyer_user_id"'));
 lex_new_case_assert('Case list is limited to the assigned attorney', str_contains($helpers, 'cf.assigned_lawyer_user_id = :uid1') && !str_contains($helpers, 'created_by_user_id = :uid2'));
+lex_new_case_assert('Create form uses case-form so compact modal CSS applies', str_contains($helpers, 'data-persist-form="create"') && str_contains($helpers, 'case-form form-grid'));
 
 echo "\n{$passed} passed, {$failed} failed\n";
 exit($failed > 0 ? 1 : 0);
