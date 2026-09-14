@@ -33636,3 +33636,31 @@ body:has(.inbox-messenger) .inbox-messenger .inbox-header-actions .inbox-delete-
     display: inline-flex !important;
   }
 }
+
+body:has(.inbox-messenger) .inbox-messenger .chat-header {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) max-content !important;
+  align-items: center !important;
+  overflow: visible !important;
+  height: 56px !important;
+  min-height: 56px !important;
+}
+
+body:has(.inbox-messenger) .inbox-messenger .chat-header-title {
+  grid-column: 1;
+}
+
+body:has(.inbox-messenger) .inbox-messenger .inbox-header-actions {
+  grid-column: 2;
+  display: flex !important;
+  visibility: visible !important;
+}
+
+@media (max-width: 1100px) {
+  body:has(.inbox-messenger) .inbox-messenger .chat-header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) max-content !important;
+    flex-wrap: nowrap !important;
+    overflow: visible !important;
+  }
+}
