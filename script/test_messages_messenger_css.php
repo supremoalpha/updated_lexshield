@@ -33,6 +33,9 @@ lex_mmc_assert('Last-wins CSS forces Messenger white chrome', str_contains($styl
 lex_mmc_assert('Sent bubbles stay Messenger blue', str_contains($style, 'background: #0084ff !important') && str_contains($style, 'border-bottom-right-radius: 4px !important'));
 lex_mmc_assert('Received bubbles stay Messenger gray', str_contains($style, 'background: #e4e6eb !important') && str_contains($style, 'border-bottom-left-radius: 4px !important'));
 lex_mmc_assert('Composer still uses the Aa pill', str_contains($shared, 'placeholder="Aa"') && str_contains($style, 'border-radius: 20px !important'));
+lex_mmc_assert('Thread header uses Messenger actions', str_contains($shared, 'inbox-header-actions') && str_contains($shared, 'inbox-head-phone') && str_contains($shared, 'inbox-head-info'));
+lex_mmc_assert('Thread status can show Active now', str_contains($shared, 'is-active-now') && str_contains($shared, 'Active now'));
+lex_mmc_assert('CSS draws the Messenger thread header', str_contains($style, 'Messages: Messenger thread header') && str_contains($style, '.inbox-header-actions'));
 
 echo "\n{$passed} passed, {$failed} failed\n";
 exit($failed > 0 ? 1 : 0);

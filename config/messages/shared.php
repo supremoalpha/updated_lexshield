@@ -636,8 +636,6 @@ if (!function_exists('lex_messages_render_page')) {
             }
             $recipientGroups[$group][] = $recipient;
         }
-        $activeAvatar = $activeRecipient ? lex_profile_avatar_url((string) ($activeRecipient['other_avatar'] ?? '')) : '';
-        $activeInitials = $activeRecipient ? strtoupper(substr(preg_replace('/\s+/', '', (string) $activeRecipient['other_name']) ?: 'U', 0, 2)) : '';
         $callHref = $canMessageActive && function_exists('lex_inbox_call_href')
             ? lex_inbox_call_href($activeOtherId)
             : '';
@@ -687,15 +685,10 @@ if (!function_exists('lex_messages_render_page')) {
   <div class="chat-panel">
     <header class="chat-header">
       <div class="chat-header-title">
-        <a class="icon-button chat-back-link" href="<?= lex_e(function_exists('lex_nav_href') ? lex_nav_href('chat.php') : lex_app_url('chat.php')) ?>" aria-label="Back to conversations" title="Back to conversations">&larr;</a>
-        <?php if ($activeRecipient): ?>
-          <?php if ($activeAvatar !== ''): ?>
-            <img class="inbox-header-avatar" src="<?= lex_e($activeAvatar) ?>" alt="">
-          <?php else: ?>
-            <span class="inbox-header-avatar" aria-hidden="true"><?= lex_e($activeInitials) ?></span>
-          <?php endif; ?>
-        <?php endif; ?>
-        <div>
+        <a class="icon-button chat-back-link" href="<?= lex_e(function_exists('lex_nav_href') ? lex_nav_href('chat.php') : lex_app_url('chat.php')) ?>" aria-label="Back to conversations" title="Back to conversations">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.2 4.8 8 12l7.2 7.2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <div class="inbox-header-copy">
           <h2><?= $activeRecipient ? lex_e((string) $activeRecipient['other_name']) : 'Select a chat' ?></h2>
           <?php if ($activeRecipient):
             $otherOnline = false;
@@ -706,33 +699,46 @@ if (!function_exists('lex_messages_render_page')) {
                 $otherOnline = $ll && (new DateTimeImmutable((string) $ll)) >= (new DateTimeImmutable())->modify('-5 minutes');
             } catch (Throwable $e) { $otherOnline = false; }
           ?>
-            <span class="status-line"><?= lex_e(ucfirst((string) $activeRecipient['other_role'])) ?> · <?= $otherOnline ? '<span class="online-dot"></span> Active now' : 'Offline' ?></span>
+            <span class="status-line<?= $otherOnline ? ' is-active-now' : '' ?>"><?= $otherOnline ? 'Active now' : 'Offline' ?></span>
           <?php endif; ?>
         </div>
       </div>
-      <button class="inbox-header-compose" type="button" data-modal-open="newMessageModal" title="New message" aria-label="New message" onclick="if (event) { event.preventDefault(); } if (window.lexOpenNewMessage) { return window.lexOpenNewMessage(event); } var d=document.getElementById('newMessageModal'); if (d) { if (d.showModal && !d.open) { d.showModal(); } else { d.setAttribute('open',''); } d.classList.add('is-open'); } return false;">New message</button>
       <?php if ($activeRecipient && $activeOtherId > 0): ?>
-        <form method="post" class="inbox-header-delete-form" data-no-loading onclick="event.stopPropagation();" onsubmit="return confirm('Delete this chat? It will be removed from your inbox. The other person will still have the messages.');">
-          <?= lex_csrf_field() ?>
-          <input type="hidden" name="action" value="delete_conversation">
-          <input type="hidden" name="with" value="<?= (int) $activeOtherId ?>">
-          <button class="inbox-delete-btn inbox-header-delete" type="submit" title="Delete chat" aria-label="Delete chat" style="display:inline-flex;min-width:44px;min-height:44px;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;position:relative;z-index:6;touch-action:manipulation;box-sizing:border-box;">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm1 6h2v9h-2V9Zm4 0h2v9h-2V9ZM8 9h2v9H8V9Z" fill="currentColor"/></svg>
-            <span class="inbox-delete-label">Delete</span>
-          </button>
-        </form>
-      <?php endif; ?>
-      <?php if (function_exists('lex_phishing_ui_enabled') && lex_phishing_ui_enabled($user)): ?>
-      <button class="inbox-vc-btn phishing-detector-trigger" type="button" title="Check a link for phishing" aria-label="Check a link for phishing" style="cursor:pointer;pointer-events:auto;position:relative;z-index:6;touch-action:manipulation;" onclick="<?= lex_e(function_exists('lex_phishing_open_onclick') ? lex_phishing_open_onclick() : 'return false;') ?>">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 11 4.6-2.3 8-6 8-11V5Z" fill="currentColor"/></svg>
-        <span class="inbox-vc-label">Check link</span>
-      </button>
-      <?php endif; ?>
-      <?php if ($activeOtherId > 0 && $callHref !== ''): ?>
-        <a class="inbox-vc-btn" href="<?= lex_e($callHref) ?>" title="Video call" aria-label="Video call" style="display:inline-flex;min-width:44px;min-height:44px;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;position:relative;z-index:6;touch-action:manipulation;box-sizing:border-box;flex:0 0 auto;">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 10.5 21 7v10l-4-3.5V16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2.5Z" fill="currentColor"/></svg>
-          <span class="inbox-vc-label">Video call</span>
-        </a>
+        <div class="inbox-header-actions">
+          <?php if ($callHref !== ''): ?>
+            <a class="inbox-head-icon inbox-vc-btn" href="<?= lex_e($callHref) ?>" title="Video call" aria-label="Video call" style="display:inline-flex;min-width:44px;min-height:44px;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;position:relative;z-index:6;touch-action:manipulation;box-sizing:border-box;flex:0 0 auto;">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 10.5 21 7v10l-4-3.5V16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2.5Z" fill="currentColor"/></svg>
+              <span class="inbox-vc-label">Video call</span>
+            </a>
+            <a class="inbox-head-icon inbox-head-phone" href="<?= lex_e($callHref) ?>" title="Call" aria-label="Call">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8c1.4 2.7 3.9 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.2 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 .9V21c0 .6-.4 1-1 1C10.6 22 2 13.4 2 3c0-.6.4-1 1-1h4.5c.5 0 .9.4.9 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1L6.6 10.8Z" fill="currentColor"/></svg>
+            </a>
+          <?php endif; ?>
+          <details class="inbox-head-info">
+            <summary class="inbox-head-icon" title="Chat info" aria-label="Chat info">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 4.4A1.3 1.3 0 1 1 10.7 7.7 1.3 1.3 0 0 1 12 6.4ZM13.1 17h-2.2v-7h2.2Z" fill="currentColor"/></svg>
+            </summary>
+            <div class="inbox-head-info-menu">
+              <form method="post" class="inbox-header-delete-form" data-no-loading onsubmit="return confirm('Delete this chat? It will be removed from your inbox. The other person will still have the messages.');">
+                <?= lex_csrf_field() ?>
+                <input type="hidden" name="action" value="delete_conversation">
+                <input type="hidden" name="with" value="<?= (int) $activeOtherId ?>">
+                <button class="inbox-delete-btn inbox-header-delete" type="submit" title="Delete chat" aria-label="Delete chat" style="display:inline-flex;min-width:44px;min-height:44px;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;position:relative;z-index:6;touch-action:manipulation;box-sizing:border-box;">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm1 6h2v9h-2V9Zm4 0h2v9h-2V9ZM8 9h2v9H8V9Z" fill="currentColor"/></svg>
+                  <span class="inbox-delete-label">Delete</span>
+                  <span class="inbox-head-info-text">Delete chat</span>
+                </button>
+              </form>
+              <?php if (function_exists('lex_phishing_ui_enabled') && lex_phishing_ui_enabled($user)): ?>
+                <button class="inbox-vc-btn phishing-detector-trigger" type="button" title="Check a link for phishing" aria-label="Check a link for phishing" style="cursor:pointer;pointer-events:auto;position:relative;z-index:6;touch-action:manipulation;" onclick="<?= lex_e(function_exists('lex_phishing_open_onclick') ? lex_phishing_open_onclick() : 'return false;') ?>">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 11 4.6-2.3 8-6 8-11V5Z" fill="currentColor"/></svg>
+                  <span class="inbox-vc-label">Check link</span>
+                  <span class="inbox-head-info-text">Check link</span>
+                </button>
+              <?php endif; ?>
+            </div>
+          </details>
+        </div>
       <?php endif; ?>
     </header>
     <div class="chat-feed" data-chat-scroll>
