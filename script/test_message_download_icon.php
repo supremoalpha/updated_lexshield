@@ -33,6 +33,7 @@ lex_mdi_assert('Download still uses the attachment endpoint', str_contains($shar
 lex_mdi_assert('Pictures still open in the viewer', str_contains($shared, 'inbox-media-open') && str_contains($shared, 'lex_messages_view_url'));
 lex_mdi_assert('Old View/Download buttons are gone from the thread', !str_contains($shared, '>View</a>') && !str_contains($shared, '>Download</a>'));
 lex_mdi_assert('CSS draws a circular download control', str_contains($style, 'Messenger-style chat download icon') && str_contains($style, '.inbox-media-download'));
+lex_mdi_assert('Image tiles stay large enough for the overlay', str_contains($style, 'min-width: 168px') && str_contains($style, '.inbox-media--image'));
 
 echo "\n{$passed} passed, {$failed} failed\n";
 exit($failed > 0 ? 1 : 0);

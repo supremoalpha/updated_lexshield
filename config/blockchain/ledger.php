@@ -218,6 +218,7 @@ if (!function_exists('lex_blockchain_event_label')) {
             'vault_folder_created' => 'Vault folder created',
             'vault_file_approved' => 'Vault file approved',
             'vault_file_rejected' => 'Vault file rejected',
+            'vault_file_deleted' => 'Vault file deleted',
             default => ucwords(str_replace('_', ' ', $eventType)),
         };
     }

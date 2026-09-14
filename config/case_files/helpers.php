@@ -859,6 +859,7 @@ if (!function_exists('lex_case_files_render_vault_panel')) {
         };
         $createParentId = $currentFolder ? (int) $currentFolder['id'] : (int) $clientFolder['id'];
         $currentTitle = $currentFolder ? (string) $currentFolder['name'] : 'Client folders';
+        $backFolderId = $currentFolder ? (int) ($currentFolder['parent_id'] ?? 0) : 0;
         ?>
         <section class="card case-vault-panel">
           <div class="card-head">
@@ -866,7 +867,11 @@ if (!function_exists('lex_case_files_render_vault_panel')) {
             <span class="pill">AES-256 encrypted</span>
             <span class="pill">Blockchain ledger</span>
           </div>
-          <nav class="case-vault-crumbs" aria-label="Vault folders">
+          <div class="case-vault-nav">
+            <?php if ($currentFolder): ?>
+              <a class="button button-secondary case-vault-back" href="<?= lex_e($vaultUrl($backFolderId)) ?>" data-vault-folder="<?= $backFolderId ?>">Back</a>
+            <?php endif; ?>
+            <nav class="case-vault-crumbs" aria-label="Vault folders">
             <a href="<?= lex_e($vaultUrl(0)) ?>" data-vault-folder="0">Vault</a>
             <?php foreach ($ancestors as $crumb): ?>
               <span aria-hidden="true">/</span>
@@ -876,7 +881,8 @@ if (!function_exists('lex_case_files_render_vault_panel')) {
                 <a href="<?= lex_e($vaultUrl((int) $crumb['id'])) ?>" data-vault-folder="<?= (int) $crumb['id'] ?>"><?= lex_e((string) $crumb['name']) ?></a>
               <?php endif; ?>
             <?php endforeach; ?>
-          </nav>
+            </nav>
+          </div>
           <?php if ($childFolders): ?>
             <div class="case-vault-folder-grid">
               <?php foreach ($childFolders as $folder): ?>
@@ -909,8 +915,12 @@ if (!function_exists('lex_case_files_render_vault_panel')) {
             <ul class="admin-audit-list">
               <?php foreach ($documents as $document): ?>
                 <?php
-                  $canSee = $access === 'manage' || (string) $document['upload_status'] === 'approved';
+                  $ownsUpload = (int) ($document['uploaded_by_user_id'] ?? 0) === (int) $user['id'];
+                  $canSee = $access === 'manage'
+                      || (string) $document['upload_status'] === 'approved'
+                      || $ownsUpload;
                   if (!$canSee) { continue; }
+                  $canDeleteFile = !$viewOnly && ($canManage || ($access === 'client' && $ownsUpload));
                 ?>
                 <li class="admin-audit-row">
                   <span><?= lex_e((string) $document['original_name']) ?></span>
@@ -931,6 +941,15 @@ if (!function_exists('lex_case_files_render_vault_panel')) {
                     <?php endif; ?>
                     <?php if (!$viewOnly): ?>
                       <a class="button button-secondary" href="<?= lex_e(lex_app_url('case_document_file.php?document_id=' . (int) $document['id'])) ?>">Download</a>
+                    <?php endif; ?>
+                    <?php if ($canDeleteFile): ?>
+                      <form method="post" class="case-vault-delete-form" data-no-loading onsubmit="return confirm('Delete this file from the vault? This cannot be undone.');">
+                        <?= lex_csrf_field() ?>
+                        <input type="hidden" name="action" value="vault_delete">
+                        <input type="hidden" name="document_id" value="<?= (int) $document['id'] ?>">
+                        <input type="hidden" name="folder" value="<?= (int) $openFolderId ?>">
+                        <button class="button button-danger case-vault-delete" type="submit">Delete</button>
+                      </form>
                     <?php endif; ?>
                     <?php if ($canManage && (string) $document['upload_status'] === 'pending'): ?>
                       <form method="post" style="display:inline;">
