@@ -32289,3 +32289,16 @@ html[data-theme="dark"] body:has([data-case-files-app]) .case-vault-back {
     gap: 0.4rem;
   }
 }
+
+/* Keep Messenger download overlay visible on short images */
+.inbox-media--image,
+.inbox-media--video {
+  min-width: 168px;
+  min-height: 132px;
+}
+
+.inbox-media img,
+.inbox-media video {
+  min-width: 168px;
+  min-height: 132px;
+}
