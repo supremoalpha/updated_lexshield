@@ -31785,7 +31785,7 @@ html[data-theme="light"] body:has([data-case-files-app]) .case-hero .button-seco
     grid-template-columns: minmax(0, 1fr);
   }
 }
-
+
 /* Workspace professional responsive layout (last wins) */
 body[data-role="client"] .phishing-detector-trigger,
 body[data-role="client"] #topbarPhishingBtn,
@@ -32048,7 +32048,7 @@ body:has([data-appointment-board]) .appointment-inline-form {
     min-height: 44px;
   }
 }
-
+
 /* Messenger-style chat download icon */
 .inbox-media,
 .inbox-file {
@@ -32405,10 +32405,10 @@ body.pao-login .pao-login-kicker {
 
 body.pao-login .pao-login-card h1 {
   margin: 0 0 0.45rem;
-  color: var(--login-navy);
-  font-family: "Libre Baskerville", Georgia, serif;
-  font-size: clamp(1.55rem, 4vw, 2rem);
-  line-height: 1.2;
+  color: #0a192f !important;
+  font-family: "Libre Baskerville", Georgia, serif !important;
+  font-size: clamp(1.55rem, 4vw, 2rem) !important;
+  line-height: 1.2 !important;
   font-weight: 700;
 }
 
@@ -32514,23 +32514,36 @@ body.pao-login .pao-login-card label,
 body.pao-login .pao-login-card .stack-form label {
   display: grid;
   gap: 0.35rem;
-  color: var(--login-navy);
+  color: #0a192f !important;
   font-size: 0.86rem;
   font-weight: 700;
 }
 
+body.pao-login .pao-login-card,
 body.pao-login .pao-login-card input,
 body.pao-login .pao-login-card select,
 body.pao-login .pao-login-card textarea {
+  color-scheme: light;
+}
+
+body.pao-login .pao-login-card input,
+body.pao-login .pao-login-card select,
+body.pao-login .pao-login-card textarea,
+body.pao-login .pao-login-card .password-field input {
   width: 100%;
   min-height: 48px;
   box-sizing: border-box;
   padding: 0.7rem 0.85rem;
-  border: 1px solid var(--login-line);
+  border: 1px solid #d7deea !important;
   border-radius: 10px;
-  background: #fff;
-  color: var(--login-ink);
-  font-size: 1rem;
+  background: #ffffff !important;
+  color: #122033 !important;
+  font-size: 1rem !important;
+}
+
+body.pao-login .pao-login-card input::placeholder,
+body.pao-login .pao-login-card textarea::placeholder {
+  color: #7b8798 !important;
 }
 
 body.pao-login .pao-login-card .password-field {
@@ -32538,7 +32551,7 @@ body.pao-login .pao-login-card .password-field {
 }
 
 body.pao-login .pao-login-card .password-field input {
-  padding-right: 3.4rem;
+  padding-right: 3.4rem !important;
 }
 
 body.pao-login .pao-login-card .password-toggle {
@@ -32546,13 +32559,16 @@ body.pao-login .pao-login-card .password-toggle {
   min-width: 44px;
   min-height: 44px;
   border-radius: 8px;
-  background: #f7f9fc;
+  background: #f3f6fb !important;
+  color: #0a192f !important;
+  border: 1px solid #d7deea !important;
 }
 
 body.pao-login .pao-login-card input[aria-invalid="true"] {
   border-color: #d08a12 !important;
   box-shadow: 0 0 0 3px rgba(227, 179, 65, 0.28);
-  background: #fffdf6;
+  background: #fffdf6 !important;
+  color: #122033 !important;
 }
 
 body.pao-login .pao-login-card .auth-forgot-link {

@@ -33,7 +33,8 @@ lex_login_assert('Failed login keeps the typed email', str_contains($login, 'val
 lex_login_assert('Password field is marked invalid after a failed attempt', str_contains($login, 'aria-invalid="true"'));
 lex_login_assert('Card marks the failed attempt', str_contains($login, 'pao-login-card--error'));
 lex_login_assert('Warning banner is styled on the login card', str_contains($style, 'Login page: professional responsive card') && str_contains($style, '.pao-login-warning'));
-lex_login_assert('Login card is responsive', str_contains($style, 'body.pao-login .pao-login-card') && str_contains($style, 'min(100%, 28.5rem)'));
+lex_login_assert('Login title stays dark on the white card', str_contains($style, 'body.pao-login .pao-login-card h1') && str_contains($style, 'color: #0a192f !important'));
+lex_login_assert('Login fields stay light on the white card', str_contains($style, 'background: #ffffff !important') && str_contains($style, 'color-scheme: light'));
 
 echo "\n{$passed} passed, {$failed} failed\n";
 exit($failed > 0 ? 1 : 0);
