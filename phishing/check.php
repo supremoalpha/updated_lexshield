@@ -707,6 +707,14 @@ function lex_phishing_response_for_url(string $url, bool $resolveRedirects = tru
 function lex_phishing_handle_request(): void
 {
     try {
+        if (PHP_SAPI !== 'cli' && function_exists('lex_phishing_ui_enabled') && !lex_phishing_ui_enabled()) {
+            lex_phishing_json_ok([
+                'status' => 'suspicious',
+                'score' => 0,
+                'message' => 'Phishing detection is available to lawyers and admins.',
+            ], 403);
+            return;
+        }
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
             lex_phishing_json_ok([
                 'status' => 'suspicious',

@@ -1222,6 +1222,19 @@ if (!function_exists('lex_phishing_scan_message_body')) {
     }
 }
 
+if (!function_exists('lex_phishing_ui_enabled')) {
+    function lex_phishing_ui_enabled(?array $user = null): bool
+    {
+        $user = $user ?? (function_exists('lex_current_user') ? lex_current_user() : null);
+        $role = strtolower(trim((string) ($user['role'] ?? '')));
+        if ($role === 'attorney') {
+            $role = 'lawyer';
+        }
+
+        return in_array($role, ['admin', 'lawyer'], true);
+    }
+}
+
 if (!function_exists('lex_phishing_open_onclick')) {
     function lex_phishing_open_onclick(): string
     {
@@ -2453,9 +2466,11 @@ if (!function_exists('lex_page_header')) {
       <button class="icon-button" id="sidebarToggle" type="button" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
       <div class="topbar-title"><h1><?= lex_e($title) ?></h1></div>
       <div class="topbar-actions">
+        <?php if (function_exists('lex_phishing_ui_enabled') && lex_phishing_ui_enabled($user)): ?>
         <button class="icon-button phishing-detector-trigger" id="topbarPhishingBtn" type="button" aria-label="Check a link for phishing" title="Check a link for phishing" style="position:relative;z-index:6;cursor:pointer;pointer-events:auto;touch-action:manipulation;width:44px;min-width:44px;height:44px;min-height:44px;flex:0 0 44px;" onclick="<?= lex_e(function_exists('lex_phishing_open_onclick') ? lex_phishing_open_onclick() : 'return false;') ?>">
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 11 4.6-2.3 8-6 8-11V5Z" fill="currentColor"/></svg>
         </button>
+        <?php endif; ?>
         <button class="icon-button" id="themeToggle" type="button" aria-label="Switch to light mode" title="Switch to light mode">&#9681;</button>
         <?php
         $lexNotifUserId = (int) ($user['id'] ?? 0);
@@ -2534,7 +2549,7 @@ if (!function_exists('lex_page_footer')) {
         ?>
   </main>
 </div>
-<?php if (function_exists('lex_phishing_modal_markup')) { lex_phishing_modal_markup(); } ?>
+<?php if (function_exists('lex_phishing_ui_enabled') && lex_phishing_ui_enabled() && function_exists('lex_phishing_modal_markup')) { lex_phishing_modal_markup(); } ?>
 <?php if ($ringUserId > 0): ?>
 <?php if (function_exists('lex_inbox_call_overlay_markup')) { lex_inbox_call_overlay_markup($incomingCall); } ?>
 <script type="application/json" id="lex-call-ring-data"><?= json_encode([

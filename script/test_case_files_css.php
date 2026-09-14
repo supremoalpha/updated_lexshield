@@ -35,6 +35,7 @@ lex_css_assert('Vault folder cards get a dark-theme override', str_contains($sty
 lex_css_assert('Create modal sits above the page chrome', str_contains($style, 'z-index: 6200'));
 lex_css_assert('New case form uses the compact case-form grid', str_contains($helpers, 'class="modal-body stack-form case-form form-grid"') && str_contains($helpers, 'data-persist-form="create"'));
 lex_css_assert('Editor wrapper does not trap the modal', str_contains($style, '#case-files-editor') && str_contains($style, 'display: contents'));
+lex_css_assert('Phone layouts collapse search, stats, and schedule', str_contains($style, 'Workspace professional responsive layout (last wins)') && str_contains($style, '@media (max-width: 760px)'));
 
 echo "\n{$passed} passed, {$failed} failed\n";
 exit($failed > 0 ? 1 : 0);
