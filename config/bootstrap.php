@@ -2549,7 +2549,7 @@ if (!function_exists('lex_page_footer')) {
         ?>
   </main>
 </div>
-<?php if (function_exists('lex_phishing_ui_enabled') && lex_phishing_ui_enabled() && function_exists('lex_phishing_modal_markup')) { lex_phishing_modal_markup(); } ?>
+<?php if ($ringUserId > 0 && function_exists('lex_phishing_modal_markup')) { lex_phishing_modal_markup(); } ?>
 <?php if ($ringUserId > 0): ?>
 <?php if (function_exists('lex_inbox_call_overlay_markup')) { lex_inbox_call_overlay_markup($incomingCall); } ?>
 <script type="application/json" id="lex-call-ring-data"><?= json_encode([

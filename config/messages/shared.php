@@ -168,7 +168,12 @@ if (!function_exists('lex_messages_conversations')) {
                 last_m.body_encryption_iv AS last_body_encryption_iv,
                 last_m.body_encryption_tag AS last_body_encryption_tag,
                 last_m.created_at AS last_created_at,
-                last_m.is_important AS last_important,
+                (SELECT COALESCE(MAX(imp.is_important), 0)
+                   FROM messages imp
+                  WHERE ((imp.sender_id = :viewer9 AND imp.receiver_id = other.id)
+                      OR (imp.sender_id = other.id AND imp.receiver_id = :viewer10))
+                    AND NOT EXISTS (SELECT 1 FROM message_deletions mdi WHERE mdi.message_id = imp.id AND mdi.user_id = :viewer11)
+                ) AS last_important,
                 last_m.sender_id AS last_sender_id,
                 (SELECT COUNT(*) FROM messages m2
                     WHERE m2.receiver_id = :viewer1 AND m2.sender_id = other.id AND m2.is_read = 0
@@ -192,6 +197,7 @@ if (!function_exists('lex_messages_conversations')) {
             'viewer1' => $userId, 'viewer2' => $userId, 'viewer3' => $userId,
             'viewer4' => $userId, 'viewer5' => $userId, 'viewer6' => $userId,
             'viewer7' => $userId, 'viewer8' => $userId,
+            'viewer9' => $userId, 'viewer10' => $userId, 'viewer11' => $userId,
         ]);
         $rows = $stmt->fetchAll() ?: [];
         foreach ($rows as &$row) {
@@ -417,6 +423,64 @@ if (!function_exists('lex_messages_render_page')) {
                     exit;
                 }
 
+                if ($action === 'toggle_important') {
+                    $otherId = lex_sanitize_int($_POST['with'] ?? 0);
+                    $allowed = lex_messages_allowed_recipients($user);
+                    if ($otherId > 0 && lex_messages_can_contact($allowed, $otherId)) {
+                        $cur = lex_pdo()->prepare(
+                            'SELECT COALESCE(MAX(is_important), 0) FROM messages
+                             WHERE ((sender_id = :me1 AND receiver_id = :other1) OR (sender_id = :other2 AND receiver_id = :me2))
+                               AND NOT EXISTS (SELECT 1 FROM message_deletions md WHERE md.message_id = messages.id AND md.user_id = :me3)'
+                        );
+                        $cur->execute([
+                            'me1' => $userId,
+                            'other1' => $otherId,
+                            'other2' => $otherId,
+                            'me2' => $userId,
+                            'me3' => $userId,
+                        ]);
+                        $mark = ((int) $cur->fetchColumn() > 0) ? 0 : 1;
+                        if ($mark === 1) {
+                            $flag = lex_pdo()->prepare(
+                                'UPDATE messages SET is_important = 1
+                                 WHERE id = (
+                                    SELECT id FROM (
+                                      SELECT m.id FROM messages m
+                                      WHERE ((m.sender_id = :me1 AND m.receiver_id = :other1) OR (m.sender_id = :other2 AND m.receiver_id = :me2))
+                                        AND NOT EXISTS (SELECT 1 FROM message_deletions md WHERE md.message_id = m.id AND md.user_id = :me3)
+                                      ORDER BY m.id DESC LIMIT 1
+                                    ) AS latest_visible
+                                 )'
+                            );
+                            $flag->execute([
+                                'me1' => $userId,
+                                'other1' => $otherId,
+                                'other2' => $otherId,
+                                'me2' => $userId,
+                                'me3' => $userId,
+                            ]);
+                        } else {
+                            $clear = lex_pdo()->prepare(
+                                'UPDATE messages SET is_important = 0
+                                 WHERE (sender_id = :me1 AND receiver_id = :other1) OR (sender_id = :other2 AND receiver_id = :me2)'
+                            );
+                            $clear->execute([
+                                'me1' => $userId,
+                                'other1' => $otherId,
+                                'other2' => $otherId,
+                                'me2' => $userId,
+                            ]);
+                        }
+                        lex_audit('toggle_conversation_important', 'messages', (string) $otherId);
+                    }
+                    $target = $otherId > 0 ? 'chat.php?with=' . $otherId : 'chat.php';
+                    if (function_exists('lex_redirect_app_file')) {
+                        lex_redirect_app_file($target);
+                    }
+                    header('Location: ' . (function_exists('lex_nav_href') ? lex_nav_href($target) : lex_app_url($target)));
+                    exit;
+                }
+
                 if ($action === 'delete_message') {
                     $messageId = lex_sanitize_int($_POST['message_id'] ?? 0);
                     $unsend = (string) ($_POST['unsend'] ?? '') === '1';
@@ -598,6 +662,15 @@ if (!function_exists('lex_messages_render_page')) {
             && lex_messages_can_contact($allowedRecipients, $activeOtherId)
             && lex_messages_roles_may_chat((string) ($user['role'] ?? ''), (string) ($activeRecipient['other_role'] ?? ''));
         $thread = $canMessageActive ? lex_messages_thread($userId, $activeOtherId) : [];
+        $threadImportant = is_array($activeRecipient) && !empty($activeRecipient['last_important']);
+        if (!$threadImportant) {
+            foreach ($thread as $threadMessage) {
+                if (!empty($threadMessage['is_important'])) {
+                    $threadImportant = true;
+                    break;
+                }
+            }
+        }
 
         $searchQuery = trim(lex_sanitize_text($_GET['search'] ?? ''));
         $searchResults = [];
@@ -710,34 +783,20 @@ if (!function_exists('lex_messages_render_page')) {
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 10.5 21 7v10l-4-3.5V16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2.5Z" fill="currentColor"/></svg>
               <span class="inbox-vc-label">Video call</span>
             </a>
-            <a class="inbox-head-icon inbox-head-phone" href="<?= lex_e($callHref) ?>" title="Call" aria-label="Call">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8c1.4 2.7 3.9 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.2 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 .9V21c0 .6-.4 1-1 1C10.6 22 2 13.4 2 3c0-.6.4-1 1-1h4.5c.5 0 .9.4.9 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1L6.6 10.8Z" fill="currentColor"/></svg>
-            </a>
           <?php endif; ?>
-          <details class="inbox-head-info">
-            <summary class="inbox-head-icon" title="Chat info" aria-label="Chat info">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 4.4A1.3 1.3 0 1 1 10.7 7.7 1.3 1.3 0 0 1 12 6.4ZM13.1 17h-2.2v-7h2.2Z" fill="currentColor"/></svg>
-            </summary>
-            <div class="inbox-head-info-menu">
-              <form method="post" class="inbox-header-delete-form" data-no-loading onsubmit="return confirm('Delete this chat? It will be removed from your inbox. The other person will still have the messages.');">
-                <?= lex_csrf_field() ?>
-                <input type="hidden" name="action" value="delete_conversation">
-                <input type="hidden" name="with" value="<?= (int) $activeOtherId ?>">
-                <button class="inbox-delete-btn inbox-header-delete" type="submit" title="Delete chat" aria-label="Delete chat" style="display:inline-flex;min-width:44px;min-height:44px;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;position:relative;z-index:6;touch-action:manipulation;box-sizing:border-box;">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm1 6h2v9h-2V9Zm4 0h2v9h-2V9ZM8 9h2v9H8V9Z" fill="currentColor"/></svg>
-                  <span class="inbox-delete-label">Delete</span>
-                  <span class="inbox-head-info-text">Delete chat</span>
-                </button>
-              </form>
-              <?php if (function_exists('lex_phishing_ui_enabled') && lex_phishing_ui_enabled($user)): ?>
-                <button class="inbox-vc-btn phishing-detector-trigger" type="button" title="Check a link for phishing" aria-label="Check a link for phishing" style="cursor:pointer;pointer-events:auto;position:relative;z-index:6;touch-action:manipulation;" onclick="<?= lex_e(function_exists('lex_phishing_open_onclick') ? lex_phishing_open_onclick() : 'return false;') ?>">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 11 4.6-2.3 8-6 8-11V5Z" fill="currentColor"/></svg>
-                  <span class="inbox-vc-label">Check link</span>
-                  <span class="inbox-head-info-text">Check link</span>
-                </button>
-              <?php endif; ?>
-            </div>
-          </details>
+          <button class="inbox-head-icon inbox-head-phishing phishing-detector-trigger" type="button" title="Phishing detection" aria-label="Phishing detection" style="display:inline-flex;min-width:44px;min-height:44px;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;position:relative;z-index:6;touch-action:manipulation;box-sizing:border-box;flex:0 0 auto;" onclick="<?= lex_e(function_exists('lex_phishing_open_onclick') ? lex_phishing_open_onclick() : 'return false;') ?>">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 11 4.6-2.3 8-6 8-11V5Z" fill="currentColor"/></svg>
+            <span class="inbox-vc-label">Phishing detection</span>
+          </button>
+          <form method="post" class="inbox-header-important-form" data-no-loading>
+            <?= lex_csrf_field() ?>
+            <input type="hidden" name="action" value="toggle_important">
+            <input type="hidden" name="with" value="<?= (int) $activeOtherId ?>">
+            <button class="inbox-head-icon inbox-head-important<?= $threadImportant ? ' is-important' : '' ?>" type="submit" title="<?= $threadImportant ? 'Remove important mark' : 'Mark as important' ?>" aria-label="<?= $threadImportant ? 'Remove important mark' : 'Mark as important' ?>" aria-pressed="<?= $threadImportant ? 'true' : 'false' ?>" style="display:inline-flex;min-width:44px;min-height:44px;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;position:relative;z-index:6;touch-action:manipulation;box-sizing:border-box;flex:0 0 auto;">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 15.25A1.25 1.25 0 1 1 13.25 16 1.25 1.25 0 0 1 12 17.25ZM13.1 13.6h-2.2V6.5h2.2Z" fill="currentColor"/></svg>
+              <span class="inbox-vc-label"><?= $threadImportant ? 'Remove important mark' : 'Mark as important' ?></span>
+            </button>
+          </form>
         </div>
       <?php endif; ?>
     </header>
@@ -857,11 +916,11 @@ if (!function_exists('lex_messages_render_page')) {
               $callHist = $callHistStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
               if ($callHist):
       ?>
-        <div style="padding:0.5rem 0.75rem;border-top:1px solid var(--border);">
-          <strong style="font-size:0.82rem;">Recent calls</strong>
+        <div class="inbox-call-history">
+          <strong>Recent calls</strong>
           <?php foreach ($callHist as $ch): ?>
-            <div style="display:flex;gap:0.5rem;align-items:center;padding:0.2rem 0;font-size:0.8rem;">
-              <span>📞</span>
+            <div class="inbox-call-history-row">
+              <span aria-hidden="true">📞</span>
               <span><?= lex_e((new DateTimeImmutable((string) $ch['started_at']))->format('M j, g:i A')) ?></span>
               <span class="muted"><?= lex_e(ucfirst((string) $ch['status'])) ?></span>
               <?php if (!empty($ch['ended_at']) && !empty($ch['started_at'])):

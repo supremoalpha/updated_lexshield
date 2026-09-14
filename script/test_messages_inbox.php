@@ -50,7 +50,8 @@ lex_inbox_assert('New message compose button has a direct click handler', str_co
 lex_inbox_assert('Closing New message does not focus a null return target', str_contains($chatJs, 'const returnFocus = genericModalReturnFocus') && str_contains($chatJs, 'returnFocus.focus()'));
 lex_inbox_assert('Inbox rows have a delete-chat button', str_contains($shared, 'name="action" value="delete_conversation"') && str_contains($shared, 'inbox-delete-btn'));
 lex_inbox_assert('Inbox delete is a 44px tappable control', str_contains($shared, 'min-height:44px') && str_contains($shared, 'event.stopPropagation()'));
-lex_inbox_assert('Open thread has a Delete chat control', str_contains($shared, 'inbox-header-delete'));
+lex_inbox_assert('Open thread can be marked important', str_contains($shared, 'name="action" value="toggle_important"') && str_contains($shared, 'inbox-head-important'));
+lex_inbox_assert('Open thread has phishing detection in the header', str_contains($shared, 'inbox-head-phishing') && str_contains($shared, 'Phishing detection'));
 lex_inbox_assert('Single-message delete posts delete_message', str_contains($shared, 'name="action" value="delete_message"'));
 lex_inbox_assert('Unsend is available on sent messages', str_contains($shared, 'name="unsend" value="1"'));
 lex_inbox_assert('New message picker still groups admins for attorneys', str_contains($shared, "'admin' => 'Admins'"));
