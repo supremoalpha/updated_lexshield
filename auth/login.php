@@ -431,7 +431,7 @@ $otpRemainingSeconds = $otpExpiresAt > time() ? $otpExpiresAt - time() : 0;
 
 lex_pao_page_header('Login', 'login', 'pao-login');
 ?>
-<section class="pao-login-card">
+<section class="pao-login-card<?= $credentialError ? ' pao-login-card--error' : '' ?>">
     <p class="pao-login-kicker">PAO Iloilo · Client Portal</p>
     <h1>Login</h1>
     <p class="pao-login-lead">Sign in to reserve an appointment, message counsel, and manage your case with the Public Attorney's Office in Iloilo.</p>
@@ -440,10 +440,15 @@ lex_pao_page_header('Login', 'login', 'pao-login');
       <a href="<?= lex_e(lex_app_url('auth/register.php')) ?>">New client</a>
     </div>
     <?php if ($error): ?>
-      <div class="alert <?= $credentialError ? 'alert-warning pao-login-warning' : 'alert-error' ?>" role="alert" aria-live="assertive">
+      <div class="alert <?= $credentialError ? 'alert-warning pao-login-warning' : 'alert-error pao-login-alert' ?>" role="alert" aria-live="assertive">
         <?php if ($credentialError): ?>
-          <strong>Incorrect email or password</strong>
-          <p><?= lex_e($error) ?></p>
+          <span class="pao-login-warning-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21Zm12-3h-2v-2h2v2Zm0-4h-2v-4h2v4Z" fill="currentColor"/></svg>
+          </span>
+          <div class="pao-login-warning-copy">
+            <strong>Incorrect email or password</strong>
+            <p><?= lex_e($error) ?></p>
+          </div>
         <?php else: ?>
           <?= lex_e($error) ?>
         <?php endif; ?>
