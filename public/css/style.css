@@ -33664,3 +33664,111 @@ body:has(.inbox-messenger) .inbox-messenger .inbox-header-actions {
     overflow: visible !important;
   }
 }
+
+/* Messages: unstick overlapping bubbles; phishing + important header icons */
+body:has(.inbox-messenger) .inbox-messenger .chat-feed {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  min-height: 0 !important;
+}
+
+body:has(.inbox-messenger) .inbox-messenger .chat-feed::before {
+  content: "";
+  flex: 1 1 auto;
+  min-height: 0.35rem;
+  pointer-events: none;
+}
+
+body:has(.inbox-messenger) .inbox-messenger .message-row {
+  display: flex !important;
+  flex: 0 0 auto !important;
+  flex-shrink: 0 !important;
+  align-items: flex-end !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 0 !important;
+  position: relative !important;
+  z-index: 1;
+}
+
+body:has(.inbox-messenger) .inbox-messenger .chat-bubble {
+  display: block !important;
+  flex: 0 1 auto !important;
+  max-width: min(78%, 34rem) !important;
+  min-width: 0 !important;
+  height: auto !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
+
+body:has(.inbox-messenger) .inbox-messenger .bubble-text {
+  margin: 0 !important;
+  max-width: 100% !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
+
+body:has(.inbox-messenger) .inbox-messenger .inbox-call-history {
+  flex: 0 0 auto !important;
+  width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.45rem 0.15rem 0.1rem !important;
+  border-top: 1px solid #e4e6eb !important;
+  color: #65676b !important;
+}
+
+body:has(.inbox-messenger) .inbox-messenger .inbox-call-history strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.78rem;
+  color: #050505 !important;
+}
+
+body:has(.inbox-messenger) .inbox-messenger .inbox-call-history-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  padding: 0.15rem 0;
+  font-size: 0.8rem;
+}
+
+body:has(.inbox-messenger) .inbox-messenger .inbox-header-important-form {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+}
+
+body:has(.inbox-messenger) .inbox-messenger .inbox-head-important.is-important {
+  color: #e53935 !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-head-phishing,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-head-important,
+body:has(.inbox-messenger) .inbox-messenger .inbox-head-phishing,
+body:has(.inbox-messenger) .inbox-messenger .inbox-head-important {
+  color: #0084ff !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-head-important.is-important,
+body:has(.inbox-messenger) .inbox-messenger .inbox-head-important.is-important {
+  color: #e53935 !important;
+}
+
+html body[data-role="client"] .inbox-messenger .inbox-head-phishing.phishing-detector-trigger {
+  display: inline-flex !important;
+}
+
+html body[data-role="client"] dialog#phishingDetectorModal[open],
+html body[data-role="client"] dialog#phishingDetectorModal.is-open,
+html body[data-role="client"] dialog.phishing-detector-modal[open],
+html body[data-role="client"] dialog.phishing-detector-modal.is-open {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}

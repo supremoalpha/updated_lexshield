@@ -33,9 +33,13 @@ lex_mmc_assert('Last-wins CSS forces Messenger white chrome', str_contains($styl
 lex_mmc_assert('Sent bubbles stay Messenger blue', str_contains($style, 'background: #0084ff !important') && str_contains($style, 'border-bottom-right-radius: 4px !important'));
 lex_mmc_assert('Received bubbles stay Messenger gray', str_contains($style, 'background: #e4e6eb !important') && str_contains($style, 'border-bottom-left-radius: 4px !important'));
 lex_mmc_assert('Composer still uses the Aa pill', str_contains($shared, 'placeholder="Aa"') && str_contains($style, 'border-radius: 20px !important'));
-lex_mmc_assert('Thread header uses Messenger actions', str_contains($shared, 'inbox-header-actions') && str_contains($shared, 'inbox-head-phone') && str_contains($shared, 'inbox-head-info'));
+lex_mmc_assert('Thread header uses Messenger actions', str_contains($shared, 'inbox-header-actions') && str_contains($shared, 'inbox-head-phishing') && str_contains($shared, 'inbox-head-important'));
+lex_mmc_assert('Call icon is phishing detection', str_contains($shared, 'title="Phishing detection"') && !str_contains($shared, 'inbox-head-phone'));
+lex_mmc_assert('Info control is mark as important', str_contains($shared, 'Mark as important') && str_contains($shared, 'toggle_important') && !str_contains($shared, 'title="Chat info"'));
 lex_mmc_assert('Thread status can show Active now', str_contains($shared, 'is-active-now') && str_contains($shared, 'Active now'));
 lex_mmc_assert('CSS draws the Messenger thread header', str_contains($style, 'Messages: Messenger thread header') && str_contains($style, '.inbox-header-actions'));
+lex_mmc_assert('CSS stops bubbles from overlapping', str_contains($style, 'Messages: unstick overlapping bubbles') && str_contains($style, 'flex-shrink: 0 !important') && str_contains($style, 'overflow-wrap: anywhere !important'));
+lex_mmc_assert('Client header can open phishing detection', str_contains($style, 'html body[data-role="client"] .inbox-messenger .inbox-head-phishing') && str_contains($style, 'dialog#phishingDetectorModal.is-open'));
 
 echo "\n{$passed} passed, {$failed} failed\n";
 exit($failed > 0 ? 1 : 0);
