@@ -725,13 +725,13 @@ if (!function_exists('lex_messages_render_page')) {
       <?php if (function_exists('lex_phishing_ui_enabled') && lex_phishing_ui_enabled($user)): ?>
       <button class="inbox-vc-btn phishing-detector-trigger" type="button" title="Check a link for phishing" aria-label="Check a link for phishing" style="cursor:pointer;pointer-events:auto;position:relative;z-index:6;touch-action:manipulation;" onclick="<?= lex_e(function_exists('lex_phishing_open_onclick') ? lex_phishing_open_onclick() : 'return false;') ?>">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 11 4.6-2.3 8-6 8-11V5Z" fill="currentColor"/></svg>
-        Check link
+        <span class="inbox-vc-label">Check link</span>
       </button>
       <?php endif; ?>
       <?php if ($activeOtherId > 0 && $callHref !== ''): ?>
         <a class="inbox-vc-btn" href="<?= lex_e($callHref) ?>" title="Video call" aria-label="Video call" style="display:inline-flex;min-width:44px;min-height:44px;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;position:relative;z-index:6;touch-action:manipulation;box-sizing:border-box;flex:0 0 auto;">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 10.5 21 7v10l-4-3.5V16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2.5Z" fill="currentColor"/></svg>
-          Video call
+          <span class="inbox-vc-label">Video call</span>
         </a>
       <?php endif; ?>
     </header>
@@ -881,12 +881,15 @@ if (!function_exists('lex_messages_render_page')) {
       <div data-attachment-preview hidden></div>
       <div class="composer-row">
         <div class="composer-tools">
-          <label class="icon-button ghost" title="Attach file">
-            📎<input type="file" name="attachment" accept="image/*,video/*,.pdf,.txt,.doc,.docx" data-attachment-input hidden>
+          <label class="icon-button ghost inbox-attach-btn" title="Attach a photo, video, or file">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2Z" fill="currentColor"/></svg>
+            <input type="file" name="attachment" accept="image/*,video/*,.pdf,.txt,.doc,.docx" data-attachment-input hidden>
           </label>
         </div>
         <textarea class="composer-input" name="message" rows="1" placeholder="Aa"></textarea>
-        <button class="inbox-send-btn" type="submit" title="Send">Send</button>
+        <button class="inbox-send-btn" type="submit" title="Send" aria-label="Send">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.4 20.6 21 12 3.4 3.4 3 10.25l11.2 1.75L3 13.75Z" fill="currentColor"/></svg>
+        </button>
       </div>
     </form>
     <?php endif; ?>
