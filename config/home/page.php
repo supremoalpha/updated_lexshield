@@ -129,24 +129,6 @@ if (!$featuredLawyers && !$lawyerQueryOk) {
 }
 
 $heroUrl = lex_pao_hero_url();
-$logoUrl = lex_pao_logo_url();
-$lawyerCount = max(1, count($featuredLawyers));
-$ratingTotal = 0.0;
-$ratedCount = 0;
-$reviewTotal = 0;
-foreach ($featuredLawyers as $lawyer) {
-    $reviewTotal += (int) ($lawyer['review_count'] ?? 0);
-    if ($lawyer['avg_rating'] !== null && $lawyer['avg_rating'] !== '') {
-        $ratingTotal += (float) $lawyer['avg_rating'];
-        $ratedCount++;
-    }
-}
-$avgRating = $ratedCount > 0 ? round($ratingTotal / $ratedCount, 1) : 4.7;
-$directoryBar = (int) min(100, max(16, $lawyerCount * 25));
-$trustBar = (int) min(100, max(16, round(($avgRating / 5) * 100)));
-$reviewBar = (int) min(100, max(16, $reviewTotal > 0 ? min(100, 24 + $reviewTotal) : 16));
-$profileLabel = $lawyerCount === 1 ? '1 profile' : $lawyerCount . ' profiles';
-$reviewLabel = $reviewTotal === 1 ? '1 rating' : $reviewTotal . ' ratings';
 $directorySpecs = [];
 foreach ($featuredLawyers as $lawyer) {
     $spec = trim((string) ($lawyer['specialization'] ?? ''));
@@ -164,7 +146,7 @@ lex_pao_page_header('Equal Access to Justice for All', 'home', 'pao-home');
   <?php if ($error !== ''): ?><div class="alert alert-error pao-flash"><?= lex_e($error) ?></div><?php endif; ?>
   <?php if ($success !== ''): ?><div class="alert alert-success pao-flash"><?= lex_e($success) ?></div><?php endif; ?>
 
-  <section class="pao-hero" id="home">
+  <section class="pao-hero<?= $heroUrl !== '' ? ' pao-hero--photo' : '' ?>" id="home"<?= $heroUrl !== '' ? ' aria-label="Iloilo City Hall, Plaza Libertad"' : '' ?>>
     <div class="pao-hero-copy">
       <p class="pao-kicker">PAO Iloilo</p>
       <h1>Book a free legal appointment</h1>
@@ -176,67 +158,24 @@ lex_pao_page_header('Equal Access to Justice for All', 'home', 'pao-home');
         </a>
         <a class="pao-btn pao-btn-ghost" href="#resources">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 15h-2v-6h2Zm0-8h-2V7h2Z" fill="currentColor"/></svg>
-          Learn More
+          Who qualifies
         </a>
       </div>
       <div class="pao-hero-metrics">
-        <?php if ($lawyerQueryOk && $featuredLawyers): ?>
-          <article>
-            <span>Active lawyers</span>
-            <strong><?= (int) $lawyerCount ?></strong>
-          </article>
-          <article>
-            <span>Average rating</span>
-            <strong><?= lex_e(number_format($avgRating, 1)) ?>/5</strong>
-          </article>
-          <article>
-            <span>Client reviews</span>
-            <strong><?= (int) $reviewTotal ?></strong>
-          </article>
-        <?php else: ?>
-          <article>
-            <span>Walk-in</span>
-            <strong>Mon–Fri</strong>
-          </article>
-          <article>
-            <span>Hours</span>
-            <strong>8:00–5:00</strong>
-          </article>
-          <article>
-            <span>Office</span>
-            <strong>Iloilo</strong>
-          </article>
-        <?php endif; ?>
+        <article>
+          <span>Walk-in</span>
+          <strong>Mon–Fri</strong>
+        </article>
+        <article>
+          <span>Hours</span>
+          <strong>8:00–5:00</strong>
+        </article>
+        <article>
+          <span>Office</span>
+          <strong>Iloilo</strong>
+        </article>
       </div>
     </div>
-    <?php if ($heroUrl !== ''): ?>
-      <aside class="pao-hero-panel">
-        <div class="pao-hero-visual">
-          <img src="<?= lex_e($heroUrl) ?>" alt="Iloilo City Hall, Plaza Libertad">
-        </div>
-        <div class="pao-hero-panel-copy">
-          <strong>PAO Iloilo</strong>
-          <span>Legal compliance</span>
-        </div>
-        <div class="pao-hero-bars">
-          <div>
-            <span>Directory coverage</span>
-            <b><?= lex_e($profileLabel) ?></b>
-            <i style="--pao-bar: <?= (int) $directoryBar ?>%"></i>
-          </div>
-          <div>
-            <span>Client trust signal</span>
-            <b><?= lex_e(number_format($avgRating, 1)) ?>/5</b>
-            <i style="--pao-bar: <?= (int) $trustBar ?>%"></i>
-          </div>
-          <div>
-            <span>Review participation</span>
-            <b><?= lex_e($reviewLabel) ?></b>
-            <i style="--pao-bar: <?= (int) $reviewBar ?>%"></i>
-          </div>
-        </div>
-      </aside>
-    <?php endif; ?>
   </section>
 
   <section class="pao-band pao-reserve-band" id="reservation">

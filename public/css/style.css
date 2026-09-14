@@ -32720,3 +32720,97 @@ body.pao-login .pao-legal {
     margin: 0 auto;
   }
 }
+
+
+/* Homepage: navy page, photo only in the hero */
+body.pao-home.pao-site,
+body.pao-home,
+body.pao-home .pao-page {
+  background-color: #070b14 !important;
+  background-image: none !important;
+}
+
+body.pao-home .pao-hero,
+body.pao-home .pao-hero.pao-hero--photo {
+  position: relative;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  align-items: center !important;
+  justify-items: start !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-height: min(78vh, 44rem) !important;
+  margin: 0 !important;
+  padding: clamp(2.25rem, 6vw, 5rem) clamp(1rem, 5vw, 4rem) !important;
+  gap: 0 !important;
+  overflow: hidden;
+  isolation: isolate;
+  background: #070b14 !important;
+}
+
+body.pao-home .pao-hero--photo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(105deg, rgba(7, 12, 22, 0.88) 0%, rgba(7, 12, 22, 0.62) 46%, rgba(7, 12, 22, 0.38) 100%),
+    var(--pao-hero-image, none) center 42% / cover no-repeat;
+}
+
+body.pao-home .pao-hero-copy {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 40rem);
+  max-width: 40rem !important;
+}
+
+body.pao-home .pao-hero-panel,
+body.pao-home .pao-hero-visual,
+body.pao-home .pao-hero-bars,
+body.pao-home .pao-hero-panel-copy {
+  display: none !important;
+}
+
+body.pao-home .pao-hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  width: min(100%, 32rem);
+}
+
+body.pao-home .pao-hero--photo .pao-hero-metrics article {
+  background: rgba(7, 12, 22, 0.55) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+body.pao-home .pao-hero--photo .pao-btn-ghost {
+  background: rgba(7, 12, 22, 0.35);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #fff !important;
+}
+
+body.pao-home .pao-hero--photo .pao-hero-copy > p:not(.pao-kicker) {
+  color: #d7e1ee !important;
+}
+
+@media (max-width: 760px) {
+  body.pao-home .pao-hero,
+  body.pao-home .pao-hero.pao-hero--photo {
+    min-height: 28rem !important;
+    padding: 1.5rem 1rem 2rem !important;
+  }
+
+  body.pao-home .pao-hero--photo::before {
+    background:
+      linear-gradient(180deg, rgba(7, 12, 22, 0.82) 0%, rgba(7, 12, 22, 0.7) 55%, rgba(7, 12, 22, 0.88) 100%),
+      var(--pao-hero-image, none) center 40% / cover no-repeat;
+  }
+
+  body.pao-home .pao-hero-metrics {
+    grid-template-columns: 1fr;
+  }
+}
