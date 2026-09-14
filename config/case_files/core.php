@@ -963,6 +963,66 @@ if (!function_exists('lex_case_files_handle_post')) {
                 $redirect(['record' => $caseFileId, 'folder' => $stayFolderId > 0 ? $stayFolderId : (int) ($created['parent_id'] ?? $parentId)]);
             }
 
+            if ($action === 'vault_delete') {
+                $documentId = lex_sanitize_int($_POST['document_id'] ?? 0);
+                $stmt = $pdo->prepare(
+                    'SELECT d.id, d.case_file_id, d.folder_id, d.original_name, d.stored_name,
+                            d.uploaded_by_user_id, d.ledger_hash, d.mime_type,
+                            f.slug, f.name AS folder_name,
+                            cf.folder_name AS case_folder_name, cf.client_user_id,
+                            cf.assigned_lawyer_user_id, cf.created_by_user_id
+                     FROM case_file_documents d
+                     JOIN case_file_folders f ON f.id = d.folder_id
+                     JOIN case_files cf ON cf.id = d.case_file_id
+                     WHERE d.id = :id
+                     LIMIT 1'
+                );
+                $stmt->execute(['id' => $documentId]);
+                $document = $stmt->fetch();
+                $access = $document ? lex_case_file_vault_access([
+                    'id' => (int) $document['case_file_id'],
+                    'client_user_id' => (int) $document['client_user_id'],
+                    'assigned_lawyer_user_id' => (int) $document['assigned_lawyer_user_id'],
+                    'created_by_user_id' => (int) $document['created_by_user_id'],
+                ], $user) : 'none';
+                $viewOnly = function_exists('lex_case_file_is_view_only') && lex_case_file_is_view_only($access);
+                $ownsUpload = $document && (int) ($document['uploaded_by_user_id'] ?? 0) === (int) $user['id'];
+                $canDelete = $document && !$viewOnly && ($access === 'manage' || ($access === 'client' && $ownsUpload));
+
+                if (!$document || !$canDelete) {
+                    return ['error' => 'Unable to delete that file.', 'failed_action' => 'vault_delete'];
+                }
+
+                $path = function_exists('lex_case_file_document_abs_path')
+                    ? lex_case_file_document_abs_path((string) $document['case_folder_name'], $document, (string) $document['stored_name'])
+                    : '';
+                if ($path !== '' && is_file($path)) {
+                    @unlink($path);
+                }
+
+                $pdo->prepare('DELETE FROM case_file_documents WHERE id = :id AND case_file_id = :case_file_id')
+                    ->execute([
+                        'id' => $documentId,
+                        'case_file_id' => (int) $document['case_file_id'],
+                    ]);
+
+                if (function_exists('lex_vault_blockchain_record')) {
+                    lex_vault_blockchain_record('vault_file_deleted', [
+                        'case_file_id' => (int) $document['case_file_id'],
+                        'document_id' => $documentId,
+                        'folder_id' => (int) ($document['folder_id'] ?? 0),
+                        'original_name' => (string) ($document['original_name'] ?? ''),
+                        'previous_ledger_hash' => (string) ($document['ledger_hash'] ?? ''),
+                    ], (int) $user['id']);
+                }
+                lex_audit('vault_delete_case_file_document', 'case_file_documents', (string) $documentId);
+                lex_flash_set('success', 'File deleted from the vault.');
+                $redirect([
+                    'record' => (int) $document['case_file_id'],
+                    'folder' => lex_sanitize_int($_POST['folder'] ?? $filters['folder'] ?? 0),
+                ]);
+            }
+
             if ($action === 'vault_decision') {
                 $documentId = lex_sanitize_int($_POST['document_id'] ?? 0);
                 $decision = lex_safe_identifier((string) ($_POST['decision'] ?? ''), ['approved', 'rejected'], '');

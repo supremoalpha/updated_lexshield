@@ -34,7 +34,9 @@ lex_vb_assert('Vault events have ledger labels', lex_blockchain_event_label('vau
 lex_vb_assert('Folder events have ledger labels', lex_blockchain_event_label('vault_folder_created') === 'Vault folder created');
 lex_vb_assert('Uploads write a vault block', str_contains($core, 'lex_vault_blockchain_record') && str_contains($core, 'vault_file_uploaded'));
 lex_vb_assert('Folder creates write a vault block', str_contains($core, 'vault_folder_created'));
+lex_vb_assert('Deletes write a vault block', str_contains($core, 'vault_file_deleted'));
 lex_vb_assert('Approvals write a vault block', str_contains($core, 'vault_file_'));
+lex_vb_assert('Deleted files have a ledger label', lex_blockchain_event_label('vault_file_deleted') === 'Vault file deleted');
 lex_vb_assert('Vault UI shows the blockchain', str_contains($helpers, 'Vault blockchain') && str_contains($helpers, 'lex_case_files_render_vault_ledger'));
 lex_vb_assert('Documents can store a ledger hash', str_contains($core, 'ledger_hash') && str_contains($ledger, 'lex_blockchain_blocks_for_case'));
 

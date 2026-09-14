@@ -32213,3 +32213,79 @@ html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .chat-feed {
     min-height: 40px;
   }
 }
+
+/* Vault back button and file delete */
+.case-vault-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 0.85rem;
+  margin: 0.2rem 0 0.85rem;
+}
+
+.case-vault-nav .case-vault-crumbs {
+  margin: 0;
+  flex: 1 1 auto;
+}
+
+.case-vault-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  font-weight: 700;
+}
+
+.case-vault-back::before {
+  content: "";
+  width: 0.48rem;
+  height: 0.48rem;
+  border-left: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  margin-top: -1px;
+}
+
+.case-vault-delete-form {
+  display: inline;
+  margin: 0;
+}
+
+.case-vault-panel .button-danger.case-vault-delete {
+  background: #fff1f2;
+  color: #b42318;
+  border: 1px solid rgba(244, 63, 94, 0.28);
+}
+
+.case-vault-panel .button-danger.case-vault-delete:hover,
+.case-vault-panel .button-danger.case-vault-delete:focus-visible {
+  background: #ffe4e6;
+  color: #9f1239;
+}
+
+html[data-theme="dark"] .case-vault-panel .button-danger.case-vault-delete {
+  background: rgba(127, 29, 29, 0.35);
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+html[data-theme="dark"] body:has([data-case-files-app]) .case-vault-back {
+  color: #e5e7eb;
+}
+
+@media (max-width: 720px) {
+  .case-vault-nav {
+    align-items: stretch;
+  }
+
+  .case-vault-back {
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .case-vault-panel .inline-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+}
