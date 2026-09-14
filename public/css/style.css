@@ -33758,3 +33758,17 @@ html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-head-
 body:has(.inbox-messenger) .inbox-messenger .inbox-head-important.is-important {
   color: #e53935 !important;
 }
+
+html body[data-role="client"] .inbox-messenger .inbox-head-phishing.phishing-detector-trigger {
+  display: inline-flex !important;
+}
+
+html body[data-role="client"] dialog#phishingDetectorModal[open],
+html body[data-role="client"] dialog#phishingDetectorModal.is-open,
+html body[data-role="client"] dialog.phishing-detector-modal[open],
+html body[data-role="client"] dialog.phishing-detector-modal.is-open {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
