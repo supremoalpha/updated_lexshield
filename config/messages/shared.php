@@ -776,18 +776,36 @@ if (!function_exists('lex_messages_render_page')) {
                 $downloadUrl = function_exists('lex_messages_attachment_url')
                     ? lex_messages_attachment_url($attachId, false)
                     : lex_app_url('message_attachment.php?id=' . $attachId);
-                $isImage = str_starts_with($attachMime, 'image/');
+                $attachExt = strtolower((string) pathinfo($attachName, PATHINFO_EXTENSION));
+                $isImage = str_starts_with($attachMime, 'image/') || in_array($attachExt, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true);
+                $isVideo = str_starts_with($attachMime, 'video/') || in_array($attachExt, ['mp4', 'm4v', 'webm', 'mov'], true);
+                $downloadLabel = 'Download ' . $attachName;
+                $downloadIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16.5 6.5 11h3.25V4h4.5v7H17.5L12 16.5ZM5 20v-2h14v2H5Z" fill="currentColor"/></svg>';
               ?>
               <?php if ($isImage && $canPreview): ?>
-                <div class="attachment-preview"><a href="<?= lex_e($viewUrl) ?>"><img src="<?= lex_e($previewUrl) ?>" alt="<?= lex_e($attachName) ?>" style="max-width:220px;max-height:200px;border-radius:8px;display:block;margin:0.3rem 0;"></a></div>
+                <div class="inbox-media inbox-media--image">
+                  <a class="inbox-media-open" href="<?= lex_e($viewUrl) ?>">
+                    <img src="<?= lex_e($previewUrl) ?>" alt="<?= lex_e($attachName) ?>">
+                  </a>
+                  <a class="inbox-media-download" href="<?= lex_e($downloadUrl) ?>" download="<?= lex_e($attachName) ?>" title="Download" aria-label="<?= lex_e($downloadLabel) ?>"><?= $downloadIcon ?></a>
+                </div>
+              <?php elseif ($isVideo && $canPreview): ?>
+                <div class="inbox-media inbox-media--video">
+                  <video src="<?= lex_e($previewUrl) ?>" controls playsinline preload="metadata"></video>
+                  <a class="inbox-media-download" href="<?= lex_e($downloadUrl) ?>" download="<?= lex_e($attachName) ?>" title="Download" aria-label="<?= lex_e($downloadLabel) ?>"><?= $downloadIcon ?></a>
+                </div>
+              <?php else: ?>
+                <div class="inbox-file">
+                  <a class="inbox-file-main" href="<?= lex_e($canPreview ? $viewUrl : $downloadUrl) ?>">
+                    <span class="inbox-file-icon" aria-hidden="true"></span>
+                    <span class="inbox-file-copy">
+                      <strong><?= lex_e($attachName) ?></strong>
+                      <small><?= $canPreview ? 'Open file' : 'File' ?></small>
+                    </span>
+                  </a>
+                  <a class="inbox-media-download" href="<?= lex_e($downloadUrl) ?>" download="<?= lex_e($attachName) ?>" title="Download" aria-label="<?= lex_e($downloadLabel) ?>"><?= $downloadIcon ?></a>
+                </div>
               <?php endif; ?>
-              <div class="attachment-card">
-                <span><?= lex_e($attachName) ?></span>
-                <?php if ($canPreview): ?>
-                  <a class="button button-primary" href="<?= lex_e($viewUrl) ?>">View</a>
-                <?php endif; ?>
-                <a class="button button-secondary" href="<?= lex_e($downloadUrl) ?>">Download</a>
-              </div>
             <?php endif; ?>
             <div class="bubble-meta">
               <span><?= lex_e(lex_message_timestamp((string) $message['created_at'])) ?></span>

@@ -32048,3 +32048,168 @@ body:has([data-appointment-board]) .appointment-inline-form {
     min-height: 44px;
   }
 }
+
+/* Messenger-style chat download icon */
+.inbox-media,
+.inbox-file {
+  position: relative;
+  margin: 0.28rem 0 0.15rem;
+}
+
+.inbox-media {
+  display: block;
+  overflow: hidden;
+  width: fit-content;
+  max-width: min(100%, 240px);
+  border-radius: 16px;
+  background: #0a0a0a;
+}
+
+.inbox-media-open {
+  display: block;
+}
+
+.inbox-media img,
+.inbox-media video {
+  display: block;
+  width: 100%;
+  max-width: 240px;
+  max-height: 280px;
+  object-fit: cover;
+  background: #111;
+}
+
+.inbox-media-download {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  z-index: 2;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.62);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+  text-decoration: none;
+}
+
+.inbox-media-download:hover,
+.inbox-media-download:focus-visible {
+  background: rgba(0, 0, 0, 0.82);
+  color: #fff;
+}
+
+.inbox-media-download svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.inbox-file {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: min(100%, 220px);
+  max-width: 100%;
+  padding: 0.45rem 0.45rem 0.45rem 0.55rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.inbox-file-main {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  flex: 1 1 auto;
+  color: inherit;
+  text-decoration: none;
+}
+
+.inbox-file-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, #f3c56b 0 10px, #e7b44a 10px 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  position: relative;
+}
+
+.inbox-file-icon::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-style: solid;
+  border-width: 0 8px 8px 0;
+  border-color: transparent #fff8 transparent transparent;
+}
+
+.inbox-file-copy {
+  display: grid;
+  gap: 0.08rem;
+  min-width: 0;
+}
+
+.inbox-file-copy strong {
+  font-size: 0.86rem;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inbox-file-copy small {
+  color: inherit;
+  opacity: 0.72;
+  font-size: 0.72rem;
+}
+
+.inbox-file .inbox-media-download {
+  position: static;
+  flex: 0 0 36px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+body:has(.inbox-messenger) .inbox-messenger .chat-bubble.received .inbox-file {
+  background: #fff;
+  border: 1px solid #e4e6eb;
+  color: #050505;
+}
+
+body:has(.inbox-messenger) .inbox-messenger .chat-bubble.sent .inbox-file {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+body:has(.inbox-messenger) .inbox-messenger .chat-bubble.received .inbox-file .inbox-media-download {
+  background: #e7f3ff;
+  color: #0084ff;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .chat-feed {
+  background: transparent;
+}
+
+@media (max-width: 760px) {
+  .inbox-media,
+  .inbox-media img,
+  .inbox-media video {
+    max-width: min(100%, 78vw);
+  }
+
+  .inbox-media-download,
+  .inbox-file .inbox-media-download {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+  }
+}
