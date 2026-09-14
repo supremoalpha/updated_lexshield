@@ -603,11 +603,11 @@ if (!function_exists('lex_case_files_render_summary')) {
         ob_start();
         $counts = $state['counts'];
         ?>
-        <section class="admin-dashboard-stats" aria-label="Case file summary">
-          <article class="admin-dashboard-stat-card"><div class="admin-dashboard-stat-copy"><span>Total</span><strong><?= number_format((int) $counts['total']) ?></strong></div></article>
-          <article class="admin-dashboard-stat-card"><div class="admin-dashboard-stat-copy"><span>Open</span><strong class="tone-success"><?= number_format((int) $counts['open']) ?></strong></div></article>
-          <article class="admin-dashboard-stat-card"><div class="admin-dashboard-stat-copy"><span>Ongoing</span><strong><?= number_format((int) $counts['ongoing']) ?></strong></div></article>
-          <article class="admin-dashboard-stat-card"><div class="admin-dashboard-stat-copy"><span>Closed</span><strong class="tone-danger"><?= number_format((int) $counts['closed']) ?></strong></div></article>
+        <section class="case-stats" aria-label="Case file summary">
+          <article class="kpi-card"><span>Total</span><strong><?= number_format((int) $counts['total']) ?></strong></article>
+          <article class="kpi-card is-open"><span>Open</span><strong class="tone-success"><?= number_format((int) $counts['open']) ?></strong></article>
+          <article class="kpi-card is-ongoing"><span>Ongoing</span><strong><?= number_format((int) $counts['ongoing']) ?></strong></article>
+          <article class="kpi-card is-closed"><span>Closed</span><strong class="tone-danger"><?= number_format((int) $counts['closed']) ?></strong></article>
         </section>
         <?php
         return (string) ob_get_clean();
@@ -633,7 +633,7 @@ if (!function_exists('lex_case_files_render_list')) {
         ?>
         <?php foreach ($state['records'] as $record): ?>
           <?php $isSelected = $state['selected'] && (int) $state['selected']['id'] === (int) $record['id']; ?>
-          <article class="card case-list-item<?= $isSelected ? ' is-active' : '' ?>" data-case-select data-case-id="<?= (int) $record['id'] ?>" role="button" tabindex="0">
+          <article class="card case-list-item<?= $isSelected ? ' is-active is-selected' : '' ?>" data-case-select data-case-id="<?= (int) $record['id'] ?>" role="button" tabindex="0">
             <div class="card-head">
               <div>
                 <strong><?= lex_e((string) $record['full_name']) ?></strong>
@@ -1039,10 +1039,10 @@ if (!function_exists('lex_case_files_render_editor')) {
         <div class="modal-overlay case-create-modal-overlay" id="case-create-modal" data-case-create-modal aria-hidden="true">
           <div class="modal-card case-create-modal case-compact-modal">
             <div class="modal-header"><h2>New case file</h2><a class="icon-button" href="#case-overview" data-case-create-close aria-label="Close">&times;</a></div>
-            <form method="post" class="modal-body stack-form" data-casefile-form data-persist-form="create">
+            <form method="post" class="modal-body stack-form case-form form-grid" data-casefile-form data-persist-form="create">
               <?= lex_csrf_field() ?>
               <input type="hidden" name="action" value="create">
-              <div class="alert alert-error" data-form-errors hidden></div>
+              <div class="alert alert-error full" data-form-errors hidden></div>
               <label>Full name <input type="text" name="full_name" data-casefile-fullname required></label>
               <label>Client
                 <select name="client_user_id" data-casefile-client-select required<?= $clients === [] ? ' disabled' : '' ?>>
@@ -1051,29 +1051,29 @@ if (!function_exists('lex_case_files_render_editor')) {
                 </select>
               </label>
               <label>Case file title <input type="text" name="case_file_title" required></label>
-              <label class="full">Description <textarea name="description" rows="3"></textarea></label>
               <label>Status
                 <select name="status"><option value="open">Open</option><option value="ongoing">Ongoing</option><option value="closed">Closed</option></select>
               </label>
-              <button class="button button-primary" type="submit">Create case file</button>
+              <label class="full">Description <textarea name="description" rows="3"></textarea></label>
+              <button class="button button-primary full" type="submit">Create case file</button>
             </form>
           </div>
         </div>
         <div class="modal-overlay" data-case-edit-modal aria-hidden="true">
-          <div class="modal-card">
+          <div class="modal-card case-compact-modal">
             <div class="modal-header"><h2>Edit case file</h2><button class="icon-button" type="button" data-case-edit-close aria-label="Close">&times;</button></div>
-            <form method="post" class="modal-body stack-form" data-casefile-form>
+            <form method="post" class="modal-body stack-form case-form form-grid" data-casefile-form>
               <?= lex_csrf_field() ?>
               <input type="hidden" name="action" value="update">
               <input type="hidden" name="case_id" data-case-edit-id>
-              <div class="alert alert-error" data-form-errors hidden></div>
+              <div class="alert alert-error full" data-form-errors hidden></div>
               <label>Full name <input type="text" name="full_name" data-case-edit-full-name required></label>
               <label>Case file title <input type="text" name="case_file_title" data-case-edit-case-title required></label>
               <label class="full">Description <textarea name="description" rows="3" data-case-edit-description></textarea></label>
               <label>Status
                 <select name="status" data-case-edit-status><option value="open">Open</option><option value="ongoing">Ongoing</option><option value="closed">Closed</option></select>
               </label>
-              <button class="button button-primary" type="submit">Save changes</button>
+              <button class="button button-primary full" type="submit">Save changes</button>
             </form>
           </div>
         </div>
