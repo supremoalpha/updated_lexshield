@@ -33815,7 +33815,7 @@ body.pao-home .pao-services-main > h2 {
 
 body.pao-home .pao-services-main > p {
   margin: 0 0 1.85rem !important;
-  max-width: 46ch;
+  max-width: none;
   line-height: 1.65 !important;
 }
 
