@@ -39,6 +39,7 @@ lex_hh_assert('FAQ questions each sit in their own box', str_contains($home, 'id
 lex_hh_assert('FAQ is not left loose under Legal Resources', !preg_match('/id="resources"[\s\S]*class="pao-faq"/', $home));
 lex_hh_assert('CSS spaces Our Services and boxes each FAQ question', str_contains($style, 'Homepage: spaced Our Services and boxed FAQ questions') && str_contains($style, 'body.pao-home .pao-faq-item'));
 lex_hh_assert('Our Services sits tight on the Iloilo line', str_contains($style, 'body.pao-home .pao-services-main > h2') && str_contains($style, 'letter-spacing: 0 !important') && str_contains($style, 'margin: 0.15rem 0 1.85rem !important'));
+lex_hh_assert('Contact title sits tight on its line', str_contains($style, 'Homepage: sit Contact title tight on its line') && str_contains($style, 'body.pao-home .pao-inquiry-copy > h2') && str_contains($home, 'id="contact"'));
 
 echo "\n{$passed} passed, {$failed} failed\n";
 exit($failed > 0 ? 1 : 0);
