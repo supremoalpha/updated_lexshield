@@ -761,6 +761,16 @@ if (!function_exists('lex_messages_render_page')) {
         <a class="icon-button chat-back-link" href="<?= lex_e(function_exists('lex_nav_href') ? lex_nav_href('chat.php') : lex_app_url('chat.php')) ?>" aria-label="Back to conversations" title="Back to conversations">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.2 4.8 8 12l7.2 7.2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
+        <?php if ($activeRecipient):
+          $activeAvatar = lex_profile_avatar_url((string) ($activeRecipient['other_avatar'] ?? ''));
+          $activeInitials = strtoupper(substr(preg_replace('/\s+/', '', (string) ($activeRecipient['other_name'] ?? '')) ?: 'U', 0, 2));
+        ?>
+          <?php if ($activeAvatar !== ''): ?>
+            <img class="inbox-header-avatar" src="<?= lex_e($activeAvatar) ?>" alt="">
+          <?php else: ?>
+            <span class="inbox-header-avatar" aria-hidden="true"><?= lex_e($activeInitials) ?></span>
+          <?php endif; ?>
+        <?php endif; ?>
         <div class="inbox-header-copy">
           <h2><?= $activeRecipient ? lex_e((string) $activeRecipient['other_name']) : 'Select a chat' ?></h2>
           <?php if ($activeRecipient):

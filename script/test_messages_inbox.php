@@ -142,6 +142,25 @@ $notifApi = (string) file_get_contents(dirname(__DIR__) . '/notifications_api.ph
 lex_inbox_assert('Sidebar nav can show unread badges', str_contains($bootstrap, 'data-nav-badge') && str_contains($bootstrap, 'lex_nav_badge_counts'));
 lex_inbox_assert('Every sidebar button can show a notify badge', str_contains($bootstrap, 'data-nav-badge="<?= lex_e($navKey) ?>"') && str_contains($bootstrap, 'function lex_nav_badge_type_map'));
 lex_inbox_assert('Messages badge uses unread message count', str_contains($bootstrap, 'function lex_nav_unread_messages') && str_contains($bootstrap, 'receiver_id'));
+lex_inbox_assert(
+    'Messages badge matches inbox partners, not leftover notifications',
+    str_contains($bootstrap, 'function lex_nav_message_partner_roles')
+    && str_contains($bootstrap, "lex_nav_unread_messages(\$userId, \$role)")
+    && !preg_match("/counts\\['messages'\\]\\s*=\\s*max\\(/", $bootstrap)
+    && str_contains($bootstrap, "'admin' => ['lawyer', 'attorney']"),
+    'Admin Messages must count unread lawyer threads only. Leftover message/call notification rows belong on the bell, not the sidebar button.'
+);
+lex_inbox_assert(
+    'Notification poll uses the role-aware unread count',
+    str_contains($notifApi, 'lex_nav_unread_messages($userId, $role)'),
+    'The footer poller would put the ghost badge back if it counted every unread row.'
+);
+lex_inbox_assert(
+    'Quick Inquiries badge clears after opening the page',
+    str_contains($bootstrap, "'inquiries' => ['inquiry']")
+    && !str_contains($bootstrap, "quick_inquiries WHERE status = 'new'"),
+    'The Quick Inquiries button must not keep counting status=new rows after lex_nav_mark_active_read() clears inquiry notifications.'
+);
 lex_inbox_assert('Appointments badge uses unread appointment notifications', str_contains($bootstrap, "['appointment']") && str_contains($bootstrap, 'lex_nav_appointment_count'));
 lex_inbox_assert('Appointments button shows how many appointments are waiting', str_contains($bootstrap, 'function lex_nav_appointment_count') && str_contains($bootstrap, "baseLabel + ' (' + shown + ')'") && str_contains($bootstrap, 'background:#e11d48'));
 lex_inbox_assert('Notification API returns sidebar badge counts', str_contains($notifApi, 'unread_messages') && str_contains($notifApi, 'nav_badges'));

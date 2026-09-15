@@ -29,7 +29,7 @@ if ($method === 'GET') {
         ? lex_notifications_unread_count($userId)
         : 0;
     $unreadMessages = function_exists('lex_nav_unread_messages')
-        ? lex_nav_unread_messages($userId)
+        ? lex_nav_unread_messages($userId, $role)
         : 0;
     // The footer poller repaints [data-nav-badge] from this, so it has to be the
     // same source the sidebar is server-rendered from or the two drift apart
