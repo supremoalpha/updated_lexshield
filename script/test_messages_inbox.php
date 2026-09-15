@@ -143,12 +143,19 @@ lex_inbox_assert('Sidebar nav can show unread badges', str_contains($bootstrap, 
 lex_inbox_assert('Every sidebar button can show a notify badge', str_contains($bootstrap, 'data-nav-badge="<?= lex_e($navKey) ?>"') && str_contains($bootstrap, 'function lex_nav_badge_type_map'));
 lex_inbox_assert('Messages badge uses unread message count', str_contains($bootstrap, 'function lex_nav_unread_messages') && str_contains($bootstrap, 'receiver_id'));
 lex_inbox_assert(
-    'Messages badge matches inbox partners, not leftover notifications',
+    'Lawyer and client Messages badges use unread partner threads',
     str_contains($bootstrap, 'function lex_nav_message_partner_roles')
     && str_contains($bootstrap, "lex_nav_unread_messages(\$userId, \$role)")
     && !preg_match("/counts\\['messages'\\]\\s*=\\s*max\\(/", $bootstrap)
     && str_contains($bootstrap, "'admin' => ['lawyer', 'attorney']"),
-    'Admin Messages must count unread lawyer threads only. Leftover message/call notification rows belong on the bell, not the sidebar button.'
+    'Lawyer/client Messages must count unread partner threads. Leftover message/call notification rows belong on the bell, not the sidebar button.'
+);
+lex_inbox_assert(
+    'Admin Messages badge clears after opening the page',
+    str_contains($bootstrap, 'Admin: Messages is unread message/call notifications')
+    && str_contains($bootstrap, "if (\$role !== 'admin')")
+    && str_contains($bootstrap, "if (\$key === 'messages' && \$role !== 'admin')"),
+    'Admin Messages must use message/call notifications so lex_nav_mark_active_read() can clear the sidebar number.'
 );
 lex_inbox_assert(
     'Notification poll uses the role-aware unread count',
@@ -466,6 +473,40 @@ try {
         $endedRow = lex_inbox_call_find($lawyerId, $adminId);
         lex_inbox_assert('Ending the call marks the session ended', (string) ($endedRow['status'] ?? '') === 'ended');
         lex_inbox_assert('Ended call no longer rings', lex_inbox_call_incoming_for($adminId) === null);
+
+        lex_notifications_table_ensure();
+        lex_notify($adminId, 'message', 'Test admin messages sidebar badge');
+        lex_notify($adminId, 'inquiry', 'Test admin inquiries sidebar badge');
+        $badgeBefore = lex_nav_badge_counts($adminId, 'admin');
+        lex_inbox_assert('Admin Messages badge is on before opening the page', (int) ($badgeBefore['messages'] ?? 0) > 0);
+        lex_inbox_assert('Admin Quick Inquiries badge is on before opening the page', (int) ($badgeBefore['inquiries'] ?? 0) > 0);
+        lex_nav_mark_active_read($adminId, 'messages');
+        $badgeAfterMessages = lex_nav_badge_counts($adminId, 'admin');
+        lex_inbox_assert(
+            'Opening Messages clears the admin Messages badge',
+            (int) ($badgeAfterMessages['messages'] ?? 0) === 0,
+            'got ' . (int) ($badgeAfterMessages['messages'] ?? 0)
+        );
+        lex_inbox_assert('Opening Messages does not clear Quick Inquiries', (int) ($badgeAfterMessages['inquiries'] ?? 0) > 0);
+        lex_nav_mark_active_read($adminId, 'inquiries');
+        $badgeAfterInquiries = lex_nav_badge_counts($adminId, 'admin');
+        lex_inbox_assert(
+            'Opening Quick Inquiries clears the admin inquiries badge',
+            (int) ($badgeAfterInquiries['inquiries'] ?? 0) === 0,
+            'got ' . (int) ($badgeAfterInquiries['inquiries'] ?? 0)
+        );
+        $newInquiryRows = 0;
+        try {
+            $newInquiryRows = (int) $pdo->query("SELECT COUNT(*) FROM quick_inquiries WHERE status = 'new'")->fetchColumn();
+        } catch (Throwable $e) {
+            $newInquiryRows = 0;
+        }
+        if ($newInquiryRows > 0) {
+            lex_inbox_assert(
+                'Quick Inquiries badge stays clear even when status=new rows remain',
+                (int) ($badgeAfterInquiries['inquiries'] ?? 0) === 0
+            );
+        }
     }
 } catch (Throwable $e) {
     lex_inbox_assert('Database messaging checks ran', false, $e->getMessage());

@@ -1510,7 +1510,14 @@ if (!function_exists('lex_nav_badge_counts')) {
             $role = 'lawyer';
         }
 
-        $counts['messages'] = lex_nav_unread_messages($userId, $role);
+        // Lawyers and clients: Messages is live unread inbox count.
+        // Admin: Messages is unread message/call notifications, which
+        // lex_nav_mark_active_read() clears when chat.php is opened.
+        // Unread lawyer threads stay in the inbox list; they must not pin
+        // a number on the sidebar after the admin clicks Messages.
+        if ($role !== 'admin') {
+            $counts['messages'] = lex_nav_unread_messages($userId, $role);
+        }
         lex_notifications_table_ensure();
         try {
             $stmt = lex_pdo()->prepare(
@@ -1522,8 +1529,8 @@ if (!function_exists('lex_nav_badge_counts')) {
             $stmt->execute(['uid' => $userId]);
             foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
                 $key = lex_nav_key_for_type((string) ($row['type'] ?? ''), $role);
-                if ($key === 'messages') {
-                    // The Messages button is the inbox unread count, not leftover
+                if ($key === 'messages' && $role !== 'admin') {
+                    // Lawyer/client Messages is the inbox unread count, not leftover
                     // message/call notification rows (those stay on the bell).
                     continue;
                 }
