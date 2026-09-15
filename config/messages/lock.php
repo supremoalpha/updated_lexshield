@@ -299,24 +299,25 @@ if (!function_exists('lex_messages_lock_handle_post')) {
 }
 
 if (!function_exists('lex_messages_lock_render_pin_pad')) {
-    function lex_messages_lock_render_pin_pad(string $name, string $label, bool $autofocus = false): void
+    function lex_messages_lock_render_pin_pad(string $name, string $label, bool $autofocus = false, string $enterKeyHint = 'next'): void
     {
+        $hint = $enterKeyHint === 'done' ? 'done' : 'next';
         ?>
       <div class="pin-pad" data-pin-pad>
         <p class="pin-pad-label"><?= lex_e($label) ?></p>
         <label class="pin-entry">
           <span class="pin-dots" data-pin-dots aria-hidden="true"></span>
-          <input type="password" name="<?= lex_e($name) ?>" data-pin-input inputmode="numeric" pattern="[0-9]{4,8}" maxlength="8" minlength="4" autocomplete="off" aria-label="<?= lex_e($label) ?> (type 4 to 8 digits on your keyboard)" required<?= $autofocus ? ' autofocus' : '' ?>>
+          <input type="password" name="<?= lex_e($name) ?>" data-pin-input inputmode="numeric" enterkeyhint="<?= lex_e($hint) ?>" pattern="[0-9]{4,8}" maxlength="8" minlength="4" autocomplete="off" aria-label="<?= lex_e($label) ?> (type 4 to 8 digits on your keyboard, then Tab or Next)" required<?= $autofocus ? ' autofocus' : '' ?>>
         </label>
-        <p class="pin-keyboard-hint muted">On a laptop, type the PIN with your keyboard. Backspace deletes. Enter continues.</p>
+        <p class="pin-keyboard-hint muted">Type the PIN with your keyboard, including on a phone. Tab or Next moves to the next field. Backspace deletes. Enter continues.</p>
         <div class="pin-keys" role="group" aria-label="PIN keypad">
           <?php foreach (['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'del'] as $key): ?>
             <?php if ($key === ''): ?>
               <span class="pin-key pin-key-empty" aria-hidden="true"></span>
             <?php elseif ($key === 'del'): ?>
-              <button class="pin-key pin-key-del" type="button" data-pin-key="del" aria-label="Delete">⌫</button>
+              <button class="pin-key pin-key-del" type="button" data-pin-key="del" tabindex="-1" aria-label="Delete">⌫</button>
             <?php else: ?>
-              <button class="pin-key" type="button" data-pin-key="<?= lex_e($key) ?>"><?= lex_e($key) ?></button>
+              <button class="pin-key" type="button" data-pin-key="<?= lex_e($key) ?>" tabindex="-1"><?= lex_e($key) ?></button>
             <?php endif; ?>
           <?php endforeach; ?>
         </div>
@@ -347,8 +348,8 @@ if (!function_exists('lex_messages_lock_render')) {
     <form method="post" class="stack-form">
       <?= lex_csrf_field() ?>
       <input type="hidden" name="action" value="set_messages_pin">
-      <?php lex_messages_lock_render_pin_pad('messages_pin', 'Create PIN', true); ?>
-      <?php lex_messages_lock_render_pin_pad('messages_pin_confirm', 'Confirm PIN'); ?>
+      <?php lex_messages_lock_render_pin_pad('messages_pin', 'Create PIN', true, 'next'); ?>
+      <?php lex_messages_lock_render_pin_pad('messages_pin_confirm', 'Confirm PIN', false, 'done'); ?>
       <button class="button button-primary" type="submit">Save PIN</button>
     </form>
   <?php elseif ($showForgot): ?>
@@ -360,8 +361,8 @@ if (!function_exists('lex_messages_lock_render')) {
       <label>Account password
         <input type="password" name="current_password" autocomplete="current-password" required>
       </label>
-      <?php lex_messages_lock_render_pin_pad('messages_pin', 'New PIN'); ?>
-      <?php lex_messages_lock_render_pin_pad('messages_pin_confirm', 'Confirm PIN'); ?>
+      <?php lex_messages_lock_render_pin_pad('messages_pin', 'New PIN', false, 'next'); ?>
+      <?php lex_messages_lock_render_pin_pad('messages_pin_confirm', 'Confirm PIN', false, 'done'); ?>
       <button class="button button-primary" type="submit">Reset PIN</button>
     </form>
     <p class="muted"><a href="<?= lex_e(lex_messages_lock_url($user)) ?>">Back to PIN</a></p>
@@ -371,9 +372,9 @@ if (!function_exists('lex_messages_lock_render')) {
     <form method="post" class="stack-form">
       <?= lex_csrf_field() ?>
       <input type="hidden" name="action" value="change_messages_pin">
-      <?php lex_messages_lock_render_pin_pad('messages_pin_current', 'Current PIN', true); ?>
-      <?php lex_messages_lock_render_pin_pad('messages_pin', 'New PIN'); ?>
-      <?php lex_messages_lock_render_pin_pad('messages_pin_confirm', 'Confirm new PIN'); ?>
+      <?php lex_messages_lock_render_pin_pad('messages_pin_current', 'Current PIN', true, 'next'); ?>
+      <?php lex_messages_lock_render_pin_pad('messages_pin', 'New PIN', false, 'next'); ?>
+      <?php lex_messages_lock_render_pin_pad('messages_pin_confirm', 'Confirm new PIN', false, 'done'); ?>
       <button class="button button-primary" type="submit">Change PIN</button>
     </form>
     <p class="muted"><a href="<?= lex_e(lex_messages_lock_url($user)) ?>">Back to messages</a></p>
@@ -383,7 +384,7 @@ if (!function_exists('lex_messages_lock_render')) {
     <form method="post" class="stack-form">
       <?= lex_csrf_field() ?>
       <input type="hidden" name="action" value="unlock_messages">
-      <?php lex_messages_lock_render_pin_pad('messages_pin', 'PIN', true); ?>
+      <?php lex_messages_lock_render_pin_pad('messages_pin', 'PIN', true, 'done'); ?>
       <button class="button button-primary" type="submit">Unlock</button>
     </form>
     <p class="muted"><a href="<?= lex_e(lex_messages_lock_url($user, ['forgot' => 1])) ?>">Forgot PIN?</a></p>

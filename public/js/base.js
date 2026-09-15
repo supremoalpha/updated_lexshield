@@ -797,10 +797,17 @@
     };
 
     const focusPin = () => {
+      if (window.matchMedia('(pointer: coarse)').matches) {
+        input.focus();
+        return;
+      }
       input.focus({ preventScroll: true });
     };
 
     pad.querySelectorAll('[data-pin-key]').forEach((button) => {
+      if (button instanceof HTMLElement) {
+        button.tabIndex = -1;
+      }
       button.addEventListener('click', () => {
         const key = button.getAttribute('data-pin-key') || '';
         if (key === 'del') {
@@ -869,6 +876,22 @@
         input.value = input.value.slice(0, -1);
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.focus({ preventScroll: true });
+        return;
+      }
+
+      if (event.key === 'Tab') {
+        if (!focusedPad) {
+          return;
+        }
+        const currentIndex = pinPads.indexOf(pad);
+        const nextPad = pinPads[currentIndex + (event.shiftKey ? -1 : 1)];
+        if (nextPad) {
+          const nextInput = nextPad.querySelector('[data-pin-input]');
+          if (nextInput instanceof HTMLInputElement) {
+            event.preventDefault();
+            nextInput.focus({ preventScroll: true });
+          }
+        }
         return;
       }
 

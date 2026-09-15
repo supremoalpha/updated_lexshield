@@ -951,7 +951,7 @@ if (!function_exists('lex_messages_render_page')) {
             <input type="file" name="attachment" accept="image/*,video/*,.pdf,.txt,.doc,.docx" data-attachment-input hidden>
           </label>
         </div>
-        <textarea class="composer-input" name="message" rows="1" placeholder="Aa"></textarea>
+        <textarea class="composer-input" name="message" rows="1" placeholder="Aa" enterkeyhint="enter" autocomplete="off"></textarea>
         <button class="inbox-send-btn" type="submit" title="Send" aria-label="Send">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.4 20.6 21 12 3.4 3.4 3 10.25l11.2 1.75L3 13.75Z" fill="currentColor"/></svg>
         </button>

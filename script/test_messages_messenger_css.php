@@ -40,6 +40,7 @@ lex_mmc_assert('Thread status can show Active now', str_contains($shared, 'is-ac
 lex_mmc_assert('CSS draws the Messenger thread header', str_contains($style, 'Messages: Messenger thread header') && str_contains($style, '.inbox-header-actions'));
 lex_mmc_assert('CSS stops bubbles from overlapping', str_contains($style, 'Messages: unstick overlapping bubbles') && str_contains($style, 'flex-shrink: 0 !important') && str_contains($style, 'overflow-wrap: anywhere !important'));
 lex_mmc_assert('Client header can open phishing detection', str_contains($style, 'html body[data-role="client"] .inbox-messenger .inbox-head-phishing') && str_contains($style, 'dialog#phishingDetectorModal.is-open'));
+lex_mmc_assert('Phone keyboard keeps the composer on screen', str_contains($style, '--lex-vv-height') && str_contains($shared, 'enterkeyhint="enter"'));
 
 echo "\n{$passed} passed, {$failed} failed\n";
 exit($failed > 0 ? 1 : 0);

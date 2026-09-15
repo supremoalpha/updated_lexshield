@@ -33772,3 +33772,22 @@ html body[data-role="client"] dialog.phishing-detector-modal.is-open {
   visibility: visible !important;
   pointer-events: auto !important;
 }
+
+/* Messages: keep the composer above the phone keyboard; PIN fields stay 16px for iOS. */
+.pin-pad input[data-pin-input] {
+  opacity: 0.01;
+  font-size: 16px;
+}
+
+@media (max-width: 1100px) {
+  body.app-workspace:has(.inbox-messenger) .app-shell {
+    height: var(--lex-vv-height, 100dvh) !important;
+    max-height: var(--lex-vv-height, 100dvh) !important;
+  }
+
+  body.app-workspace:has(.inbox-messenger .messages-layout[data-active-conversation="1"]) .messages-layout.inbox-messenger,
+  body.app-workspace:has(.messages-layout.inbox-messenger[data-active-conversation="1"]) .messages-layout.inbox-messenger {
+    height: var(--lex-vv-height, 100dvh) !important;
+    max-height: var(--lex-vv-height, 100dvh) !important;
+  }
+}

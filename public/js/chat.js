@@ -862,6 +862,17 @@
   }
 
   if (chatShell) {
+  const syncVisualViewport = () => {
+    const height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--lex-vv-height', `${Math.round(height)}px`);
+  };
+  syncVisualViewport();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', syncVisualViewport);
+    window.visualViewport.addEventListener('scroll', syncVisualViewport);
+  }
+  window.addEventListener('resize', syncVisualViewport);
+
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
       document.querySelectorAll('[data-modal].is-open').forEach((modal) => {
@@ -884,9 +895,21 @@
       textarea.style.height = `${Math.min(Math.max(textarea.scrollHeight, 36), 120)}px`;
     };
     if (textarea instanceof HTMLTextAreaElement) {
+      const phoneComposer = () => window.matchMedia('(pointer: coarse)').matches || window.matchMedia('(max-width: 1100px)').matches;
+      const syncEnterKeyHint = () => {
+        textarea.setAttribute('enterkeyhint', phoneComposer() ? 'enter' : 'send');
+      };
+      syncEnterKeyHint();
+      window.addEventListener('resize', syncEnterKeyHint);
       textarea.addEventListener('input', resizeComposer);
       textarea.addEventListener('keydown', (event) => {
-        if (event.key !== 'Enter' || event.shiftKey) return;
+        if (event.key === 'Tab') {
+          return;
+        }
+        if (event.key !== 'Enter' || event.shiftKey || event.isComposing) return;
+        if (phoneComposer()) {
+          return;
+        }
         event.preventDefault();
         const hasText = textarea.value.trim() !== '';
         const hasFile = Boolean(fileInput instanceof HTMLInputElement && fileInput.files && fileInput.files.length > 0);

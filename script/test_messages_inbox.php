@@ -63,7 +63,8 @@ lex_inbox_assert(
 lex_inbox_assert('Composer posts to chat.php', str_contains($shared, "lex_nav_href('chat.php')"));
 lex_inbox_assert('Inbox call page exists', str_contains($chatCall, 'chat_call_signal.php') && str_contains($chatCall, 'peerUserId'));
 lex_inbox_assert('Messenger blue bubbles are styled', str_contains($style, '#0084ff') && str_contains($style, 'inbox-messenger'));
-lex_inbox_assert('Enter sends from the composer', str_contains($chatJs, 'data-inbox-composer') && str_contains($chatJs, "event.key !== 'Enter'"));
+lex_inbox_assert('Enter sends from the composer on desktop', str_contains($chatJs, 'data-inbox-composer') && str_contains($chatJs, "event.key !== 'Enter'") && str_contains($chatJs, 'phoneComposer'));
+lex_inbox_assert('Phone composer keeps Tab and Return on the keyboard', str_contains($chatJs, "event.key === 'Tab'") && str_contains($chatJs, "enterkeyhint") && str_contains($chatJs, 'visualViewport'));
 lex_inbox_assert('Video-call JS polls peer_user_id for inbox calls', str_contains($videoJs, 'peer_user_id') && str_contains($videoJs, 'peerUserId'));
 lex_inbox_assert('Video-call JS starts after leftover signals', str_contains($videoJs, 'pageData.sinceId') && str_contains($chatCall, "'sinceId'"));
 lex_inbox_assert('Video-call JS shows camera and browser errors', str_contains($videoJs, 'This browser cannot start a video call') && str_contains($videoJs, 'Camera and microphone access is required'));
@@ -232,7 +233,8 @@ lex_inbox_assert('Client home dashboard matches index', $clientDash === $clientH
 
 $lockPhp = (string) file_get_contents(dirname(__DIR__) . '/config/messages/lock.php');
 $baseJs = (string) file_get_contents(dirname(__DIR__) . '/public/js/base.js');
-lex_inbox_assert('PIN pad tells laptop users to type', str_contains($lockPhp, 'type the PIN with your keyboard'));
+lex_inbox_assert('PIN pad tells people to type from any keyboard', str_contains($lockPhp, 'Type the PIN with your keyboard, including on a phone') && str_contains($lockPhp, 'Tab or Next'));
+lex_inbox_assert('PIN keypad buttons are skipped by Tab', str_contains($lockPhp, 'tabindex="-1"') && str_contains($baseJs, "event.key === 'Tab'"));
 lex_inbox_assert('PIN input is a real keyboard field', str_contains($lockPhp, 'class="pin-entry"') && str_contains($lockPhp, 'data-pin-input'));
 lex_inbox_assert('PIN keyboard handler accepts digits and Backspace', str_contains($baseJs, "event.key === 'Backspace'") && str_contains($baseJs, '/^[0-9]$/.test(event.key)'));
 lex_inbox_assert('PIN keypad click returns focus for typing', str_contains($baseJs, 'focusPin()'));
