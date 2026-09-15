@@ -34125,3 +34125,40 @@ html[data-theme="dark"] body.app-workspace [data-messages-lock] .pin-key {
   color: #e4e6eb !important;
   border-color: #3e4042 !important;
 }
+
+/* Messages: Messenger profile in the thread header */
+body:has(.inbox-messenger) .inbox-messenger .inbox-header-avatar {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  overflow: hidden;
+  flex: 0 0 auto !important;
+  margin: 0 0.15rem 0 0.1rem;
+  background: #0084ff !important;
+  color: #fff !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+}
+
+body:has(.inbox-messenger) .inbox-messenger .inbox-header-compose {
+  display: none !important;
+}
+
+body:has(.inbox-messenger) .inbox-messenger .chat-header-title {
+  gap: 0.2rem !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-header-avatar {
+  background: #0084ff !important;
+  color: #fff !important;
+}
+
+body:has(.inbox-messenger) .inbox-messenger .conversation-avatar {
+  object-fit: cover !important;
+  overflow: hidden;
+}
