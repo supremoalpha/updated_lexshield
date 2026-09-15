@@ -33844,9 +33844,9 @@ body.pao-home .pao-services-main .pao-service-grid p {
 
 body.pao-home .pao-faq {
   display: grid !important;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-template-columns: minmax(0, 1fr) !important;
   align-items: start !important;
-  gap: 1.15rem !important;
+  gap: 0.15rem !important;
   width: 100%;
   height: auto;
   margin: 0 !important;
@@ -33862,9 +33862,17 @@ body.pao-home .pao-faq::before {
 }
 
 body.pao-home .pao-faq > h2 {
-  grid-column: 1 / -1;
-  margin: 0 0 0.15rem !important;
-  padding: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.2 !important;
+}
+
+body.pao-home .pao-faq-list {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  align-items: start !important;
+  gap: 1.15rem !important;
 }
 
 body.pao-home .pao-faq-item,
@@ -33929,14 +33937,14 @@ body.pao-home .pao-faq-item p {
 
 @media (max-width: 1100px) {
   body.pao-home .pao-services-main .pao-service-grid,
-  body.pao-home .pao-faq {
+  body.pao-home .pao-faq-list {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 
 @media (max-width: 640px) {
   body.pao-home .pao-services-main .pao-service-grid,
-  body.pao-home .pao-faq {
+  body.pao-home .pao-faq-list {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 }
