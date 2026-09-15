@@ -313,6 +313,23 @@ lex_pao_page_header('Equal Access to Justice for All', 'home', 'pao-home');
           </article>
         </div>
       </div>
+      <aside class="pao-faq" id="faq" aria-label="Frequently asked questions">
+        <h2>FAQ</h2>
+        <div class="pao-faq-list">
+          <details class="pao-faq-item">
+            <summary>Walk-in or online?</summary>
+            <p>Both. Walk in Monday to Friday, 8:00 AM to 5:00 PM, or reserve a schedule through a client account.</p>
+          </details>
+          <details class="pao-faq-item">
+            <summary>Which window should I visit?</summary>
+            <p>Iloilo District cases are received at the Hall of Justice on Bonifacio Drive. The Iloilo City Hall desk at Plaza Libertad can point you to the right district window.</p>
+          </details>
+          <details class="pao-faq-item">
+            <summary>What cases does PAO handle?</summary>
+            <p>Criminal, civil, labor, and administrative cases for qualified indigent clients. PAO does not replace private counsel for those who can afford a lawyer.</p>
+          </details>
+        </div>
+      </aside>
     </div>
   </section>
 
@@ -364,21 +381,6 @@ lex_pao_page_header('Equal Access to Justice for All', 'home', 'pao-home');
         <p>Coordinated hours at the City Hall desk</p>
         <p>(033) 508-6989</p>
       </article>
-    </div>
-    <div class="pao-faq">
-      <h2>FAQ</h2>
-      <details>
-        <summary>Walk-in or online?</summary>
-        <p>Both. Walk in Monday to Friday, 8:00 AM to 5:00 PM, or reserve a schedule through a client account.</p>
-      </details>
-      <details>
-        <summary>Which window should I visit?</summary>
-        <p>Iloilo District cases are received at the Hall of Justice on Bonifacio Drive. The Iloilo City Hall desk at Plaza Libertad can point you to the right district window.</p>
-      </details>
-      <details>
-        <summary>What cases does PAO handle?</summary>
-        <p>Criminal, civil, labor, and administrative cases for qualified indigent clients. PAO does not replace private counsel for those who can afford a lawyer.</p>
-      </details>
     </div>
   </section>
 

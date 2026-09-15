@@ -33791,3 +33791,193 @@ html body[data-role="client"] dialog.phishing-detector-modal.is-open {
     max-height: var(--lex-vv-height, 100dvh) !important;
   }
 }
+
+
+/* Homepage: spaced Our Services and boxed FAQ questions */
+body.pao-home .pao-services-layout {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  align-items: start !important;
+  gap: 2.75rem !important;
+}
+
+body.pao-home .pao-services-main > .pao-eyebrow {
+  margin: 0 0 1rem !important;
+  letter-spacing: 0.16em !important;
+}
+
+body.pao-home .pao-services-main > h2 {
+  margin: 0 !important;
+  padding: 0 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.2 !important;
+}
+
+body.pao-home .pao-services-main > p {
+  margin: 0.15rem 0 1.85rem !important;
+  max-width: none;
+  line-height: 1.4 !important;
+}
+
+body.pao-home .pao-services-main .pao-service-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 1.15rem !important;
+}
+
+body.pao-home .pao-services-main .pao-service-grid article {
+  display: grid !important;
+  align-content: start;
+  gap: 0.7rem !important;
+  padding: 1.45rem 1.25rem 1.35rem !important;
+}
+
+body.pao-home .pao-services-main .pao-service-grid h3 {
+  margin: 0 !important;
+  line-height: 1.35 !important;
+}
+
+body.pao-home .pao-services-main .pao-service-grid p {
+  margin: 0 !important;
+  line-height: 1.55 !important;
+}
+
+body.pao-home .pao-faq {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  align-items: start !important;
+  gap: 0.15rem !important;
+  width: 100%;
+  height: auto;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible;
+}
+
+body.pao-home .pao-faq::before {
+  content: none !important;
+}
+
+body.pao-home .pao-faq > h2 {
+  margin: 0 !important;
+  padding: 0 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.2 !important;
+}
+
+body.pao-home .pao-faq-list {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  align-items: start !important;
+  gap: 1.15rem !important;
+}
+
+body.pao-home .pao-faq-item,
+body.pao-home .pao-faq details.pao-faq-item {
+  margin: 0;
+  padding: 1.35rem 1.2rem 1.25rem !important;
+  background: rgba(12, 18, 32, 0.92) !important;
+  border: 1px solid rgba(212, 175, 55, 0.32) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+  position: relative;
+  overflow: hidden;
+}
+
+body.pao-home .pao-faq-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #c9a227, rgba(201, 162, 39, 0.15));
+}
+
+body.pao-home .pao-faq-item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  cursor: pointer;
+  list-style: none;
+  margin: 0;
+  font-size: 1.05rem !important;
+  line-height: 1.45 !important;
+}
+
+body.pao-home .pao-faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+body.pao-home .pao-faq-item summary::after {
+  content: "";
+  flex: 0 0 auto;
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-top: -0.15rem;
+  border-right: 2px solid #d4af37;
+  border-bottom: 2px solid #d4af37;
+  transform: rotate(45deg);
+}
+
+body.pao-home .pao-faq-item[open] summary::after {
+  margin-top: 0.15rem;
+  transform: rotate(-135deg);
+}
+
+body.pao-home .pao-faq-item p {
+  margin: 0.85rem 0 0 !important;
+  color: #b7c3d4 !important;
+  line-height: 1.6 !important;
+}
+
+@media (max-width: 1100px) {
+  body.pao-home .pao-services-main .pao-service-grid,
+  body.pao-home .pao-faq-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  body.pao-home .pao-services-main .pao-service-grid,
+  body.pao-home .pao-faq-list {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* Homepage: sit Contact title tight on its line */
+body.pao-home .pao-inquiry-copy > .pao-eyebrow,
+body.pao-home .pao-inquiry-form > .pao-eyebrow {
+  margin: 0 0 1rem !important;
+  letter-spacing: 0.16em !important;
+}
+
+body.pao-home .pao-inquiry-copy > h2 {
+  margin: 0 !important;
+  padding: 0 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.2 !important;
+}
+
+body.pao-home .pao-inquiry-form > h2 {
+  margin: calc(0px - var(--pao-gap)) 0 0 !important;
+  padding: 0 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.2 !important;
+}
+
+body.pao-home .pao-inquiry-copy > p:not(.pao-eyebrow) {
+  margin: 0.15rem 0 1.85rem !important;
+  max-width: none;
+  line-height: 1.4 !important;
+}
+
+body.pao-home .pao-inquiry-form > p:not(.pao-eyebrow) {
+  margin: calc(0.15rem - var(--pao-gap)) 0 1.85rem !important;
+  max-width: none;
+  line-height: 1.4 !important;
+}
