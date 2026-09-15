@@ -33791,3 +33791,95 @@ html body[data-role="client"] dialog.phishing-detector-modal.is-open {
     max-height: var(--lex-vv-height, 100dvh) !important;
   }
 }
+
+
+/* Homepage: FAQ boxed beside Our Services */
+body.pao-home .pao-services-layout {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.45fr) minmax(17.5rem, 24rem) !important;
+  align-items: stretch !important;
+  gap: 1.5rem !important;
+}
+
+body.pao-home .pao-faq.pao-faq-box {
+  display: grid !important;
+  align-content: start;
+  align-self: stretch;
+  gap: 0.75rem !important;
+  height: 100%;
+  margin: 0 !important;
+  padding: 1.35rem 1.25rem 1.25rem !important;
+  background: rgba(12, 18, 32, 0.92) !important;
+  border: 1px solid rgba(212, 175, 55, 0.32) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+  position: relative;
+  overflow: hidden;
+}
+
+body.pao-home .pao-faq.pao-faq-box::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #c9a227, rgba(201, 162, 39, 0.15));
+}
+
+body.pao-home .pao-faq.pao-faq-box > h2 {
+  margin: 0.1rem 0 0.2rem !important;
+  padding: 0;
+}
+
+body.pao-home .pao-faq.pao-faq-box details {
+  margin: 0;
+  padding: 0.85rem 0.95rem !important;
+  background: rgba(7, 12, 22, 0.55) !important;
+  border: 1px solid rgba(148, 163, 184, 0.16) !important;
+  border-top-color: rgba(148, 163, 184, 0.16) !important;
+  border-radius: 12px !important;
+  box-shadow: none;
+}
+
+body.pao-home .pao-faq.pao-faq-box summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  cursor: pointer;
+  list-style: none;
+  font-size: 1rem !important;
+  line-height: 1.35;
+}
+
+body.pao-home .pao-faq.pao-faq-box summary::-webkit-details-marker {
+  display: none;
+}
+
+body.pao-home .pao-faq.pao-faq-box summary::after {
+  content: "";
+  flex: 0 0 auto;
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-top: -0.15rem;
+  border-right: 2px solid #d4af37;
+  border-bottom: 2px solid #d4af37;
+  transform: rotate(45deg);
+}
+
+body.pao-home .pao-faq.pao-faq-box details[open] summary::after {
+  margin-top: 0.15rem;
+  transform: rotate(-135deg);
+}
+
+body.pao-home .pao-faq.pao-faq-box details p {
+  margin: 0.65rem 0 0 !important;
+  color: #b7c3d4 !important;
+}
+
+@media (max-width: 1100px) {
+  body.pao-home .pao-services-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
