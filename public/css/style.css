@@ -33981,3 +33981,147 @@ body.pao-home .pao-inquiry-form > p:not(.pao-eyebrow) {
   max-width: none;
   line-height: 1.4 !important;
 }
+
+/* Messages: activate dark-mode Messenger theme */
+html[data-theme="dark"] body.app-workspace:has(.inbox-messenger),
+html[data-theme="dark"] body.app-workspace:has([data-messages-lock]) {
+  background: #18191a !important;
+}
+
+html[data-theme="dark"] body.app-workspace:has(.inbox-messenger) .main-content,
+html[data-theme="dark"] body.app-workspace:has([data-messages-lock]) .main-content {
+  background: #18191a !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .messages-layout.inbox-messenger {
+  background: #242526 !important;
+  color: #e4e6eb !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .chat-sidebar,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .chat-panel,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .chat-header,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .chat-feed,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .chat-composer {
+  background: #242526 !important;
+  color: #e4e6eb !important;
+  border-color: #3e4042 !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .chat-sidebar {
+  border-right-color: #3e4042 !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-title,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .chat-header h2,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .conversation-item-title strong {
+  color: #e4e6eb !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .conversation-item small,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .conversation-item .muted,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-thread-role,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .status-line,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-empty,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .typing-indicator,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-call-history {
+  color: #b0b3b8 !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-call-history {
+  border-top-color: #3e4042 !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-call-history strong {
+  color: #e4e6eb !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-new-btn.inbox-new-btn-wide,
+html[data-theme="dark"] #inboxComposeBtn {
+  background: #3a3b3c !important;
+  color: #e4e6eb !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-new-btn.inbox-new-btn-wide:hover,
+html[data-theme="dark"] #inboxComposeBtn:hover {
+  background: #4e4f50 !important;
+  color: #e4e6eb !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-search,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-search-form .inbox-search,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .composer-input {
+  background: #3a3b3c !important;
+  color: #e4e6eb !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .composer-input::placeholder,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-search::placeholder {
+  color: #b0b3b8 !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-filters .button,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-pin-row .button,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-pin-row button {
+  background: #3a3b3c !important;
+  color: #e4e6eb !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-filters .button.is-active {
+  background: #263951 !important;
+  color: #2d88ff !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .conversation-item.is-active .conversation-item-link,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .conversation-item:hover .conversation-item-link {
+  background: #3a3b3c !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-delete-btn {
+  color: #b0b3b8 !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .chat-header {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-vc-btn:hover,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .inbox-delete-btn.inbox-header-delete:hover {
+  background: #3a3b3c !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .chat-feed {
+  background: #242526 !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .chat-bubble.received,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .chat-bubble.received.role-client,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .chat-bubble.received.role-lawyer,
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .chat-bubble.received.role-admin {
+  background: #3a3b3c !important;
+  color: #e4e6eb !important;
+}
+
+html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .chat-composer {
+  background: #242526 !important;
+}
+
+html[data-theme="dark"] body.app-workspace .messages-lock-card {
+  background: #242526 !important;
+  border-color: #3e4042 !important;
+  color: #e4e6eb !important;
+}
+
+html[data-theme="dark"] body.app-workspace .messages-lock-card h2,
+html[data-theme="dark"] body.app-workspace .messages-lock-card p,
+html[data-theme="dark"] body.app-workspace .messages-lock-card .muted,
+html[data-theme="dark"] body.app-workspace .messages-lock-card label {
+  color: #e4e6eb !important;
+}
+
+html[data-theme="dark"] body.app-workspace .pin-pad .pin-key,
+html[data-theme="dark"] body.app-workspace [data-messages-lock] .pin-key {
+  background: #3a3b3c !important;
+  color: #e4e6eb !important;
+  border-color: #3e4042 !important;
+}

@@ -30,6 +30,8 @@ lex_mmc_assert('Composer send is an icon button', str_contains($shared, 'inbox-s
 lex_mmc_assert('Composer attach uses a plus icon', str_contains($shared, 'inbox-attach-btn') && str_contains($shared, 'data-attachment-input'));
 lex_mmc_assert('Video call label is screen-reader text', str_contains($shared, 'inbox-vc-label') && str_contains($shared, 'Video call'));
 lex_mmc_assert('Last-wins CSS forces Messenger white chrome', str_contains($style, 'Messages: Facebook Messenger chrome') && str_contains($style, 'background: #fff !important'));
+lex_mmc_assert('Dark theme activates Messenger dark chrome', str_contains($style, 'Messages: activate dark-mode Messenger theme') && str_contains($style, 'html[data-theme="dark"] body:has(.inbox-messenger) .messages-layout.inbox-messenger') && str_contains($style, 'background: #242526 !important'));
+lex_mmc_assert('Dark received bubbles use Messenger gray', str_contains($style, 'html[data-theme="dark"] body:has(.inbox-messenger) .inbox-messenger .chat-bubble.received') && str_contains($style, 'background: #3a3b3c !important'));
 lex_mmc_assert('Sent bubbles stay Messenger blue', str_contains($style, 'background: #0084ff !important') && str_contains($style, 'border-bottom-right-radius: 4px !important'));
 lex_mmc_assert('Received bubbles stay Messenger gray', str_contains($style, 'background: #e4e6eb !important') && str_contains($style, 'border-bottom-left-radius: 4px !important'));
 lex_mmc_assert('Composer still uses the Aa pill', str_contains($shared, 'placeholder="Aa"') && str_contains($style, 'border-radius: 20px !important'));
