@@ -35,9 +35,9 @@ lex_hh_assert('CSS puts the photo only in the hero', str_contains($style, 'Homep
 lex_hh_assert('Homepage drops the tech grid', str_contains($style, 'body.pao-home.pao-site') && str_contains($style, 'body.pao-home .pao-page') && str_contains($style, 'background-image: none !important'));
 lex_hh_assert('CSS shows the glass compliance card', str_contains($style, 'body.pao-home .pao-hero-panel') && str_contains($style, 'backdrop-filter: blur(16px)'));
 lex_hh_assert('Services still use the PAO delivers heading', str_contains($home, 'What PAO delivers') && str_contains($home, 'Our Services') && str_contains($home, 'qualified clients in Iloilo'));
-lex_hh_assert('FAQ sits in a boxed panel beside services', str_contains($home, 'pao-faq pao-faq-box') && str_contains($home, 'id="faq"') && str_contains($home, 'Walk-in or online?'));
+lex_hh_assert('FAQ questions each sit in their own box', str_contains($home, 'id="faq"') && substr_count($home, 'pao-faq-item') === 3 && str_contains($home, 'Walk-in or online?'));
 lex_hh_assert('FAQ is not left loose under Legal Resources', !preg_match('/id="resources"[\s\S]*class="pao-faq"/', $home));
-lex_hh_assert('CSS boxes the FAQ beside Our Services', str_contains($style, 'Homepage: FAQ boxed beside Our Services') && str_contains($style, 'body.pao-home .pao-faq.pao-faq-box'));
+lex_hh_assert('CSS spaces Our Services and boxes each FAQ question', str_contains($style, 'Homepage: spaced Our Services and boxed FAQ questions') && str_contains($style, 'body.pao-home .pao-faq-item'));
 
 echo "\n{$passed} passed, {$failed} failed\n";
 exit($failed > 0 ? 1 : 0);
