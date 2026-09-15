@@ -33948,17 +33948,28 @@ body.pao-home .pao-inquiry-form > .pao-eyebrow {
   letter-spacing: 0.16em !important;
 }
 
-body.pao-home .pao-inquiry-copy > h2,
-body.pao-home .pao-inquiry-form > h2 {
+body.pao-home .pao-inquiry-copy > h2 {
   margin: 0 !important;
   padding: 0 !important;
   letter-spacing: 0 !important;
   line-height: 1.2 !important;
 }
 
-body.pao-home .pao-inquiry-copy > p:not(.pao-eyebrow),
-body.pao-home .pao-inquiry-form > p:not(.pao-eyebrow) {
+body.pao-home .pao-inquiry-form > h2 {
+  margin: calc(0px - var(--pao-gap)) 0 0 !important;
+  padding: 0 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.2 !important;
+}
+
+body.pao-home .pao-inquiry-copy > p:not(.pao-eyebrow) {
   margin: 0.15rem 0 1.85rem !important;
+  max-width: none;
+  line-height: 1.4 !important;
+}
+
+body.pao-home .pao-inquiry-form > p:not(.pao-eyebrow) {
+  margin: calc(0.15rem - var(--pao-gap)) 0 1.85rem !important;
   max-width: none;
   line-height: 1.4 !important;
 }
